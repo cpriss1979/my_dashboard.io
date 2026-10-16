@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Print monthly bills</title><style>
+@page{margin:16mm}body{margin:32px;background:#fff;color:#111;font:16px Arial,sans-serif}main{max-width:900px;margin:auto}h1{margin-bottom:8px}.subtitle{font-size:18px;margin-bottom:24px}table{width:100%;border-collapse:collapse}th,td{padding:12px;border:1px solid #aaa;text-align:left}th{background:#eee}.amount{text-align:right;white-space:nowrap}thead{display:table-header-group}tr{break-inside:avoid}.totals{max-width:340px;margin:24px 0 0 auto;break-inside:avoid}.totals p{display:flex;justify-content:space-between;gap:20px}button{padding:12px 18px;font:inherit;cursor:pointer}.tools{margin-bottom:28px;padding:16px;background:#eef2f7}.tools p{line-height:1.5}@media print{.tools{display:none}body{margin:0}}
+</style></head><body><main><div class="tools"><button id="printButton" type="button">Print / Save as PDF</button><p id="status">Preparing your bills…</p></div><section id="report"></section></main><script>
+const content=document.getElementById('report'),statusEl=document.getElementById('status');document.getElementById('printButton').onclick=()=>window.print();
+function text(tag,value,parent){const el=document.createElement(tag);el.textContent=value;parent.append(el);return el}
+function money(cents){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(cents/100)}
+try{
+ const raw=location.hash.slice(1);if(!raw||raw.length>2000000)throw Error('Open this report using Print bills in your dashboard.');
+ const data=JSON.parse(decodeURIComponent(raw));if(typeof data.person!=='string'||typeof data.month!=='string'||!Array.isArray(data.bills)||data.bills.some(b=>typeof b.title!=='string'||typeof b.date!=='string'||!Number.isFinite(b.amount)||b.amount<0||typeof b.paid!=='boolean'))throw Error('The bill report could not be read. Open it again from the dashboard.');
+ // The fragment carries data directly between browsers, without a server upload.
+ history.replaceState(null,'',location.pathname+location.search);
+ text('h1','Monthly bills',content);text('p',data.person+' · '+data.month,content).className='subtitle';
+ const table=document.createElement('table');content.append(table);const head=document.createElement('thead');table.append(head);const row=document.createElement('tr');head.append(row);['Bill','Date','Amount','Paid'].forEach(s=>text('th',s,row));const body=document.createElement('tbody');table.append(body);let total=0,paid=0;
+ for(const bill of data.bills){const cents=Math.round(bill.amount*100);total+=cents;if(bill.paid)paid+=cents;const tr=document.createElement('tr');body.append(tr);text('td',bill.title,tr);text('td',bill.date,tr);text('td',money(cents),tr).className='amount';text('td',bill.paid?'Paid':'Unpaid',tr)}
+ if(!data.bills.length){const tr=document.createElement('tr');body.append(tr);text('td','No bills for this month.',tr).colSpan=4}
+ const totals=document.createElement('div');totals.className='totals';content.append(totals);for(const [label,value] of [['Total bills',total],['Paid',paid],['Unpaid',total-paid]]){const p=text('p',label,totals);text('strong',money(value),p)}
+ statusEl.textContent='Your print dialog should open automatically. If it doesn’t, click Print / Save as PDF or press Command + P (Mac) / Ctrl + P (Windows).';
+ setTimeout(()=>{try{window.print()}catch{}},500);
+}catch(e){statusEl.textContent=e.message;document.getElementById('printButton').hidden=true}
+</script></body></html>
