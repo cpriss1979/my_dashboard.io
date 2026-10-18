@@ -3662,7 +3662,7 @@ const areas=['Overview','Calendar','Projects','Reminders','Bookmarks','Quick not
 }
 function displayUSDate(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value||''))return value||'';return value.slice(5,7)+'/'+value.slice(8,10)+'/'+value.slice(0,4)}
 function calendarDateRange(event){return displayUSDate(event.date)+(event.endDate&&event.endDate!==event.date?' → '+displayUSDate(event.endDate):'')}
-function financeRecordDate(record){return calendarDateRange(record)+(record.time?' · '+calendarTimeRange(record):'')}
+function financeRecordDate(record){return displayUSDate(record.date)+(record.time?' · '+calendarTimeRange(record):'')}
 function calendarClockLabel(value){if(!value)return '';const [hour,minute]=value.split(':').map(Number);return (hour%12||12)+':'+String(minute).padStart(2,'0')+' '+(hour>=12?'PM':'AM')}
 function calendarTimeRange(event){return event.time?(calendarClockLabel(event.time)+(event.endTime?' → '+calendarClockLabel(event.endTime):'')):''}
 function setYearlyEvent(id,value){let event=state.events.find(x=>x.id===id);if(event){event.repeatYearly=value;save();render();notify(value?'Event repeats yearly':'Yearly repeat turned off')}}
@@ -3992,7 +3992,7 @@ function dateTextToISO(value){const m=value.trim().match(/^(\d{1,2})\/(\d{1,2})\
 function makeUSDateFields(root){
  root.querySelectorAll('input[type="date"]:not([data-us-date-picker])').forEach(input=>{
   if(input.dataset.usDateFormatted)return;input.dataset.usDateFormatted='true';const required=input.required;input.required=false;input.type='hidden';
-  const row=document.createElement('div');row.className='us-date-row';const text=document.createElement('input');text.type='text';text.placeholder='MM/DD/YYYY';text.inputMode='numeric';text.required=required;text.value=displayUSDate(input.value);text.setAttribute('aria-label',(input.name==='endDate'?'Date to':'Date from')+' MM/DD/YYYY');
+  const row=document.createElement('div');row.className='us-date-row';const text=document.createElement('input');text.type='text';text.placeholder='MM/DD/YYYY';text.inputMode='numeric';text.required=required;text.value=displayUSDate(input.value);text.setAttribute('aria-label',(input.name==='endDate'?'Date to':'Date')+' MM/DD/YYYY');
   const pickerLabel=document.createElement('label');pickerLabel.className='us-date-picker';pickerLabel.innerHTML='<span aria-hidden="true">▾</span>';const picker=document.createElement('input');picker.type='date';picker.dataset.usDatePicker='true';picker.setAttribute('aria-label','Choose date from calendar');picker.value=input.value;pickerLabel.append(picker);row.append(text,pickerLabel);input.after(row);
   function update(){const iso=dateTextToISO(text.value);text.setCustomValidity(text.value&&!iso?'Enter a valid date as MM/DD/YYYY.':'');input.value=iso;picker.value=iso;input.dispatchEvent(new Event('change',{bubbles:true}))}
   text.oninput=update;picker.onchange=()=>{input.value=picker.value;text.value=displayUSDate(picker.value);text.setCustomValidity('');input.dispatchEvent(new Event('change',{bubbles:true}))};
@@ -4000,11 +4000,11 @@ function makeUSDateFields(root){
 }
 function financeRangeFields(form,record){
  if(!form||form.dataset.rangeFields)return;form.dataset.rangeFields='true';const date=form.elements.date;if(!date)return;
- date.closest('label').firstChild.textContent='Date from';const group=document.createElement('div');group.className='finance-entry-range';
- group.innerHTML='<label>Date to<input type="date" name="endDate" required></label><label>Time from<input type="time" name="time"></label><label>Time to<input type="time" name="endTime"></label><p class="muted">Date/time range is a label for this entry. The amount counts once in the start month, not once per day. Leave both times blank if not needed.</p>';
- date.closest('label').after(group);form.elements.endDate.value=record?.endDate||date.value;form.elements.time.value=record?.time||'';form.elements.endTime.value=record?.endTime||'';
- const handler=form.onsubmit;form.onsubmit=function(e){const f=form.elements;if(!f.date.value||!f.endDate.value||f.endDate.value<f.date.value||Boolean(f.time.value)!==Boolean(f.endTime.value)||(f.date.value===f.endDate.value&&f.time.value&&f.endTime.value<f.time.value)){e.preventDefault();alert('Choose a valid From/To range. Enter both times or leave both blank.');return}
-  const metadata={endDate:f.endDate.value,time:f.time.value,endTime:f.endTime.value};const type=form.id==='incomeForm'?'incomes':form.id==='expenseForm'?'sharedExpenses':form.id==='personTransferForm'?'personTransfers':'savingsEntries';const ids=new Set((state[type]||[]).map(x=>x.id));const result=handler.call(this,e);
+ date.closest('label').firstChild.textContent='Date';const group=document.createElement('div');group.className='finance-entry-range';
+ group.innerHTML='<label>Time from<input type="time" name="time"></label><label>Time to<input type="time" name="endTime"></label><p class="muted">Choose the date for this entry. Leave both times blank if not needed.</p>';
+ date.closest('label').after(group);form.elements.time.value=record?.time||'';form.elements.endTime.value=record?.endTime||'';
+ const handler=form.onsubmit;form.onsubmit=function(e){const f=form.elements;if(!f.date.value||Boolean(f.time.value)!==Boolean(f.endTime.value)||(f.time.value&&f.endTime.value<f.time.value)){e.preventDefault();alert('Choose a date and valid time range. Enter both times or leave both blank.');return}
+  const metadata={time:f.time.value,endTime:f.endTime.value};const type=form.id==='incomeForm'?'incomes':form.id==='expenseForm'?'sharedExpenses':form.id==='personTransferForm'?'personTransfers':'savingsEntries';const ids=new Set((state[type]||[]).map(x=>x.id));const result=handler.call(this,e);
   if(!financeDialog.open){const item=record?(state[type]||[]).find(x=>x.id===record.id):(state[type]||[]).find(x=>!ids.has(x.id));if(item){if((type==='incomes'||type==='sharedExpenses')&&item.versions?.length){const version=item.versions.find(v=>v.month===f.date.value.slice(0,7));if(version)Object.assign(version,metadata);else Object.assign(item,metadata)}else Object.assign(item,metadata);save();render()}}return result;
  };
  // Use the existing AM/PM selector builder on these finance fields too.
