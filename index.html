@@ -3662,7 +3662,7 @@ const areas=['Overview','Calendar','Projects','Reminders','Bookmarks','Quick not
 }
 function displayUSDate(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value||''))return value||'';return value.slice(5,7)+'/'+value.slice(8,10)+'/'+value.slice(0,4)}
 function calendarDateRange(event){return displayUSDate(event.date)+(event.endDate&&event.endDate!==event.date?' → '+displayUSDate(event.endDate):'')}
-function financeRecordDate(record){return displayUSDate(record.date)+(record.time?' · '+calendarTimeRange(record):'')}
+function financeRecordDate(record){return displayUSDate(record.date)}
 function calendarClockLabel(value){if(!value)return '';const [hour,minute]=value.split(':').map(Number);return (hour%12||12)+':'+String(minute).padStart(2,'0')+' '+(hour>=12?'PM':'AM')}
 function calendarTimeRange(event){return event.time?(calendarClockLabel(event.time)+(event.endTime?' → '+calendarClockLabel(event.endTime):'')):''}
 function setYearlyEvent(id,value){let event=state.events.find(x=>x.id===id);if(event){event.repeatYearly=value;save();render();notify(value?'Event repeats yearly':'Yearly repeat turned off')}}
@@ -3998,19 +3998,7 @@ function makeUSDateFields(root){
   text.oninput=update;picker.onchange=()=>{input.value=picker.value;text.value=displayUSDate(picker.value);text.setCustomValidity('');input.dispatchEvent(new Event('change',{bubbles:true}))};
  });
 }
-function financeRangeFields(form,record){
- if(!form||form.dataset.rangeFields)return;form.dataset.rangeFields='true';const date=form.elements.date;if(!date)return;
- date.closest('label').firstChild.textContent='Date';const group=document.createElement('div');group.className='finance-entry-range';
- group.innerHTML='<label>Time from<input type="time" name="time"></label><label>Time to<input type="time" name="endTime"></label><p class="muted">Choose the date for this entry. Leave both times blank if not needed.</p>';
- date.closest('label').after(group);form.elements.time.value=record?.time||'';form.elements.endTime.value=record?.endTime||'';
- const handler=form.onsubmit;form.onsubmit=function(e){const f=form.elements;if(!f.date.value||Boolean(f.time.value)!==Boolean(f.endTime.value)||(f.time.value&&f.endTime.value<f.time.value)){e.preventDefault();alert('Choose a date and valid time range. Enter both times or leave both blank.');return}
-  const metadata={time:f.time.value,endTime:f.endTime.value};const type=form.id==='incomeForm'?'incomes':form.id==='expenseForm'?'sharedExpenses':form.id==='personTransferForm'?'personTransfers':'savingsEntries';const ids=new Set((state[type]||[]).map(x=>x.id));const result=handler.call(this,e);
-  if(!financeDialog.open){const item=record?(state[type]||[]).find(x=>x.id===record.id):(state[type]||[]).find(x=>!ids.has(x.id));if(item){if((type==='incomes'||type==='sharedExpenses')&&item.versions?.length){const version=item.versions.find(v=>v.month===f.date.value.slice(0,7));if(version)Object.assign(version,metadata);else Object.assign(item,metadata)}else Object.assign(item,metadata);save();render()}}return result;
- };
- // Use the existing AM/PM selector builder on these finance fields too.
- for(const name of ['time','endTime'])addGenericAmPm(form,name);
-}
-function addGenericAmPm(target,name){const input=target.elements[name];if(!input||input.dataset.amPm)return;input.dataset.amPm='true';input.type='hidden';const row=document.createElement('div');row.className='calendar-clock12';row.innerHTML='<select aria-label="Hour"><option value="">No time</option>'+Array.from({length:12},(_,i)=>'<option>'+(i+1)+'</option>').join('')+'</select><span>:</span><select aria-label="Minute">'+Array.from({length:60},(_,i)=>'<option value="'+i+'">'+String(i).padStart(2,'0')+'</option>').join('')+'</select><select aria-label="AM or PM"><option>AM</option><option>PM</option></select>';input.after(row);const [hour,minute,period]=row.querySelectorAll('select');if(input.value){const [hh,mm]=input.value.split(':').map(Number);hour.value=String(hh%12||12);minute.value=String(mm);period.value=hh>=12?'PM':'AM'}function sync(){input.value=hour.value?String(Number(hour.value)%12+(period.value==='PM'?12:0)).padStart(2,'0')+':'+String(Number(minute.value)).padStart(2,'0'):'';minute.disabled=period.disabled=!hour.value}row.querySelectorAll('select').forEach(s=>s.onchange=sync);sync()}
+function financeRangeFields(form){if(!form)return;const date=form.elements.date;if(date)date.closest('label').firstChild.textContent='Date'}
 const incomeBeforeRange=incomeModal;incomeModal=function(id,person){incomeBeforeRange(id,person);const r=state.incomes.find(x=>x.id===id);financeRangeFields(document.getElementById('incomeForm'),r?(incomeAtMonth(r,budgetMonth)||r):null)};
 const billBeforeRange=expenseModal;expenseModal=function(id){billBeforeRange(id);const r=state.sharedExpenses.find(x=>x.id===id);financeRangeFields(document.getElementById('expenseForm'),r?(billAtMonth(r,budgetMonth)||r):null)};
 const transferBeforeRange=personTransferModal;personTransferModal=function(id){transferBeforeRange(id);financeRangeFields(document.getElementById('personTransferForm'),(state.personTransfers||[]).find(x=>x.id===id))};
