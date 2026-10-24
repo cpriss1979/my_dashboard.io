@@ -6,7 +6,7 @@
  let firebase,user=null,ref=null,ready=false,busy=false,dirty=false,conflict=false,revision=0,seq=0,epoch=0,timer=0,unsubscribe=null,deferred=null,auth=null,db=null,retryAt=0;
  const writer=crypto.randomUUID();
  function allowDashboard(value){document.body.classList.toggle('fb-account-locked',!value);el('fbAccountGate').hidden=value;document.querySelector('main').inert=!value;document.querySelector('aside').inert=!value}
- function switchUI(signedIn){el('fbAccountAccess').hidden=!signedIn;el('fbSignIn').hidden=signedIn;el('fbSignOut').hidden=!signedIn;el('fbImportDevice').hidden=!signedIn;el('fbLoadLatest').hidden=!signedIn;el('fbRetry').hidden=!signedIn;el('fbIdentity').textContent=signedIn?('Signed in: '+(user.email||user.displayName||'Google account')):'Local-only mode'}
+ function switchUI(signedIn){el('fbAccountAccess').hidden=true;el('fbSignIn').hidden=signedIn;el('fbSignOut').hidden=!signedIn;el('fbImportDevice').hidden=!signedIn;el('fbLoadLatest').hidden=!signedIn;el('fbRetry').hidden=!signedIn;el('fbIdentity').textContent=signedIn?('Signed in: '+(user.email||user.displayName||'Google account')):'Local-only mode'}
  function accountMeta(){return bridge.readMeta()||{}}
  function remember(){if(user)bridge.writeMeta({revision,pending:dirty})}
  function editing(){return Boolean(document.querySelector('dialog[open]'))||['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)||bridge.gameActive()}
@@ -61,7 +61,7 @@
  }
 
  // Passwords are sent to Firebase Auth only, never to dashboard storage or backups.
- const emailPanel=document.createElement('section');emailPanel.className='fb-email-panel';emailPanel.innerHTML=`<h2>Sign in with email</h2><form id="fbEmailForm"><label for="fbEmail">Email</label><input id="fbEmail" type="email" autocomplete="username" required><label for="fbPassword">Password</label><input id="fbPassword" type="password" autocomplete="current-password" required><label id="fbConfirmLabel" for="fbConfirm" hidden>Confirm password</label><input id="fbConfirm" type="password" autocomplete="new-password" hidden><button type="submit" id="fbEmailSubmit">Sign in with email</button></form><div class="fb-email-links"><button type="button" id="fbEmailMode">Create an account</button><button type="button" id="fbForgotPassword">Forgot password?</button><button type="button" id="fbForgotEmail">Forgot email?</button></div><p id="fbEmailMessage" role="status" aria-live="polite"></p>`;
+ const emailPanel=document.createElement('section');emailPanel.className='fb-email-panel';emailPanel.innerHTML=`<h2>Sign in with email</h2><form id="fbEmailForm"><label for="fbEmail">Email</label><input id="fbEmail" type="email" autocomplete="username" required><label for="fbPassword">Password</label><input id="fbPassword" type="password" autocomplete="current-password" required><label id="fbConfirmLabel" for="fbConfirm" hidden>Confirm password</label><input id="fbConfirm" type="password" autocomplete="new-password" hidden><div class="fb-email-primary"><button type="submit" id="fbEmailSubmit">Sign in with email</button><button type="button" id="fbEmailMode">Create an account</button></div></form><div class="fb-email-links"><button type="button" id="fbForgotPassword">Forgot password?</button><button type="button" id="fbForgotEmail">Forgot email?</button></div><p id="fbEmailMessage" role="status" aria-live="polite"></p>`;
  el('fbGateStatus').before(emailPanel);
  let creating=false,emailBusy=false;
  function emailMessage(message){el('fbEmailMessage').textContent=message}
