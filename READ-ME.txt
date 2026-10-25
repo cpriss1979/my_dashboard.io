@@ -1,1 +1,18 @@
-Upload all files in this folder to the root of your GitHub repository, replacing matching files. Email/Password must remain enabled in Firebase. Sign in/Create account share a row; recovery links are stacked text. Journal sparkles repeat indefinitely while Journal is open (reduced-motion preference is respected). Account access is hidden. Calendar entry cards wrap full text. Games resist pinch/double-tap zoom; vertical scrolling remains available for long pages. Home icon and cloud sync retained.
+MY DASHBOARD — MOBILE REFINEMENT
+
+Upload every file in this folder to the root of your existing GitHub repository, replacing matching files. Keep mobile-app.js and mobile-app.css beside index.html. The Firebase config, rules, auth driver, sync core, storage keys, icon and financial functions are preserved. No Firebase setup changes are required.
+
+PHONE
+Compact logo/title/settings header, small sync indicator, visible sync error with Resolve sync action, and Home/Calendar/Notes/Tasks/Finances tabs. Account identity, sign out, import device, load latest, retry and backup/restore live in Settings. Home retains the four stacked page buttons and compact clock/date.
+
+FINANCES
+Person/month selectors, prominent Money left, secondary Income/Bills figures, unified Add chooser, Finance options and expandable help. Section order is Bills, Income, Savings, Transfers, Archive. Bills opens initially; subsequent choices are retained during use. Transaction cards retain all fields and original edit/delete/checkbox handlers.
+
+CALENDAR
+Controls directly below header; event details have Edit/Delete. All entries searches every stored event, including past/repeating entries. Desktop keeps its separate Manage calendar entries panel.
+
+CHECKS
+DOM interaction tests at 320/375/390/430 and desktop 1280: navigation, empty states, long names, large amounts, expansion choices, opening/editing/saving bill and event forms, local data persistence and visible sync errors. CSS parsed, breakpoint and safe-area/target-width constraints checked. Mocked current Firebase driver tested same-user transfer, cross-user isolation, conflicts and retained unsynced cache.
+
+LIMITS
+No real-device/browser screenshots or on-screen keyboard test was performed. DOM tests do not measure actual rendered layout. Live Google/email sign-in and two real-device sync were not tested; sync tests used a mock Firestore service. Verify the uploaded site on your phone, particularly safe areas, keyboard and final actions above the tab bar. Remove no browser data when refreshing.
