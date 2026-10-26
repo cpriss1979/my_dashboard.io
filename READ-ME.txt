@@ -1,18 +1,26 @@
-MY DASHBOARD — MOBILE REFINEMENT
+GLOWCODE DASHBOARD — DESKTOP & MOBILE REDESIGN
 
-Upload every file in this folder to the root of your existing GitHub repository, replacing matching files. Keep mobile-app.js and mobile-app.css beside index.html. The Firebase config, rules, auth driver, sync core, storage keys, icon and financial functions are preserved. No Firebase setup changes are required.
+Upload ALL files in this folder into the root of your existing GitHub Pages repository, replacing matching files. Keep redesign.js, redesign.css, mobile-app.js and mobile-app.css beside index.html, together with the existing auth/sync scripts, manifest and icons. No Firebase setup/rules changes are needed.
 
-PHONE
-Compact logo/title/settings header, small sync indicator, visible sync error with Resolve sync action, and Home/Calendar/Notes/Tasks/Finances tabs. Account identity, sign out, import device, load latest, retry and backup/restore live in Settings. Home retains the four stacked page buttons and compact clock/date.
+This is the existing buildless HTML/JavaScript dashboard with an added presentation layer. Saved records, storage keys, auth driver, sync core, finance calculations, recurrence, archive logic and game implementations are retained.
+
+DESKTOP / MOBILE
+Midnight navy shell and consistent pastel sections. Compact shared title/clock/date/Quick add/sync/account bar. Desktop left sidebar retains all destinations and the purple-blue active highlight. On phone, Home/Calendar/Tasks/Finances/More tabs; More includes Notes, Projects, Bookmarks, Journal, Games and Settings. Account, sync-resolution and backup controls are in Settings. Sync errors remain visible.
+
+OVERVIEW / SECTIONS
+Balanced overview with schedule/compact calendar, priorities, quick capture, pinned bookmarks and active projects. Project cards have an options menu and compact archive. Bookmarks have search, domain/site icon fallback, and Show on Home. Notes open fully with Edit. Tasks grouped Overdue/Today/Upcoming/Completed. Calendar has desktop cell event titles, agenda, event details/edit/delete and access to all stored past/repeating entries.
 
 FINANCES
-Person/month selectors, prominent Money left, secondary Income/Bills figures, unified Add chooser, Finance options and expandable help. Section order is Bills, Income, Savings, Transfers, Archive. Bills opens initially; subsequent choices are retained during use. Transaction cards retain all fields and original edit/delete/checkbox handlers.
+Selectors, Money left/Income/Bills/Savings figures; Savings stays separate. Bills/Income/Savings/Transfers/Archive tabs, unified Add choices, Finance options and expandable help. Original transaction actions and calculations are reused.
 
-CALENDAR
-Controls directly below header; event details have Edit/Delete. All entries searches every stored event, including past/repeating entries. Desktop keeps its separate Manage calendar entries panel.
+JOURNAL
+More writing room, secondary library on desktop, Entries browsing on phone. All original sparkle/glitter scripts and styles are byte-for-byte unchanged. The new presentation layer never recreates or modifies the live sparkle layer. Prompts, moods, page colors, favorites, memory calendar, focus and drafts remain available.
 
-CHECKS
-DOM interaction tests at 320/375/390/430 and desktop 1280: navigation, empty states, long names, large amounts, expansion choices, opening/editing/saving bill and event forms, local data persistence and visible sync errors. CSS parsed, breakpoint and safe-area/target-width constraints checked. Mocked current Firebase driver tested same-user transfer, cross-user isolation, conflicts and retained unsynced cache.
+GAMES
+13-game library tiles open the existing focused play area. Original game rules, controls, score records and rendering retained.
+
+VERIFICATION
+DOM interaction checks at 320, 375, 390, 430, 900 and 1440 widths passed. Tested long content, empty states, project auto-archive, bookmark search/pins, note edit/save, task completion, large finance amounts, original formula/edit forms, calendar event editing, Journal autosave and sparkle-layer identity, game library and More navigation. Current auth/sync driver passed mocked same-user sync, cross-user isolation, conflict/cache preservation checks. CSS parser/property checks passed. Original inline JS/CSS and auth/sync files compared exactly.
 
 LIMITS
-No real-device/browser screenshots or on-screen keyboard test was performed. DOM tests do not measure actual rendered layout. Live Google/email sign-in and two real-device sync were not tested; sync tests used a mock Firestore service. Verify the uploaded site on your phone, particularly safe areas, keyboard and final actions above the tab bar. Remove no browser data when refreshing.
+DOM checks are not browser layout measurements or screenshots. Actual desktop/phone visual rendering, touch/keyboard/safe-area behavior and live sign-in/two-device sync still require checking after upload. Browser preview was unavailable in this session; no browser-data clearing is needed to install these changes.
