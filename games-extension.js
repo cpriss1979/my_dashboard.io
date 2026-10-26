@@ -1,6 +1,6 @@
-/* Four working additions. Modules are imported only after the user opens an activity. */
+/* Lazy-loaded working additions. Modules are imported only after the user opens an activity. */
 (function(){
- const entries=[{id:'water-sort',name:'Water Sort',category:'play',symbol:'◒',description:'Pour colors · Undo & hints'},{id:'memory-match',name:'Memory Match',category:'play',symbol:'✦',description:'Find pairs · Untimed option'},{id:'ripple-pond',name:'Ripple Pond',category:'relax',symbol:'◎',description:'Gentle ripples & floating petals'},{id:'glow-sand',name:'Glow Sand',category:'relax',symbol:'≋',description:'Draw & rake pastel sand'}];
+ const entries=[{id:'power-wash',name:'Quiet Clean',category:'relax',symbol:'▤',description:'Wash four original garden surfaces'},{id:'little-wins',name:'Little Wins',category:'relax',symbol:'✧',description:'Optional quests & decorative stars'},{id:'glow-maze',name:'Glow Maze',category:'play',symbol:'◇',description:'Three mazes · Glow power & orbiters'},{id:'fidget-spinner',name:'Fidget Spinner',category:'relax',symbol:'❋',description:'Swipe, spin & slow down'},{id:'milk-jug-toss',name:'Milk Jug Toss',category:'play',symbol:'♧',description:'Aim & toss · Practice or challenge'},{id:'bubble-wrap',name:'Bubble Wrap',category:'relax',symbol:'◌',description:'Press & glide across a fresh sheet'},{id:'water-sort',name:'Water Sort',category:'play',symbol:'◒',description:'Pour colors · Undo & hints'},{id:'memory-match',name:'Memory Match',category:'play',symbol:'✦',description:'Find pairs · Untimed option'},{id:'ripple-pond',name:'Ripple Pond',category:'relax',symbol:'◎',description:'Gentle ripples & lily pads'},{id:'glow-sand',name:'Glow Sand',category:'relax',symbol:'≋',description:'Draw & rake pastel sand'}];
  let active=null,generation=0;
  function button(text,fn,cls='secondary'){const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=text;b.onclick=fn;return b}
  function stop(){if(active){active.dispose?.();active=null}generation++}
@@ -13,7 +13,7 @@
   const header=document.createElement('div');header.className='activity-heading';const title=document.createElement('h2');title.textContent=entry.name;header.append(button('← Game Library',()=>window.GlowGameLibrary.returnToLibrary()),title);panel.append(header);const body=document.createElement('div');body.className='activity-body';const loading=document.createElement('p');loading.textContent='Opening '+entry.name+'…';body.append(loading);panel.append(body);content.append(panel);window.scrollTo(0,0);
   active={id,dispose:null};
   try{
-   const module=await import('./activities/'+id+'.mjs');
+   const module=await import('./activities/'+id+'.mjs?v=20261026-originals');
    if(token!==generation||page!=='Games'||state!==owner||dashboardActivePrefix!==scope||!panel.isConnected)return;
    body.replaceChildren();const context={initial:saved(id),reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,persist(data){if(token!==generation||state!==owner||dashboardActivePrefix!==scope)return false;if(!state.glowActivities||typeof state.glowActivities!=='object')state.glowActivities={};state.glowActivities[id]=JSON.parse(JSON.stringify(data));save();return true}};
    active.dispose=module.mount(body,context);

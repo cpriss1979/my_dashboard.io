@@ -1,31 +1,26 @@
-GLOWCODE — GAME LIBRARY & PLACE PHOTOS
+GLOWCODE — ORIGINAL GAMES & ACTIVITIES
 
 INSTALL
-Upload ALL files and folders in this package into your existing GitHub repository root, replacing matching files. Keep activities/ and assets/memory-places/ in their exact relative locations. No npm/build step or Firebase setup/rule change is required.
+Upload ALL files and folders from this package into your existing GitHub repository root, replacing matching files. Keep activities/ and assets/memory-places/ in their relative locations. This is the complete dashboard, not a patch. No build, npm install, or Firebase/rules changes are needed. This package has not been uploaded to GitHub for you.
 
-MEMORY MATCH
-12 distinct local place photographs (beaches, mountains, waterfalls, gardens, cities and landmarks), square-cropped to 512×512. The same local image and crop are used for each pair. All selected round photos must preload/decode successfully before cards or elapsed play begin. Missing photos show Retry photos rather than a broken round. Card backs are identical and do not contain face images. Matched cards show the place name; a full matched-place list and Photo credits are available. Difficulty 6/8/12 pairs and Untimed/Elapsed-time modes remain. Existing saved decks, matching progress and settings are retained.
+WHAT CHANGED
+22 working games/activities in one alphabetical Game Library. The six additions are Quiet Clean (original pressure-washing activity), Little Wins, Glow Maze, Fidget Spinner, Milk Jug Toss, and Bubble Wrap. Existing games remain, including Memory Match's local place photographs. Balloon Pop remains removed.
 
-PHOTO RIGHTS
-11 photographs carry CC0; the Yosemite photograph by Carol M. Highsmith is public domain. Rights/author/source metadata were checked from Wikimedia Commons and stored with the package. Credits and local image hashes:
-assets/memory-places/CREDITS.txt
-assets/memory-places/credits.json
-No random/hotlinked image service is used during play. Credits link to original source pages for reference only.
+Category tabs now use a purple/blue gradient, white text, bright border and subtle glow for the active category, with a separate underline marker. Inactive tabs are navy/lavender. Keyboard focus, hover and pressed states are distinct. Categories, previous library position and return controls are retained.
 
-LIBRARY
-Game Library contains 16 remaining games in two alphabetized category grids. Play & Puzzles has 13 games. Relax & Unwind includes Glow Sand, Kaleidoscope and Ripple Pond. Old/new tiles use the same sizing and typography. Grids adapt from 4–5 columns on wide screens to 3 on tablets and 2 on phones. Active category is highlighted.
+Quiet Clean: four original canvas surfaces, saved localized dirt masks, nozzle widths, optional progress, reset/new surface. Hold/drag, Space, or Shift + arrows.
+Little Wins: choose, skip, edit or create optional quests; decorative stars and history save without streaks or penalties.
+Glow Maze: three generated connected mazes, original diamond/orbiter characters, power-ups, score, lives, difficulty, pause/restart; arrows/WASD, swipe and direction buttons.
+Fidget Spinner: original metallic shapes/colors, gesture-driven rotation, adjustable friction, keyboard controls and reduced motion.
+Milk Jug Toss: drag-back projectile aim, jug/ball collisions, gravity, platform-only scoring, returning ball, unlimited practice and three-ball challenge.
+Bubble Wrap: translucent raised bubbles stay depressed, drag multi-pop, keyboard access, fresh sheet and optional endless sheets.
+Ripple Pond: existing saved petal positions become varied original lily pads with V notches, veins, highlights, contact shadows and gentle bobbing. Interactive ripples are retained.
 
-NAVIGATION
-No Choose a game dropdown exists, including in older games. Every game has a consistent ← Game Library button. Category and previous library scroll position return when leaving a game. Useful game controls (difficulty, color choices, pause, sound, restart/New game) remain. Legacy Bowling's header lookup was updated so its difficulty/New game controls still work without the removed dropdown.
+SAVING / SOUND
+Progress/settings use state.glowActivities in the existing storage, backup and account-sync system. No real user data is embedded. Sound starts off on every mount and is optional. Reduced-motion controls are available. Activity loops/listeners/audio are cleaned up on exit. The Journal sparkle implementation is unchanged.
 
-BALLOON POP
-Removed from the game catalog, library, dedicated functions, styles and embedded zoo asset. Shared city/fireworks and other game code/assets remain. Any old Balloon Pop/invalid selection falls back safely to the library. Historical saved score records were left untouched; no app data was deleted.
-
-PRESERVED
-Journal sparkle function, selectors/keyframes and layering CSS are unchanged. Finance functions, auth/sync/storage files and all other activity modules are unchanged. Existing app data and account behavior remain.
-
-CHECKS
-All 16 games opened and returned in DOM tests at 320/375/390/430/900/1440/1600 widths. Alphabetical categories, no selector dropdowns, category/scroll restoration, old removed-selection fallback and preserved scores checked. Memory photo preload gate, identical backs, pair image/crop attributes, matched names, difficulty/mode and missing-image retry checked. All 12 JPEGs decoded and their dimensions/hashes/licenses verified. Dashboard editing/saving/finance and mocked account sync regression suites passed.
+VERIFICATION
+Pure-mechanic checks passed for localized/progressive washing, quest rewards/editing, maze connectivity/collisions/lives/power/level completion, spinner friction, jug physics/scoring/ball limits and Bubble Wrap states. Simulated pointer/keyboard interactions, restart, save/restore and animation cleanup passed for all six additions and Ripple Pond. All 22 games opened/returned in DOM tests at 320, 375, 390, 430, 900, 1440 and 1600 CSS-pixel viewport settings. Alphabetical ordering, accessible category states and category/scroll restoration passed. Memory photo preloading/matching tests, finance/editing regressions and mocked account isolation/sync tests passed.
 
 LIMITS
-DOM and CSS checks do not measure actual browser geometry or replace a real-phone test. The local photos were visually inspected; the full dashboard was not rendered in a browser during this session. Real keyboard/touch/safe-area rendering and live account sync remain to be checked after upload. No real user account data was accessed during testing.
+DOM tests do not measure actual browser geometry or verify physical touch, real audio, or live Firebase. Full browser rendering and real-phone checks remain to be performed after upload. Original visuals are canvas/CSS artwork, not photographs or third-party game assets. This package preserves the existing authentication/sync implementation and does not change its setup.
