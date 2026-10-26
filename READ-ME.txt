@@ -1,26 +1,28 @@
-GLOWCODE — ORIGINAL GAMES & ACTIVITIES
+GLOWCODE — GAME THEMES, FLOWERS, BADGES & SOUND
 
-INSTALL
-Upload ALL files and folders from this package into your existing GitHub repository root, replacing matching files. Keep activities/ and assets/memory-places/ in their relative locations. This is the complete dashboard, not a patch. No build, npm install, or Firebase/rules changes are needed. This package has not been uploaded to GitHub for you.
+INSTALL THE COMPLETE UPDATE
+Extract the ZIP and upload ALL contents into your existing GitHub repository root, replacing matching files. Keep activities/ and assets/ in their exact relative locations. This is the full dashboard, not a patch. No build, npm, Firebase, or rule changes are required. It has not been uploaded to GitHub for you. The updated game scripts, CSS and module imports use new version URLs to avoid stale cached controls.
 
-WHAT CHANGED
-22 working games/activities in one alphabetical Game Library. The six additions are Quiet Clean (original pressure-washing activity), Little Wins, Glow Maze, Fidget Spinner, Milk Jug Toss, and Bubble Wrap. Existing games remain, including Memory Match's local place photographs. Balloon Pop remains removed.
+CHANGES
+- Ripple Pond: lotus-style flowers on the lily pads in pink, golden cream, lavender and white. Existing pad locations and ripples remain.
+- Sound: a shared, louder Web Audio signal, explicit user-triggered resume, confirmation chime on enabling sound, volume and mute. Older games, Memory Match and Water Sort now have sound controls too. Test sound is available in the shared controls. Sound starts off; leaving a game or hiding the page closes audio. Gameplay uses short synthesized effects, not background music.
+- Game Library: names, icons and descriptions are centered in both categories.
+- Chess: green board, ivory and charcoal sculpted original SVG pieces with distinct silhouettes, shading and outlines. Chess rules, saved match, controls and history remain.
+- Memory Match: Places (existing local photographs), Flowers (12 original local illustrations) and Space (12 original local illustrations). Difficulty, untimed mode, preloading, exact pair imagery/crops, matched captions and saved theme remain supported. Changing the image theme starts a new round.
+- Milk Jug Toss: a curved light cord with warm five-point star bulbs.
+- Pong: Lilac chrome, Lagoon, Sunset and Midnight glow palettes; choosing one does not reset the current game.
+- Uno: Classic stars, Cosmic sparkle and Garden blooms prints; card colors/values remain meaningful. Switching prints preserves the current hand.
+- Water Sort: laboratory beakers with flared pouring lips, graduation marks, glass highlights and layered liquid.
+- Bubble Wrap: Ice blue, Rose, Mint, Lilac and Midnight backgrounds. Switching colors preserves popped bubbles.
+- Fidget Spinner: Brushed metal, Constellation, Botanical and Prism patterns, combined with existing color/shape choices.
+- Quiet Clean: detailed stone surfaces, wood grain, knots, screw heads, fence grain, grass/stone textures and mottled dirt. The original localized washing mask and four saved surfaces remain.
+- Little Wins: five decorative award badges. Earned badges stay awarded; no streak or missed-day penalty.
 
-Category tabs now use a purple/blue gradient, white text, bright border and subtle glow for the active category, with a separate underline marker. Inactive tabs are navy/lavender. Keyboard focus, hover and pressed states are distinct. Categories, previous library position and return controls are retained.
-
-Quiet Clean: four original canvas surfaces, saved localized dirt masks, nozzle widths, optional progress, reset/new surface. Hold/drag, Space, or Shift + arrows.
-Little Wins: choose, skip, edit or create optional quests; decorative stars and history save without streaks or penalties.
-Glow Maze: three generated connected mazes, original diamond/orbiter characters, power-ups, score, lives, difficulty, pause/restart; arrows/WASD, swipe and direction buttons.
-Fidget Spinner: original metallic shapes/colors, gesture-driven rotation, adjustable friction, keyboard controls and reduced motion.
-Milk Jug Toss: drag-back projectile aim, jug/ball collisions, gravity, platform-only scoring, returning ball, unlimited practice and three-ball challenge.
-Bubble Wrap: translucent raised bubbles stay depressed, drag multi-pop, keyboard access, fresh sheet and optional endless sheets.
-Ripple Pond: existing saved petal positions become varied original lily pads with V notches, veins, highlights, contact shadows and gentle bobbing. Interactive ripples are retained.
-
-SAVING / SOUND
-Progress/settings use state.glowActivities in the existing storage, backup and account-sync system. No real user data is embedded. Sound starts off on every mount and is optional. Reduced-motion controls are available. Activity loops/listeners/audio are cleaned up on exit. The Journal sparkle implementation is unchanged.
+PRESERVED
+All 22 games, existing records, place-photo files, account/sync behavior, finance calculations and other pages. Theme preferences and badges use the existing saved state. The Journal sparkle function, styles and keyframes are unchanged.
 
 VERIFICATION
-Pure-mechanic checks passed for localized/progressive washing, quest rewards/editing, maze connectivity/collisions/lives/power/level completion, spinner friction, jug physics/scoring/ball limits and Bubble Wrap states. Simulated pointer/keyboard interactions, restart, save/restore and animation cleanup passed for all six additions and Ripple Pond. All 22 games opened/returned in DOM tests at 320, 375, 390, 430, 900, 1440 and 1600 CSS-pixel viewport settings. Alphabetical ordering, accessible category states and category/scroll restoration passed. Memory photo preloading/matching tests, finance/editing regressions and mocked account isolation/sync tests passed.
+All 22 games opened and returned through the library at 320, 375, 390, 430, 900, 1440 and 1600 CSS-pixel viewport settings in DOM tests. Automated checks covered audio opt-in/resume/chime signal and cleanup, persistent sound controls through rerenders, theme saving, Uno hand preservation, chess moves and image paths, three Memory themes and matching/preloading, spinner/background options, permanent badges, core mechanics and save/restore. Finance/editing regressions and mocked account isolation/sync passed. Original photographs and Journal sparkle code were compared for identity.
 
-LIMITS
-DOM tests do not measure actual browser geometry or verify physical touch, real audio, or live Firebase. Full browser rendering and real-phone checks remain to be performed after upload. Original visuals are canvas/CSS artwork, not photographs or third-party game assets. This package preserves the existing authentication/sync implementation and does not change its setup.
+REAL-DEVICE LIMITS
+The tests simulate audio output and DOM interactions; they cannot confirm physical speaker output or actual phone/browser geometry. After upload, enable Sound in a game and listen for its confirmation chime. Use Test sound where available. If silent, check the phone/computer's media volume, mute/silent settings and browser/site audio settings. Live Firebase and real-device audio/touch rendering still require checking.

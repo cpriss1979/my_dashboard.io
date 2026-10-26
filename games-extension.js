@@ -1,9 +1,10 @@
 /* Lazy-loaded working additions. Modules are imported only after the user opens an activity. */
 (function(){
  const entries=[{id:'power-wash',name:'Quiet Clean',category:'relax',symbol:'▤',description:'Wash four original garden surfaces'},{id:'little-wins',name:'Little Wins',category:'relax',symbol:'✧',description:'Optional quests & decorative stars'},{id:'glow-maze',name:'Glow Maze',category:'play',symbol:'◇',description:'Three mazes · Glow power & orbiters'},{id:'fidget-spinner',name:'Fidget Spinner',category:'relax',symbol:'❋',description:'Swipe, spin & slow down'},{id:'milk-jug-toss',name:'Milk Jug Toss',category:'play',symbol:'♧',description:'Aim & toss · Practice or challenge'},{id:'bubble-wrap',name:'Bubble Wrap',category:'relax',symbol:'◌',description:'Press & glide across a fresh sheet'},{id:'water-sort',name:'Water Sort',category:'play',symbol:'◒',description:'Pour colors · Undo & hints'},{id:'memory-match',name:'Memory Match',category:'play',symbol:'✦',description:'Find pairs · Untimed option'},{id:'ripple-pond',name:'Ripple Pond',category:'relax',symbol:'◎',description:'Gentle ripples & lily pads'},{id:'glow-sand',name:'Glow Sand',category:'relax',symbol:'≋',description:'Draw & rake pastel sand'}];
- let active=null,generation=0;
+ let active=null,generation=0,auxSound=null;
+ function auxiliary(panel){if(!panel||panel.querySelector(".relax-toolbar,.originals-toolbar")||!window.GlowGameSound)return;auxSound?.stop();auxSound=window.GlowGameSound.create(panel);window.__glowActiveSound=auxSound;const row=document.createElement("div");row.className="activity-toolbar auxiliary-sound";const sound=button("Sound off",async()=>{const on=await auxSound.toggle();sound.textContent=on?"Sound on":"Sound off";sound.setAttribute("aria-pressed",String(on))});sound.setAttribute("aria-pressed","false");const label=document.createElement("label");label.textContent="Volume";const volume=document.createElement("input");volume.type="range";volume.min=0;volume.max=100;volume.value=55;volume.oninput=()=>auxSound.setVolume(volume.value/100);label.append(volume);const test=button("Test sound",async()=>{if(!auxSound.enabled){const on=await auxSound.toggle();sound.textContent=on?"Sound on":"Sound off";sound.setAttribute("aria-pressed",String(on))}else auxSound.tone("test",true)});const hint=document.createElement("small");hint.textContent="Enabling sound plays a chime. Check device/media volume if silent.";row.append(sound,label,test,hint);panel.prepend(row);panel.addEventListener("click",e=>{if(e.target.closest(".auxiliary-sound"))return;if(e.target.closest("button,canvas"))auxSound?.tone("soft")}); }
  function button(text,fn,cls='secondary'){const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=text;b.onclick=fn;return b}
- function stop(){if(active){active.dispose?.();active=null}generation++}
+ function stop(){auxSound?.stop();auxSound=null;window.__glowActiveSound=null;if(active){active.dispose?.();active=null}generation++}
  function saved(id){const value=state.glowActivities?.[id];return value?JSON.parse(JSON.stringify(value)):null}
  async function open(id){
   const entry=entries.find(e=>e.id===id);if(page!=='Games')return;if(!entry){window.GlowGameLibrary.returnToLibrary();return}window.GlowGameLibrary.capture(id);
@@ -13,10 +14,10 @@
   const header=document.createElement('div');header.className='activity-heading';const title=document.createElement('h2');title.textContent=entry.name;header.append(button('← Game Library',()=>window.GlowGameLibrary.returnToLibrary()),title);panel.append(header);const body=document.createElement('div');body.className='activity-body';const loading=document.createElement('p');loading.textContent='Opening '+entry.name+'…';body.append(loading);panel.append(body);content.append(panel);window.scrollTo(0,0);
   active={id,dispose:null};
   try{
-   const module=await import('./activities/'+id+'.mjs?v=20261026-originals');
+   const module=await import('./activities/'+id+'.mjs?v=20261026-themes2');
    if(token!==generation||page!=='Games'||state!==owner||dashboardActivePrefix!==scope||!panel.isConnected)return;
    body.replaceChildren();const context={initial:saved(id),reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,persist(data){if(token!==generation||state!==owner||dashboardActivePrefix!==scope)return false;if(!state.glowActivities||typeof state.glowActivities!=='object')state.glowActivities={};state.glowActivities[id]=JSON.parse(JSON.stringify(data));save();return true}};
-   active.dispose=module.mount(body,context);
+   active.dispose=module.mount(body,context);auxiliary(panel);
   }catch(error){if(token!==generation)return;body.replaceChildren();const message=document.createElement('p');message.setAttribute('role','alert');message.textContent='This activity could not load. Make sure the activities folder was uploaded, then try again.';body.append(message,button('Try again',()=>open(id)),button('← Game Library',()=>window.GlowGameLibrary.returnToLibrary()));console.error('Activity load failed',id,error)}
  }
  function decorate(){
@@ -33,8 +34,8 @@
   tabs.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const target=e.key==='Home'?playButton:e.key==='End'?relaxButton:document.activeElement===playButton?relaxButton:playButton;target.click();target.focus()}};
   library.append(tabs,play,relax);choose(state.glowActivities?._settings?.category||'play');
  }
- const before=render;render=function(){stop();before();decorate()};
+ const before=render;render=function(){stop();before();decorate();if(page==='Games'&&!content.querySelector(".games-card")?.hidden)auxiliary(content.querySelector(".games-card"))};
  // Unmount when navigation/account changes replace the scene; no animation or audio survives it.
- addEventListener('pagehide',stop);decorate();
+ addEventListener('pagehide',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden){auxSound?.stop();const b=content.querySelector('.auxiliary-sound button');if(b){b.textContent='Sound off';b.setAttribute('aria-pressed','false')}}});decorate();
  window.GlowActivities={open,stop,get active(){return active?.id||null}};
 })();

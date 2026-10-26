@@ -1,4 +1,4 @@
-import {button,audioTools,controls,canvas,point,help,rounded} from './relax-tools.mjs';
+import {button,audioTools,controls,canvas,point,help,rounded} from './relax-tools.mjs?v=20261026-themes2';
 export function validatePetals(values){return Array.isArray(values)?values.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=0&&p.x<=1&&p.y>=0&&p.y<=1).slice(-40).map(p=>({x:p.x,y:p.y,color:Number.isInteger(p.color)?Math.abs(p.color)%4:0})):[]}
 export function drawLily(x,px,py,size,rotation,variant=0){
  x.save();x.translate(px,py);x.rotate(rotation);x.scale(1,.72);
@@ -9,7 +9,9 @@ export function drawLily(x,px,py,size,rotation,variant=0){
  for(let i=0;i<=52;i++){const a=-.48+i*(Math.PI*2-.44)/52,r=size*(1+.035*Math.sin(a*7+variant)+.018*Math.cos(a*11));x.lineTo(Math.cos(a)*r,Math.sin(a)*r)}
  x.lineTo(size*.06,size*.06);x.closePath();x.fill();x.shadowBlur=0;x.shadowOffsetY=0;x.strokeStyle=greens[2]+'aa';x.lineWidth=.8;x.stroke();
  for(let i=1;i<=12;i++){const a=.2+i*(Math.PI*2-.9)/13,ex=Math.cos(a)*size*.9,ey=Math.sin(a)*size*.9;x.beginPath();x.moveTo(size*.06,size*.06);x.quadraticCurveTo(ex*.4-size*.05,ey*.55,ex,ey);x.strokeStyle=i%2?'#d7e8a64a':'#203f2655';x.lineWidth=.7;x.stroke();for(const t of [.52,.73]){x.beginPath();x.moveTo(ex*t,ey*t);x.lineTo(ex*t+Math.cos(a+.55)*size*.14,ey*t+Math.sin(a+.55)*size*.14);x.stroke()}}
- x.strokeStyle='#d9eca963';x.lineWidth=1.2;x.beginPath();x.ellipse(-size*.08,-size*.08,size*.83,size*.78,-.08,3.3,4.7);x.stroke();x.restore();
+ x.strokeStyle='#d9eca963';x.lineWidth=1.2;x.beginPath();x.ellipse(-size*.08,-size*.08,size*.83,size*.78,-.08,3.3,4.7);x.stroke();
+ x.translate(-size*.2,-size*.08);x.scale(1,1.3);const flowerColors=[['#fff6fa','#e49dc4'],['#fff3d3','#eda94c'],['#e5dcff','#9e7ad4'],['#fefefe','#d2dcbf']][variant%4];
+ for(let ring=0;ring<2;ring++)for(let j=0;j<8;j++){x.save();x.rotate(j*Math.PI/4+ring*.4);const length=size*(ring?.43:.61),g=x.createLinearGradient(0,-length,0,0);g.addColorStop(0,flowerColors[0]);g.addColorStop(1,flowerColors[1]);x.fillStyle=g;x.strokeStyle=flowerColors[1];x.lineWidth=.45;x.beginPath();x.moveTo(0,2);x.bezierCurveTo(-length*.45,-length*.38,-length*.3,-length*.8,0,-length);x.bezierCurveTo(length*.3,-length*.8,length*.45,-length*.38,0,2);x.fill();x.stroke();x.restore()}x.fillStyle='#e6bd57';x.beginPath();x.arc(0,0,size*.14,0,7);x.fill();x.restore();
 }
 export function mount(root,ctx){
  const d=root.ownerDocument,w=d.defaultView,stored=ctx.initial||{},audio=audioTools(root),state={paused:false,reduced:typeof stored.reduced==='boolean'?stored.reduced:ctx.reducedMotion,volume:Math.max(0,Math.min(1,stored.volume??.25)),petals:validatePetals(stored.petals),mode:'ripples'};let waves=[],frame=0,last=0,clock=0,alive=true,pointer=false,cursor={x:.5,y:.5},focused=false;
