@@ -91,11 +91,18 @@
   const layout=content.querySelector('.journal-layout');if(!layout)return;layout.classList.add('glow-journal-layout');layout.classList.toggle('glow-entries-open',entriesOpen);
   if(!layout.querySelector('.glow-journal-browse')){const browse=button(entriesOpen?'Back to writing':'Entries',()=>{entriesOpen=!entriesOpen;if(entriesOpen&&journalFocus){journalFocus=false;layout.classList.remove('journal-focus');const focus=$('journalFocusButton');if(focus)focus.textContent='Focus mode'}layout.classList.toggle('glow-entries-open',entriesOpen);browse.textContent=entriesOpen?'Back to writing':'Entries'},'secondary glow-journal-browse');layout.prepend(browse)}
  }
+ const libraryPositions=new Map();let libraryFocus='';
+ function categoryKey(){return dashboardActivePrefix+'|'+(state.glowActivities?._settings?.category||'play')}
+ function captureLibrary(id){libraryPositions.set(categoryKey(),window.scrollY||0);libraryFocus=id||libraryFocus}
+ function restoreLibrary(){const scope=dashboardActivePrefix,key=categoryKey(),y=libraryPositions.get(key)||0;requestAnimationFrame(()=>{if(page!=='Games'||gameOpen||scope!==dashboardActivePrefix||key!==categoryKey())return;const tile=[...content.querySelectorAll('[data-library-id]')].find(b=>b.dataset.libraryId===libraryFocus);tile?.focus({preventScroll:true});window.scrollTo({top:y,behavior:'instant'})})}
+ function returnToLibrary(){gameOpen=false;render();restoreLibrary()}
+ function openLegacy(id){if(!gameCatalog.some(g=>g.id===id)){returnToLibrary();return}captureLibrary(id);gameChoice=id;gameOpen=true;render();window.scrollTo(0,0)}
+ window.GlowGameLibrary={capture:captureLibrary,restore:restoreLibrary,returnToLibrary,openLegacy};
  function games(){
-  const select=$('gamePicker'),card=content.querySelector('.games-card');if(!select||!card)return;
-  const library=panel('Choose a game','games');library.classList.add('glow-game-library');const grid=document.createElement('div');grid.className='glow-game-grid';const symbols={pong:'◉',uno:'★',chess:'♞',blackjack:'♠',tetris:'▦',tictactoe:'×',minesweeper:'⚑',bingo:'◎',bowling:'●',balloons:'◈',hangman:'A',kaleidoscope:'✦',glass:'◇'};
-  [...select.options].forEach(o=>{const b=button('',()=>{gameChoice=o.value;gameOpen=true;render()},'glow-game-tile');b.innerHTML='<span aria-hidden="true">'+(symbols[o.value]||'◇')+'</span><strong>'+esc(o.textContent)+'</strong>';grid.append(b)});library.append(grid);content.prepend(library);library.hidden=gameOpen;card.hidden=!gameOpen;select.closest('label').hidden=true;
-  const heading=card.querySelector('.cardhead');const label=document.createElement('h2');label.className='glow-playing-title';label.textContent=select.selectedOptions[0]?.textContent||'Game';heading.prepend(button('← Game library',()=>{gameOpen=false;render()}),label);
+  const card=content.querySelector('.games-card');if(!card)return;if(gameLibraryFallback){gameOpen=false;gameLibraryFallback=false}
+  const library=panel('Game Library','games');library.classList.add('glow-game-library');const grid=document.createElement('div');grid.className='glow-game-grid';const symbols={pong:'◉',uno:'★',chess:'♞',blackjack:'♠',tetris:'▦',tictactoe:'×',minesweeper:'⚑',bingo:'◎',bowling:'●',hangman:'A',kaleidoscope:'✦',glass:'◇'};
+  gameCatalog.forEach(o=>{const b=button('',()=>openLegacy(o.id),'glow-game-tile');b.dataset.libraryId=o.id;b.dataset.category=o.id==='kaleidoscope'?'relax':'play';b.innerHTML='<span aria-hidden="true">'+(symbols[o.id]||'◇')+'</span><strong>'+esc(o.name)+'</strong>';grid.append(b)});library.append(grid);content.prepend(library);library.hidden=gameOpen;card.hidden=!gameOpen;
+  const heading=card.querySelector('.cardhead');heading.querySelector('.legacy-game-title')?.remove();const label=document.createElement('h2');label.className='glow-playing-title';label.textContent=gameCatalog.find(g=>g.id===gameChoice)?.name||'Game';heading.prepend(button('← Game Library',returnToLibrary),label);
   if(!gameOpen){cancelAnimationFrame(gameFrame);clearTimeout(gameTimer)}
  }
  function apply(){shell();if(page==='Overview')overview();else if(page==='Calendar')calendar();else if(page==='Projects')projects();else if(page==='Bookmarks')bookmarks();else if(page==='Quick notes')notes();else if(page==='Daily priorities')tasks();else if(page==='Finances')finances();else if(page==='Journal')journalLayout();else if(page==='Games')games();}

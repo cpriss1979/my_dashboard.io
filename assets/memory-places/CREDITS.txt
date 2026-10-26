@@ -1,0 +1,86 @@
+Memory Match: photographs of places
+Local assets downloaded and cropped 2026-10-26. No runtime remote image URLs.
+
+Marina Beach, Chennai
+Author: Abinayasekar357
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Marina_beach_Chennai.jpg
+Local: marina-beach.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Rincón de la Victoria, Spain
+Author: Jebulon
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Parasols,_Evening,_Beach,_Rincon_de_la_Victoria,_Andalusia,_Spain.jpg
+Local: rincon-beach.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Matterhorn, Swiss Alps
+Author: Paasikivi
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Matterhorn_(63110).jpg
+Local: matterhorn.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Montmorency Falls, Québec
+Author: Wilfredor
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Parc_de_la_Chute-Montmorency_001.jpg
+Local: montmorency-falls.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Glandieu Falls, France
+Author: Benoît Prieur
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Cascade_de_Glandieu,_octobre_2019_(1).jpg
+Local: glandieu-falls.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Japanese Garden, Osaka
+Author: Bindyeyes
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Japanese_Garden_of_Expo%E2%80%9970_Commemorative_Park.jpg
+Local: japanese-garden.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Tulip Garden, Kashmir
+Author: Kajal Kumar Mukherjee
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Tulip_Garden_Kashmir.jpg
+Local: tulip-garden.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Downtown Brooklyn, New York
+Author: FluffballsM&Ms
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Downtown_Brooklyn_Skyline_2023.jpg
+Local: new-york.jpg
+Change: Square crop centered at 50%/65%, resized to 512×512; identical local image for both cards
+
+Grand Canal, Venice
+Author: Mustang Joe
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:The_Grand_Canal,_Venice_2016.jpg
+Local: venice.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Taj Mahal, Agra
+Author: Almbauer
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Taj_Mahal_2018.jpg
+Local: taj-mahal.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Eiffel Tower, Paris
+Author: TheDigitalArtist
+License: CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en
+Source: https://commons.wikimedia.org/wiki/File:Eiffel_tower_paris_france.jpg
+Local: eiffel-tower.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
+
+Yosemite Valley, California
+Author: Carol M. Highsmith
+License: Public domain 
+Source: https://commons.wikimedia.org/wiki/File:Yosemite_by_Carol_M._Highsmith.jpg
+Local: yosemite.jpg
+Change: Center square, resized to 512×512; identical local image for both cards
