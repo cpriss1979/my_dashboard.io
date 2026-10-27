@@ -1,35 +1,43 @@
-GLOWCODE — ACHIEVEMENT MEDAL COLLECTION
+GLOWCODE — BIGGER PLAY AREAS, WINDOW CLEANING & ACTIVITY SOUNDS
 
 INSTALL
-Extract the ZIP and upload ALL contents into your existing GitHub repository root, replacing matching files. Keep activities/ and assets/ in their relative locations. This is the complete dashboard. No build, Firebase setup, or rule changes are required. This package has not been uploaded to GitHub for you.
+Extract and upload ALL package contents to your existing GitHub repository root, replacing matching files. Keep activities/ and assets/ in the exact relative locations. This is the complete dashboard. No build or Firebase setup/rule changes are required. It has not been uploaded to GitHub for you.
 
-DESIGN
-Ten original SVG medals with coordinated scalloped metallic rims, ribbon tails, darker matching-color borders, gradients, highlights, decorative dotted edging and soft shadows. Every medal has its own palette and central illustration. Locked medals show the actual artwork with a gentle fade and an explicit Locked label. Earned medals show the bright artwork, an Earned label and a subtle static glow. Text remains dark and readable on pastel cards in both states.
+MOBILE
+Game cards use more of the phone width, larger canvas play areas and safe-area bottom padding. Game controls & sound folds the shared toolbar away on phones, leaving core play tools accessible. Sand's 24-color palette folds into a color picker on phones. Desktop controls remain expanded.
 
-The responsive collection shows the first five medals initially; Show all badges reveals all ten. The expanded choice stays open while choosing, editing or completing quests during that visit. Artwork is local and needs no external image service.
+QUIET CLEAN — REBUILT
+An opaque fogged window hides a garden view. Choose 1 · Spray foam and drag, then choose 2 · Squeegee and drag over the foamed area. Wiping without foam does not clear the window. Tool width is adjustable. Fog window again resets it. Enable Sound under Game controls & sound for a short rubber squeak during an active cleaning stroke; it stops after movement stops. Keyboard: arrows move, Space or Shift + arrows uses the tool. Window foam/cleaning progress saves in the same activity state. Earlier patio/bench/fence/stone state is retained in the stored data.
 
-HOW TO EARN EACH MEDAL
-First Spark — Celebrate your first little win. Gold sparkle medal.
-Five Bright Moments — Celebrate five little wins. Pink medal with five stars.
-Pocket of Sunshine — Celebrate ten little wins. Amber sun medal.
-Curious Explorer — Complete three different quests. Blue compass medal.
-Your Own Path — Complete a quest you created. Purple winding-path medal.
-Growing Strong — Celebrate 25 little wins. Green sprout medal.
-Creative Spark — Complete a Creative quest. Coral paintbrush/sparkle medal.
-Gentle Pause — Complete a Break / relaxation quest. Lavender cloud medal.
-Butterfly Steps — Celebrate 50 little wins. Teal butterfly medal.
-A Hundred Little Wins — Celebrate 100 little wins. Rose-gold star/rays medal.
+RIPPLE POND
+Pads/flowers continuously drift and gently bob within the pond when playing. Pause stops movement; reduced motion keeps pads static. Saved placement anchors are retained. Water has more layered reflections and surface highlights; flower petals have added shading. Sound toggles a flowing-water relaxation soundscape and starts off.
 
-TRACKING AND PRESERVATION
-Existing quest IDs, quests, stars, awards and completion history are retained. The legacy award ID creative still means Your Own Path; the new Creative Spark uses a separate ID. Previously earned medals remain earned.
+GLOW SAND
+24 distinct named colors, retaining the original first five so old artwork keeps its colors. Draw/rake, undo and saved strokes remain. Sound enables a separate low, soft wind-like sand soundscape. The palette is expandable and closes after a phone color selection.
 
-Quest creation/editing now includes Quest type: Everyday little win, Creative, or Break / relaxation. New completions snapshot that type and whether the quest was created by the user. Saving, editing, choosing or skipping a quest does not earn a medal. The original unedited Make a little something quest is Creative; A moment away is Break / relaxation. Custom quests default to Everyday little win until explicitly categorized.
+LITTLE WINS
+Two optional deeper quests are added once, without replacing existing quests: Make something meaningful (a roughly 30-minute creative project) and One meaningful task (three manageable steps on a postponed useful task). No deadline, penalty or automatic completion. Existing medals/progress remain. Completing a quest with sound enabled plays an RPG-style ascending reward fanfare.
 
-Historical completed records are used as evidence. The exact known original ID/title pairs for Make a little something and A moment away qualify for their corresponding new medals. Unknown or renamed historical quests are not classified by guessing from words in their title. You can set their type for future completions.
+FIDGET SPINNER
+Additional Starburst, Butterfly wings and Pinwheel shapes, six more colors, and Candy stripes/Confetti designs. Wind/whistle effects respond to spinning speed, becoming silent when the spinner stops. Reduced motion disables inertial spinning. All existing choices and progress remain.
 
-Lifetime achievement facts retain completed quest IDs and qualifying types even after the recent completion history reaches its existing 200-entry limit. Awards are permanent. These fields remain inside the existing Little Wins state, so they use the current backup and account-sync system. No separate service is added.
+OTHER GAMES AND SOUND
+- Bingo: room ambience and spoken number calls when the device/browser supports speech synthesis. Visual calls always remain.
+- Break glass: more architectural facade detail, shaded window framing and glass edges; city/traffic soundscape and glass-break effects. Existing midnight/fireworks completion remains.
+- Blackjack: soft casino-style room/chime ambience.
+- Bowling: a clattering pin effect only when actual pins were hit.
+- Generic Test sound buttons are removed. Shared controls offer optional Relaxation on/off instead, alongside Sound and Volume.
+
+All sounds are original procedural/synthesized soundscapes or device speech, not downloaded recordings. Sound starts off. Audio and activity loops stop when leaving the activity; hiding the page also closes audio. Enable again to resume listening.
+
+NAVIGATION / COLORS
+22 original, defined local SVG game icons and six pastel card palettes make the library easier to scan. Bookmarks have stable pastel colors, accent edges and title initials in both overview and bookmark views. Journal has eight more paper colors (12 total) and an Ocean sound on/off button. Journal sparkle implementation and keyframes are unchanged.
+
+PRESERVED
+All 22 games, quests/medals, existing stored data, original Memory Match photo assets, account sync, authentication and finance calculations. All new progress/preferences use the existing saved state. No live user data was accessed during tests.
 
 VERIFICATION
-Automated tests cover every threshold and its boundary, distinct-quest counting, typed creative/rest completions, custom quest completion, no awards from saving/editing/keywords, legacy ID/history migration, permanent awards beyond the history limit, actual artwork in locked states, and show-all behavior. The ten SVG medals were rendered and visually inspected as a contact sheet. All prior game/account/sync code and assets were compared for identity. The whole dashboard index, including Journal sparkles and finance calculations, is unchanged except cache-version links.
+Automated tests passed for foam-before-wipe behavior, localized cleaning and save data, pond drifting/bounds/reduced motion, 24 unique sand colors, deeper-quest migration, optional audio profiles/cleanup, Bingo calls, Journal ocean controls/colors and sparkle identity. All 22 games open/return in DOM tests at 320, 375, 390, 430, 900, 1440 and 1600 CSS-pixel viewport settings. Dashboard editing/finance/account-sync regression suites passed. CSS and SVG assets parse.
 
-DOM regression checks cover phone/desktop viewport settings, navigation, editing, saving, finance and mocked account sync. DOM tests do not measure real browser geometry. Live account sync and real-device rendering remain to be checked after upload. No real user data was read during testing.
+LIMITS
+DOM tests do not measure actual phone/browser geometry. Audio tests simulate Web Audio and speech; physical speaker output, voice availability and actual sound quality must be checked on your phone/computer after upload. Live Firebase sync has not been exercised; its code/rules remain unchanged.
