@@ -1,0 +1,9 @@
+Original game artwork generated with the built-in image_gen tool, then saved as optimized local JPEGs. No external image URLs are used.
+
+city.jpg prompt:
+Use case: stylized-concept. Asset type: landscape 16:9 background painting for an interactive framed-picture game. Original luminous oil painting of a city skyline at blue hour, tall elegant buildings, warm windows, wet street reflections and a soft violet-indigo sky. Rich visible impasto brush strokes and subtle canvas texture; sophisticated dreamy painterly realism rather than flat vector graphics. Fill the entire image edge to edge. NO picture frame, NO glass, NO borders, NO text or logos. The application will add frame and glass. Wide balanced composition, buildings occupy the lower two thirds, open sky above.
+
+garden.jpg prompt:
+Use case: stylized-concept. Asset type: landscape 16:9 background painting for an interactive garden camera scene. Original lush flower garden at twilight with a gently curving pale path leading through two arches covered in roses, wisteria and climbing flowers to a lovely wooden park bench centered in the middle distance. Abundant pink, peach, lavender and white flowers, natural detailed green leaves. Beautiful dreamy painterly realism in oils with visible fine brushwork, matching a violet-indigo dusk sky, glowing soft garden lighting. Bench sits around 52% across and 62% down, arches frame the path. Plenty of open dusk sky in the upper third for later fireworks. Full bleed landscape, NO text, NO frame, NO glass, NO people.
+
+Original PNG files remain in the default generated_images folder; optimized copies are included in this complete dashboard package.

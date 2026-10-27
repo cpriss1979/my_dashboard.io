@@ -1,0 +1,21 @@
+Recorded ambience included locally in this dashboard game package.
+
+bingo-chatter.mp3
+Party.ogg — egomassive, derived from Crowd Waiting to Go In Exterior 2 by Adam_N.
+Source: https://freesound.org/people/egomassive/sounds/536747/
+License: CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+Public HQ preview downloaded; played softly with low-pass filtering. No announcer or generic button tones in Bingo.
+
+casino-room.mp3
+G16-05-Casino Ambience.wav — craigsmith (archival recording digitization).
+Source: https://freesound.org/people/craigsmith/sounds/438129/
+License: CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+Public HQ preview downloaded; background voices, chips, poker/craps and game equipment, played softly.
+
+rocky-waves.mp3
+Crashing Waves into Rocks 3 — amholma / Andrew Holman.
+Source: https://freesound.org/people/amholma/sounds/376794/
+License: CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+Recorded in Destin, Florida. Public HQ preview downloaded; wave impacts, splash and retreat against rocks, played softly in Journal.
+
+The source pages identify these recordings as Creative Commons 0. Attribution is included in appreciation of the creators. The files are part of the dashboard; no third-party audio URLs are requested during play.

@@ -1,4 +1,4 @@
-import {button,audioTools,controls,canvas,point,help,rounded} from './relax-tools.mjs?v=20261026-immersive';
+import {button,audioTools,controls,canvas,point,help,rounded} from './relax-tools.mjs?v=20261027-framed';
 export function validatePetals(values){return Array.isArray(values)?values.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=0&&p.x<=1&&p.y>=0&&p.y<=1).slice(-40).map(p=>({x:p.x,y:p.y,color:Number.isInteger(p.color)?Math.abs(p.color)%4:0})):[]}
 export function drawLily(x,px,py,size,rotation,variant=0){
  x.save();x.translate(px,py);x.rotate(rotation);x.scale(1,.72);
