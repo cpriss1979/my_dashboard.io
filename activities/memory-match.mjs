@@ -1,5 +1,5 @@
-import {artwork} from './memory-themes.mjs?v=20261026-themes2';
-import {places} from './place-photos.mjs?v=20261026-themes2';
+import {artwork} from './memory-themes.mjs?v=20261026-immersive';
+import {places} from './place-photos.mjs?v=20261026-immersive';
 export const difficulties={easy:6,standard:8,challenging:12};
 export function makeDeck(pairs,seed=Date.now()){
  let n=seed>>>0;const random=()=>{n=(Math.imul(n,1664525)+1013904223)>>>0;return n/4294967296};const deck=Array.from({length:pairs*2},(_,i)=>i%pairs);for(let i=deck.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}return deck;

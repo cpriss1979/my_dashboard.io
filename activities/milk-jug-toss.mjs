@@ -1,4 +1,4 @@
-import {kit,button,canvas,point,select,help} from './activity-kit.mjs?v=20261026-themes2';
+import {kit,button,canvas,point,select,help} from './activity-kit.mjs?v=20261026-immersive';
 export function round(mode='practice'){return {version:1,mode,jugs:[[490,327],[534,327],[578,327],[512,283],[556,283],[534,239]].map(([x,y],id)=>({id,x,y,vx:0,vy:0,angle:0,off:false})),ball:{x:120,y:345,vx:0,vy:0},shots:0,phase:'ready',time:0,settle:0}}
 export function score(m){return m.jugs.filter(j=>j.off).length}
 export function launch(m,vx,vy){if(m.phase!=='ready'||(m.mode==='challenge'&&m.shots>=3))return false;m.ball={x:120,y:345,vx:Math.max(80,Math.min(850,vx)),vy:Math.max(-700,Math.min(100,vy))};m.shots++;m.phase='flight';m.time=0;m.settle=0;return true}
