@@ -1,0 +1,11 @@
+/* Local-calendar-day styling only; saved entries and navigation remain unchanged. */
+(function(){
+ const originalCalendar=cal;let dayKey=localDate(new Date()),timer=0;
+ function decorate(holder){const today=localDate(new Date());holder.querySelectorAll('button[onclick]').forEach(button=>{const match=button.getAttribute('onclick').match(/(?:selectDate|chooseYearCalendarDay)\('([0-9]{4}-[0-9]{2}-[0-9]{2})'\)/);if(!match)return;const date=match[1];button.dataset.calendarDate=date;button.classList.remove('calendar-date-past','calendar-date-today','calendar-date-future');button.removeAttribute('aria-current');button.classList.add(date<today?'calendar-date-past':date===today?'calendar-date-today':'calendar-date-future');if(date===today)button.setAttribute('aria-current','date');const strong=button.querySelector('strong');if(strong)strong.classList.add('calendar-date-number');else{for(const node of [...button.childNodes])if(node.nodeType===Node.TEXT_NODE&&/^\s*\d{1,2}\s*$/.test(node.textContent)){const number=document.createElement('span');number.className='calendar-date-number';number.textContent=node.textContent;node.replaceWith(number)}}})}
+ cal=function(){const holder=document.createElement('div');holder.innerHTML=originalCalendar();decorate(holder);return holder.innerHTML};
+ function cells(){decorate(document.querySelector('#content')||document);document.querySelectorAll('[data-calendar-date]').forEach(button=>{const cell=button.closest('.glow-month-cell,.week-day');if(cell){cell.classList.toggle('calendar-past-cell',button.classList.contains('calendar-date-past'));cell.classList.toggle('calendar-today-cell',button.classList.contains('calendar-date-today'))}})}
+ const previousRender=render;render=function(){previousRender();cells()};
+ function refreshDay(){const next=localDate(new Date());if(next!==dayKey){dayKey=next;if(page==='Calendar'||page==='Overview')render()}}
+ function schedule(){clearTimeout(timer);const now=new Date(),midnight=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);timer=setTimeout(()=>{refreshDay();schedule()},midnight-now+100)}
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden){refreshDay();schedule()}});addEventListener('focus',refreshDay);addEventListener('pagehide',()=>clearTimeout(timer));schedule();render();
+})();

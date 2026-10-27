@@ -1,43 +1,47 @@
-GLOWCODE — BIGGER PLAY AREAS, WINDOW CLEANING & ACTIVITY SOUNDS
+CALENDAR DATE HIGHLIGHTING
+
+Past dates are greyed out; today is a bold glowing blue number in Month, Week, Year and the Home calendar. Past dates and saved entries remain accessible. Uses the device local date and refreshes at midnight or when returning to the dashboard.
+
+Calendar DOM checks passed at 320, 375, 390, 430 and 1440 pixels. Existing application source, saved-data logic, Journal sparkles and account/sync code are unchanged. Actual device visual rendering was not checked.
+
+GLOWCODE — FRAMED CITY, FLOWER GARDEN & SIMPLIFIED SOUND
 
 INSTALL
-Extract and upload ALL package contents to your existing GitHub repository root, replacing matching files. Keep activities/ and assets/ in the exact relative locations. This is the complete dashboard. No build or Firebase setup/rule changes are required. It has not been uploaded to GitHub for you.
+Extract the ZIP and upload ALL contents into your existing GitHub repository root, replacing matching files. Keep activities/ and assets/ in their exact relative locations, especially assets/audio and assets/painted-world. This is the complete dashboard, not a patch. No build or Firebase/rule changes are required. It has not been uploaded to GitHub for you.
 
-MOBILE
-Game cards use more of the phone width, larger canvas play areas and safe-area bottom padding. Game controls & sound folds the shared toolbar away on phones, leaving core play tools accessible. Sand's 24-color palette folds into a color picker on phones. Desktop controls remain expanded.
+SOUND ON/OFF ONLY
+All extra Relaxation and Test sound buttons are removed. Sound controls now offer one on/off button, with no separate audio-volume controls. Normal game controls such as Pause, Restart and Reduced motion remain.
 
-QUIET CLEAN — REBUILT
-An opaque fogged window hides a garden view. Choose 1 · Spray foam and drag, then choose 2 · Squeegee and drag over the foamed area. Wiping without foam does not clear the window. Tool width is adjustable. Fog window again resets it. Enable Sound under Game controls & sound for a short rubber squeak during an active cleaning stroke; it stops after movement stops. Keyboard: arrows move, Space or Shift + arrows uses the tool. Window foam/cleaning progress saves in the same activity state. Earlier patio/bench/fence/stone state is retained in the stored data.
+Journal — recorded waves crashing against rocks, splashing and retreating. The existing Ocean sound on/off button remains. Ocean audio starts off and stops on leaving Journal or hiding the page.
+Bingo — soft recorded people-chatter ambience. The spoken announcer and generic click tones are removed.
+Blackjack — recorded casino ambience with people, chips and gaming equipment. No generic UI beep overlay.
+Bowling — absolutely no background ambience or generic button tones. Enabling sound is silent until actual pins are hit. Pin hits trigger the existing clattering effect.
 
-RIPPLE POND
-Pads/flowers continuously drift and gently bob within the pond when playing. Pause stops movement; reduced motion keeps pads static. Saved placement anchors are retained. Water has more layered reflections and surface highlights; flower petals have added shading. Sound toggles a flowing-water relaxation soundscape and starts off.
+The three recorded MP3s are included locally; their creators, source links and CC0 licenses are in assets/audio/CREDITS.txt. Playback starts only after enabling sound. The first enable may take a moment to load/decode the audio. No third-party audio URLs are used during play. Procedural fallback sound is retained if a local recording cannot be loaded. Audio closes when leaving an activity or hiding the page.
 
-GLOW SAND
-24 distinct named colors, retaining the original first five so old artwork keeps its colors. Draw/rake, undo and saved strokes remain. Sound enables a separate low, soft wind-like sand soundscape. The palette is expandable and closes after a phone color selection.
+BREAK GLASS — HOW IT WORKS
+1. A full oil-painted city appears behind picture glass inside a decorative golden photo frame. The glass has soft reflections and thin edges, without heavy window-grid bars.
+2. Tap all 24 glass sections. Keyboard users can focus the play area and press Space/Enter to clear the next section.
+3. When every section is cleared, an Open window into the garden button appears. The scene waits for you; it does not enter the garden automatically.
+4. Press the button. The picture opens outward, revealing a flower garden, a path through flower-covered arches and a park bench.
+5. The camera automatically approaches the bench, then tilts toward the sky. Bench armrests appear at the edge of the seated view. The sky gently darkens for the fireworks.
+6. Fireworks continue without a time limit until New game is selected or you leave the game. New game resets the glass and scene. Leaving the activity stops animation and audio.
 
-LITTLE WINS
-Two optional deeper quests are added once, without replacing existing quests: Make something meaningful (a roughly 30-minute creative project) and One meaningful task (three manageable steps on a postponed useful task). No deadline, penalty or automatic completion. Existing medals/progress remain. Completing a quest with sound enabled plays an RPG-style ascending reward fanfare.
+Reduced motion skips the camera journey and uses slower, gentler firework motion. It starts from the device preference and can be changed in the game. The previous Break Glass records are retained. City/traffic ambience stops when entering the garden.
 
-FIDGET SPINNER
-Additional Starburst, Butterfly wings and Pinwheel shapes, six more colors, and Candy stripes/Confetti designs. Wind/whistle effects respond to spinning speed, becoming silent when the spinner stops. Reduced motion disables inertial spinning. All existing choices and progress remain.
-
-OTHER GAMES AND SOUND
-- Bingo: room ambience and spoken number calls when the device/browser supports speech synthesis. Visual calls always remain.
-- Break glass: more architectural facade detail, shaded window framing and glass edges; city/traffic soundscape and glass-break effects. Existing midnight/fireworks completion remains.
-- Blackjack: soft casino-style room/chime ambience.
-- Bowling: a clattering pin effect only when actual pins were hit.
-- Generic Test sound buttons are removed. Shared controls offer optional Relaxation on/off instead, alongside Sound and Volume.
-
-All sounds are original procedural/synthesized soundscapes or device speech, not downloaded recordings. Sound starts off. Audio and activity loops stop when leaving the activity; hiding the page also closes audio. Enable again to resume listening.
-
-NAVIGATION / COLORS
-22 original, defined local SVG game icons and six pastel card palettes make the library easier to scan. Bookmarks have stable pastel colors, accent edges and title initials in both overview and bookmark views. Journal has eight more paper colors (12 total) and an Ocean sound on/off button. Journal sparkle implementation and keyframes are unchanged.
+ORIGINAL ARTWORK
+city.jpg and garden.jpg in assets/painted-world were made with the built-in image_gen tool, then saved as optimized local JPEGs. ARTWORK.txt in the same folder contains the exact prompts and generation notes. The original generated PNGs remain in the generated_images folder. No artist names or copied third-party artwork were requested.
 
 PRESERVED
-All 22 games, quests/medals, existing stored data, original Memory Match photo assets, account sync, authentication and finance calculations. All new progress/preferences use the existing saved state. No live user data was accessed during tests.
+Other games, quests, achievements, saved state, account/sync behavior, financial calculations, mobile navigation, colored bookmarks and all previous Journal features. The Journal sparkle function and keyframes/styles remain unchanged.
 
 VERIFICATION
-Automated tests passed for foam-before-wipe behavior, localized cleaning and save data, pond drifting/bounds/reduced motion, 24 unique sand colors, deeper-quest migration, optional audio profiles/cleanup, Bingo calls, Journal ocean controls/colors and sparkle identity. All 22 games open/return in DOM tests at 320, 375, 390, 430, 900, 1440 and 1600 CSS-pixel viewport settings. Dashboard editing/finance/account-sync regression suites passed. CSS and SVG assets parse.
+- Native Canvas renders of the actual game scene were visually inspected: framed city, garden approach and seated fireworks.
+- Scene tests passed for artwork loading, 24-section clearing, the explicit button gate, opening/garden/sky phases, continuous bounded fireworks, restart, return-to-library cleanup and reduced motion.
+- Audio tests passed for loading/decoding/looping/stopping the three local MP3s, silence when enabling Bowling, pin-only effects, removal of relaxation controls and removal of the Bingo announcer.
+- MP3 files were checked with native audio metadata tools.
+- All 22 games open/return in DOM tests at 320, 375, 390, 430, 900, 1440 and 1600 CSS-pixel viewport settings. Dashboard editing, finance calculations, medal tracking and mocked account-sync regressions passed.
+- Authentication/sync/rules and other-page code were compared for identity. Journal sparkles and Memory Match photographs were preserved.
 
 LIMITS
-DOM tests do not measure actual phone/browser geometry. Audio tests simulate Web Audio and speech; physical speaker output, voice availability and actual sound quality must be checked on your phone/computer after upload. Live Firebase sync has not been exercised; its code/rules remain unchanged.
+Native Canvas renders and DOM tests do not measure actual browser/phone layout. Audio tests simulate Web Audio playback; physical speaker output and actual listening quality must be checked on your devices after upload. Live Firebase was not exercised; its code and rules remain unchanged. No real user account data was accessed during tests.
