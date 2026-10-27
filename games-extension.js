@@ -14,7 +14,7 @@
   const header=document.createElement('div');header.className='activity-heading';const title=document.createElement('h2');title.textContent=entry.name;header.append(button('← Game Library',()=>window.GlowGameLibrary.returnToLibrary()),title);panel.append(header);const body=document.createElement('div');body.className='activity-body';const loading=document.createElement('p');loading.textContent='Opening '+entry.name+'…';body.append(loading);panel.append(body);content.append(panel);window.scrollTo(0,0);
   active={id,dispose:null};
   try{
-   const module=await import('./activities/'+id+'.mjs?v=20261026-themes2');
+   const module=await import('./activities/'+id+'.mjs?v=20261026-medals');
    if(token!==generation||page!=='Games'||state!==owner||dashboardActivePrefix!==scope||!panel.isConnected)return;
    body.replaceChildren();const context={initial:saved(id),reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,persist(data){if(token!==generation||state!==owner||dashboardActivePrefix!==scope)return false;if(!state.glowActivities||typeof state.glowActivities!=='object')state.glowActivities={};state.glowActivities[id]=JSON.parse(JSON.stringify(data));save();return true}};
    active.dispose=module.mount(body,context);auxiliary(panel);

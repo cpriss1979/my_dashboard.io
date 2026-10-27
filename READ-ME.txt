@@ -1,28 +1,35 @@
-GLOWCODE — GAME THEMES, FLOWERS, BADGES & SOUND
+GLOWCODE — ACHIEVEMENT MEDAL COLLECTION
 
-INSTALL THE COMPLETE UPDATE
-Extract the ZIP and upload ALL contents into your existing GitHub repository root, replacing matching files. Keep activities/ and assets/ in their exact relative locations. This is the full dashboard, not a patch. No build, npm, Firebase, or rule changes are required. It has not been uploaded to GitHub for you. The updated game scripts, CSS and module imports use new version URLs to avoid stale cached controls.
+INSTALL
+Extract the ZIP and upload ALL contents into your existing GitHub repository root, replacing matching files. Keep activities/ and assets/ in their relative locations. This is the complete dashboard. No build, Firebase setup, or rule changes are required. This package has not been uploaded to GitHub for you.
 
-CHANGES
-- Ripple Pond: lotus-style flowers on the lily pads in pink, golden cream, lavender and white. Existing pad locations and ripples remain.
-- Sound: a shared, louder Web Audio signal, explicit user-triggered resume, confirmation chime on enabling sound, volume and mute. Older games, Memory Match and Water Sort now have sound controls too. Test sound is available in the shared controls. Sound starts off; leaving a game or hiding the page closes audio. Gameplay uses short synthesized effects, not background music.
-- Game Library: names, icons and descriptions are centered in both categories.
-- Chess: green board, ivory and charcoal sculpted original SVG pieces with distinct silhouettes, shading and outlines. Chess rules, saved match, controls and history remain.
-- Memory Match: Places (existing local photographs), Flowers (12 original local illustrations) and Space (12 original local illustrations). Difficulty, untimed mode, preloading, exact pair imagery/crops, matched captions and saved theme remain supported. Changing the image theme starts a new round.
-- Milk Jug Toss: a curved light cord with warm five-point star bulbs.
-- Pong: Lilac chrome, Lagoon, Sunset and Midnight glow palettes; choosing one does not reset the current game.
-- Uno: Classic stars, Cosmic sparkle and Garden blooms prints; card colors/values remain meaningful. Switching prints preserves the current hand.
-- Water Sort: laboratory beakers with flared pouring lips, graduation marks, glass highlights and layered liquid.
-- Bubble Wrap: Ice blue, Rose, Mint, Lilac and Midnight backgrounds. Switching colors preserves popped bubbles.
-- Fidget Spinner: Brushed metal, Constellation, Botanical and Prism patterns, combined with existing color/shape choices.
-- Quiet Clean: detailed stone surfaces, wood grain, knots, screw heads, fence grain, grass/stone textures and mottled dirt. The original localized washing mask and four saved surfaces remain.
-- Little Wins: five decorative award badges. Earned badges stay awarded; no streak or missed-day penalty.
+DESIGN
+Ten original SVG medals with coordinated scalloped metallic rims, ribbon tails, darker matching-color borders, gradients, highlights, decorative dotted edging and soft shadows. Every medal has its own palette and central illustration. Locked medals show the actual artwork with a gentle fade and an explicit Locked label. Earned medals show the bright artwork, an Earned label and a subtle static glow. Text remains dark and readable on pastel cards in both states.
 
-PRESERVED
-All 22 games, existing records, place-photo files, account/sync behavior, finance calculations and other pages. Theme preferences and badges use the existing saved state. The Journal sparkle function, styles and keyframes are unchanged.
+The responsive collection shows the first five medals initially; Show all badges reveals all ten. The expanded choice stays open while choosing, editing or completing quests during that visit. Artwork is local and needs no external image service.
+
+HOW TO EARN EACH MEDAL
+First Spark — Celebrate your first little win. Gold sparkle medal.
+Five Bright Moments — Celebrate five little wins. Pink medal with five stars.
+Pocket of Sunshine — Celebrate ten little wins. Amber sun medal.
+Curious Explorer — Complete three different quests. Blue compass medal.
+Your Own Path — Complete a quest you created. Purple winding-path medal.
+Growing Strong — Celebrate 25 little wins. Green sprout medal.
+Creative Spark — Complete a Creative quest. Coral paintbrush/sparkle medal.
+Gentle Pause — Complete a Break / relaxation quest. Lavender cloud medal.
+Butterfly Steps — Celebrate 50 little wins. Teal butterfly medal.
+A Hundred Little Wins — Celebrate 100 little wins. Rose-gold star/rays medal.
+
+TRACKING AND PRESERVATION
+Existing quest IDs, quests, stars, awards and completion history are retained. The legacy award ID creative still means Your Own Path; the new Creative Spark uses a separate ID. Previously earned medals remain earned.
+
+Quest creation/editing now includes Quest type: Everyday little win, Creative, or Break / relaxation. New completions snapshot that type and whether the quest was created by the user. Saving, editing, choosing or skipping a quest does not earn a medal. The original unedited Make a little something quest is Creative; A moment away is Break / relaxation. Custom quests default to Everyday little win until explicitly categorized.
+
+Historical completed records are used as evidence. The exact known original ID/title pairs for Make a little something and A moment away qualify for their corresponding new medals. Unknown or renamed historical quests are not classified by guessing from words in their title. You can set their type for future completions.
+
+Lifetime achievement facts retain completed quest IDs and qualifying types even after the recent completion history reaches its existing 200-entry limit. Awards are permanent. These fields remain inside the existing Little Wins state, so they use the current backup and account-sync system. No separate service is added.
 
 VERIFICATION
-All 22 games opened and returned through the library at 320, 375, 390, 430, 900, 1440 and 1600 CSS-pixel viewport settings in DOM tests. Automated checks covered audio opt-in/resume/chime signal and cleanup, persistent sound controls through rerenders, theme saving, Uno hand preservation, chess moves and image paths, three Memory themes and matching/preloading, spinner/background options, permanent badges, core mechanics and save/restore. Finance/editing regressions and mocked account isolation/sync passed. Original photographs and Journal sparkle code were compared for identity.
+Automated tests cover every threshold and its boundary, distinct-quest counting, typed creative/rest completions, custom quest completion, no awards from saving/editing/keywords, legacy ID/history migration, permanent awards beyond the history limit, actual artwork in locked states, and show-all behavior. The ten SVG medals were rendered and visually inspected as a contact sheet. All prior game/account/sync code and assets were compared for identity. The whole dashboard index, including Journal sparkles and finance calculations, is unchanged except cache-version links.
 
-REAL-DEVICE LIMITS
-The tests simulate audio output and DOM interactions; they cannot confirm physical speaker output or actual phone/browser geometry. After upload, enable Sound in a game and listen for its confirmation chime. Use Test sound where available. If silent, check the phone/computer's media volume, mute/silent settings and browser/site audio settings. Live Firebase and real-device audio/touch rendering still require checking.
+DOM regression checks cover phone/desktop viewport settings, navigation, editing, saving, finance and mocked account sync. DOM tests do not measure real browser geometry. Live account sync and real-device rendering remain to be checked after upload. No real user data was read during testing.
