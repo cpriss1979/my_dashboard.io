@@ -1,8 +1,59 @@
-/* Past days remain interactive; only the date surface/number is muted. */
-body.glow-redesign main #content button.calendar-date-past{background:#e5e7eb!important;color:#80848c!important;border-color:#cdd1d7!important;text-shadow:none!important;opacity:1!important}
-body.glow-redesign main #content button.calendar-date-past .calendar-date-number{color:#80848c!important;font-weight:500!important;text-shadow:none!important}
-body.glow-redesign main #content .glow-month-cell.calendar-past-cell,body.glow-redesign main #content .week-day.calendar-past-cell{background:#eef0f3!important;border-color:#c4cad3!important}
-body.glow-redesign main #content button.calendar-date-today{background:#e5f6ff!important;color:#124b91!important;border-color:#6cbbdb!important;opacity:1!important}
-body.glow-redesign main #content button.calendar-date-today .calendar-date-number{color:#124b91!important;font-weight:900!important;text-shadow:0 0 4px #75d9ffb3,0 0 10px #7cceff99,0 0 16px #9ac4ff66!important}
-body.glow-redesign main #content .calendar-today-cell{border-color:#5dadd1!important;box-shadow:inset 0 0 0 1px #7ccde4,0 0 9px #65c8ed33}
-body.glow-redesign main #content button.calendar-date-past:focus-visible,body.glow-redesign main #content button.calendar-date-today:focus-visible{outline:3px solid #315f9b!important;outline-offset:2px}
+/* Consistent date markers on Home and Month, Week, Year. */
+body.glow-redesign main #content button.overview-date{background:transparent!important;color:#284360!important;border:0!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important;opacity:1!important;text-decoration:none!important;font-weight:500!important;outline:none}
+body.glow-redesign main #content button.overview-date::after{display:none!important}
+body.glow-redesign main #content button.overview-date .calendar-date-number{display:inline-flex!important;align-items:center;justify-content:center;box-sizing:border-box;width:30px;height:30px;border:2px solid transparent;border-radius:50%;color:inherit!important;font-weight:inherit!important;text-shadow:none!important;line-height:1!important}
+body.glow-redesign main #content button.overview-today .calendar-date-number{border-color:#1465c0!important}
+body.glow-redesign main #content button.overview-plan{color:#1465c0!important;font-weight:700!important}
+body.glow-redesign main #content button.overview-holiday .calendar-date-number{text-decoration:underline!important;text-decoration-color:#1465c0!important;text-decoration-thickness:2px!important;text-underline-offset:4px!important}
+body.glow-redesign main #content button.overview-date:focus-visible{outline:3px solid #1465c0!important;outline-offset:2px;border-radius:6px!important}
+body.glow-redesign main #content button.year-day .calendar-date-number{width:24px;height:24px}
+/* Week: clear day headings, readable event cards, and no clipped titles. */
+body.glow-redesign main #content .week-agenda{gap:12px!important;min-width:0;overflow:visible!important}
+body.glow-redesign main #content .week-day{background:#eaf2fb!important;color:#172b43!important;border:1px solid #9cb3ca!important;padding:14px!important;min-height:0!important;height:auto!important;min-width:0}
+body.glow-redesign main #content .week-day.week-selected{border-color:#1465c0!important;box-shadow:inset 0 0 0 1px #1465c0}
+body.glow-redesign main #content .week-day-heading{margin-bottom:10px;gap:12px;flex-wrap:wrap}
+body.glow-redesign main #content button.week-date{display:flex!important;align-items:center;justify-content:flex-start!important;gap:10px!important;width:auto!important;min-width:0!important;min-height:44px!important;padding:0 4px!important}
+body.glow-redesign main #content button.week-date>span:not(.calendar-date-number){font-size:16px!important;font-weight:700!important;color:#243e59!important;line-height:1.4}
+body.glow-redesign main #content button.week-date .calendar-date-number{font-size:21px!important;width:36px;height:36px}
+body.glow-redesign main #content .week-event{display:block!important;background:#fff!important;color:#172b43!important;border:1px solid #a7bdd3!important;border-left:4px solid #1465c0!important;padding:13px!important;margin:8px 0 0!important;min-height:44px!important;height:auto!important;white-space:normal!important;overflow:visible!important;overflow-wrap:anywhere!important;line-height:1.5!important}
+body.glow-redesign main #content .week-event b{display:block;font-size:16px!important;line-height:1.5!important;color:#172b43!important;white-space:normal!important}
+body.glow-redesign main #content .week-event .calendar-event-time{font-size:14px!important;color:#43566b!important;line-height:1.5!important;white-space:normal!important}
+body.glow-redesign main #content .week-event small,body.glow-redesign main #content .week-empty{font-size:14px!important;color:#43566b!important;line-height:1.5!important}
+body.glow-redesign main #content .week-day .us-holiday-tags{margin:4px 0 10px;display:flex;flex-wrap:wrap;gap:6px}
+body.glow-redesign main #content .week-day .us-holiday-label{background:#dae9fb!important;color:#234a78!important;font-size:13px!important;line-height:1.5!important;white-space:normal!important}
+
+/* Calendar selections and controls use blue, never purple. */
+body.glow-redesign main #content .glow-calendar-layout .glow-month-cell.is-selected{background:#ffffff70!important;border-color:#adc8db!important}
+body.glow-redesign main #content .glow-calendar-layout .view-tab{background:#e5e9ef!important;color:#43566b!important;border-color:#9cb3ca!important}
+body.glow-redesign main #content .glow-calendar-layout .view-tab.chosen{background:#1465c0!important;color:#fff!important;border-color:#1465c0!important}
+body.glow-redesign main #content .glow-calendar-layout .primary{background:#1465c0!important;color:#fff!important;border-color:#1465c0!important;box-shadow:none!important}
+body.glow-redesign main #content .glow-calendar-layout button.year-day.overview-date.overview-plan,body.glow-redesign main #content .glow-calendar-layout button.year-day.overview-date.overview-plan .calendar-date-number{color:#1465c0!important;font-weight:700!important}
+body.glow-redesign main #content .glow-calendar-layout .glow-panel,body.glow-redesign main #content .glow-calendar-layout>.card{--glow-panel:#dceffb;background:#dceffb!important}
+
+/* Final calendar appearance: identical day cells; today alone has a blue number tile. */
+body.glow-redesign main #content .glow-calendar-layout .glow-month-cell,
+body.glow-redesign main #content .glow-calendar-layout .glow-month-cell.is-selected,
+body.glow-redesign main #content .glow-calendar-layout .glow-month-cell.calendar-past-cell,
+body.glow-redesign main #content .glow-calendar-layout .glow-month-cell.calendar-today-cell,
+body.glow-redesign main #content .glow-calendar-layout .week-day,
+body.glow-redesign main #content .glow-calendar-layout .week-day.week-selected{background:#eaf4ff!important;border:1px solid #adc8db!important;box-shadow:none!important;opacity:1!important}
+body.glow-redesign main #content .glow-calendar-layout .calendar button:not(.glow-month-event),
+body.glow-redesign main #content .glow-mini-calendar .calendar button,
+body.glow-redesign main #content .glow-calendar-layout button.year-day,
+body.glow-redesign main #content .glow-calendar-layout button.week-date{background:transparent!important;color:#284360!important;border:0!important;box-shadow:none!important;text-shadow:none!important;opacity:1!important;border-radius:7px!important;outline:none}
+body.glow-redesign main #content .glow-calendar-layout button.overview-date.overview-plan,
+body.glow-redesign main #content .glow-calendar-layout button.year-day.year-event,
+body.glow-redesign main #content .glow-mini-calendar button.event{color:#1465c0!important;font-weight:700!important}
+body.glow-redesign main #content .glow-calendar-layout button .calendar-date-number,
+body.glow-redesign main #content .glow-mini-calendar button .calendar-date-number{color:inherit!important;background:transparent!important;border:0!important;border-radius:6px!important;text-shadow:none!important;box-shadow:none!important}
+body.glow-redesign main #content .glow-calendar-layout .calendar button.today,
+body.glow-redesign main #content .glow-mini-calendar .calendar button.today,
+body.glow-redesign main #content .glow-calendar-layout button.year-day.year-today,
+body.glow-redesign main #content .glow-calendar-layout button.overview-today:not(.week-date),
+body.glow-redesign main #content .glow-mini-calendar button.overview-today{background:#1465c0!important;color:#fff!important;font-weight:700!important;box-shadow:none!important;text-shadow:none!important;border-radius:7px!important}
+body.glow-redesign main #content .glow-calendar-layout button.overview-today .calendar-date-number,
+body.glow-redesign main #content .glow-mini-calendar button.overview-today .calendar-date-number,
+body.glow-redesign main #content .glow-calendar-layout button.week-date.is-today strong{background:#1465c0!important;color:#fff!important;border:0!important;border-radius:6px!important;font-weight:700!important;text-shadow:none!important;text-decoration-color:#fff!important}
+body.glow-redesign main #content .glow-calendar-layout button.year-day.overview-today.overview-plan .calendar-date-number{color:#fff!important}
+body.glow-redesign main #content .glow-calendar-layout button.overview-date:focus-visible,
+body.glow-redesign main #content .glow-mini-calendar button.overview-date:focus-visible{outline:3px solid #1465c0!important;outline-offset:2px}
