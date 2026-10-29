@@ -57,3 +57,9 @@ body.glow-redesign main #content .glow-calendar-layout button.week-date.is-today
 body.glow-redesign main #content .glow-calendar-layout button.year-day.overview-today.overview-plan .calendar-date-number{color:#fff!important}
 body.glow-redesign main #content .glow-calendar-layout button.overview-date:focus-visible,
 body.glow-redesign main #content .glow-mini-calendar button.overview-date:focus-visible{outline:3px solid #1465c0!important;outline-offset:2px}
+
+/* Holidays appear as named entries, never underlined dates. */
+body.glow-redesign main #content button.overview-holiday .calendar-date-number,
+body.glow-redesign main #content button.overview-date.overview-holiday .calendar-date-number{text-decoration:none!important}
+body.glow-redesign main #content .calendar-holiday-entry{white-space:normal;overflow-wrap:anywhere}
+body.glow-redesign main #content .glow-month-cell .calendar-holiday-entry{background:#cee0f3!important;color:#25436b!important}
