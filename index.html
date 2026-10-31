@@ -4344,7 +4344,7 @@ let gameLastTouch=0;
 document.addEventListener('gesturestart',e=>{if(e.target.closest?.('.games-card'))e.preventDefault()},{passive:false});
 document.addEventListener('touchstart',e=>{if(e.touches.length>1&&e.target.closest?.('.games-card'))e.preventDefault()},{passive:false});
 document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))return;const now=Date.now();if(now-gameLastTouch<300)e.preventDefault();gameLastTouch=now},{passive:false});
-</script><script src="./mobile-app.js?v=20261030-readable"></script><script src="./redesign.js?v=20261026-immersive"></script><script src="./game-sound.js?v=20261027-framed"></script>
+</script><script src="./mobile-app.js?v=20261030-readable"></script><script src="./redesign.js?v=20261030-drag"></script><script src="./game-sound.js?v=20261027-framed"></script>
 <script src="./glass-world.js?v=20261027-framed"></script>
 <script src="./games-extension.js?v=20261027-framed"></script>
 <script src="./immersive-ui.js?v=20261026-immersive"></script><script src="./calendar-dates.js?v=20261028-holidays"></script>
@@ -4399,4 +4399,17 @@ body #appAllEvents .app-event span{display:block!important;font-size:14px!import
 body #appAllEvents .app-event:focus-visible{outline:3px solid #59c9f2;outline-offset:2px}
 @media(max-width:430px){body #appAllEvents{padding:16px!important}body #appAllEvents .app-event-list button.app-event{padding:12px!important}body #appAllEvents .app-event strong{font-size:16px!important}}
 </style>
+<style id="bookmark-drag-style">
+body.glow-redesign main #content .glow-bookmark-move{display:flex;align-items:center;justify-content:center;gap:5px;min-height:44px;min-width:72px;padding:6px 10px;margin:0 0 10px auto;border:1px solid #8096af;border-radius:7px;background:#ffffff90;color:#284360;font-size:13px;cursor:grab;touch-action:none;user-select:none}
+body.glow-redesign main #content .bookmark-moving{outline:3px solid #1465c0;outline-offset:2px;opacity:.78;box-shadow:0 8px 24px #10203e44}
+body.glow-redesign main #content .bookmark-moving .glow-bookmark-move{cursor:grabbing}
+body.glow-redesign main #content .glow-bookmark-move:focus-visible{outline:3px solid #1465c0;outline-offset:2px}
+</style>
+<style id="bill-order-style">
+body.glow-redesign main #content .bill-move{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:6px 9px;margin:0 12px 0 0;border:1px solid #8096af;border-radius:7px;background:#ffffff90;color:#284360;font-size:13px;cursor:grab;touch-action:none;user-select:none;vertical-align:middle}
+body.glow-redesign main #content .bill-moving{outline:3px solid #1465c0;outline-offset:-3px;opacity:.75}
+body.glow-redesign main #content .bill-moving .bill-move{cursor:grabbing}
+body.glow-redesign main #content .bill-move:focus-visible{outline:3px solid #1465c0;outline-offset:2px}
+</style>
+<script src="./bill-order.js?v=20261030"></script>
 </body></html>
