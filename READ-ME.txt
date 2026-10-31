@@ -1,8 +1,104 @@
-CALENDAR DATE HIGHLIGHTING
+PRESS AND HOLD: BOOKMARKS AND BILLS
 
-Past dates are greyed out; today is a bold glowing blue number in Month, Week, Year and the Home calendar. Past dates and saved entries remain accessible. Uses the device local date and refreshes at midnight or when returning to the dashboard.
+There are no visible Move labels on bookmarks or bills. Hold an empty area or title of a bookmark card for 0.4 seconds, then drag to another card and release. Bills use the same hold gesture to move up/down. Link taps and Edit/Delete/checkbox actions remain available. Escape cancels. The selected item gets a blue outline when ready.
 
-Calendar DOM checks passed at 320, 375, 390, 430 and 1440 pixels. Existing application source, saved-data logic, Journal sparkles and account/sync code are unchanged. Actual device visual rendering was not checked.
+The updated bookmark presentation/drag code and bill drag code are included directly in index.html to avoid loading older cached versions. Order saves through existing state/save/sync.
+
+Upload ALL extracted contents to your repository root, replacing matching files. Syntax checks and bill gesture simulation passed; real device gestures and live sync were not verified.
+
+BILL HOLD-AND-DRAG FIX
+
+No Move button is created for bills. Hold a bill name or empty row area for 0.4 seconds, then drag up/down and release. Fixed cancellation caused by moving a pointer-captured row. Active drag listeners now stay on the document. Paid/Cleared and Edit/Delete are excluded. Corrected code is included directly in index.html to avoid an old cached bill-order script.
+
+Simulated full hold/drag/release verified saved order and listener cleanup. Amounts stayed unchanged. Physical device behavior was not tested. Upload all extracted files, replacing matching files.
+
+BILLS: HOLD TO MOVE, NO MOVE LABEL
+
+The visible Move label/button is removed from bills. Press and hold the bill name or empty row area, drag, then release to save. Paid/Cleared and Edit/Delete remain unchanged. Keyboard users can focus the bill row and use Up/Down. Bookmark Move handles remain unchanged.
+
+Upload all extracted files, replacing matching files. JavaScript syntax checked. Physical-device dragging was not tested.
+
+PRESS, HOLD AND MOVE BILLS
+
+Press and hold a bill name or empty area of its row for about 0.4 seconds, then drag up/down. The row highlights when ready. Release to save. Moving before the hold finishes cancels, allowing ordinary touch scrolling. Paid/Cleared, Edit/Delete and other controls are excluded. Move handles and keyboard arrows still work. Order remains saved per person/month.
+
+Upload all extracted files, replacing matching files. Syntax and gesture guard/cleanup checks performed. Physical touch/mouse behavior was not device-tested.
+
+DRAG TO REORDER BILLS
+
+Use the Move handle beside each bill to drag it up or down the list. Keyboard: focus Move and press Up/Down. Escape cancels an active drag. Touch dragging uses the handle; normal scrolling elsewhere is unchanged.
+
+Order is saved separately for each person and month through the existing state/save/sync system. Reordering does not change dates, amounts, calculations, Paid or Cleared status. Archived bill IDs are retained in the saved order.
+
+Upload all extracted files, replacing matching files. Verified JavaScript syntax, person/month persistence and preservation of amounts/statuses. Mouse/touch rendering and live sync were not device-tested.
+
+DRAG TO REORDER BOOKMARKS
+
+On Bookmarks, drag the Move handle to place a card before or after another card in the grid. Works with pointer/touch controls. Normal scrolling outside the handle is unchanged. Focus Move and use arrow keys to rearrange with a keyboard. Escape cancels a drag.
+
+Order saves automatically using the existing save/sync system. Pinned Home bookmarks follow the same order. Searching preserves hidden bookmarks while rearranging visible ones. Links, colors, Edit/Delete, and Home checkboxes are retained.
+
+Upload all extracted files, replacing matching files. Verified JavaScript syntax, order persistence, filtered order preservation and existing bookmark record fields. Physical mouse/touch dragging and live sync were not device-tested.
+
+READABLE ALL CALENDAR ENTRIES
+
+All entries now uses uniform full-width light-blue cards with spacing between entries, left-aligned bold titles, a separate date line, and a separate time/repeating line. Long text wraps. The dialog is wider on desktop and fits phone widths, with vertical scrolling. Search and clicking through to details/edit/delete remain intact. Saved entries and finance logic are unchanged.
+
+Upload all extracted files, replacing matching files. Verified JavaScript syntax, source preservation and retained event-detail handlers. Device rendering was not verified.
+
+COMPACT PAYMENT STATUS
+
+Paid and Cleared checkboxes now sit side by side. Payment status behavior and saved data are unchanged. Upload all extracted files, replacing matching files. Verified this change only modifies payment-status CSS.
+
+BILL PAYMENT STATUS: PAID & CLEARED
+
+Paid: payment has been made/sent. Cleared: payment has finished processing through the bank. Check Cleared only after confirming with your bank. Checking Cleared also checks Paid. Unchecking Paid clears both; unchecking Cleared alone retains Paid.
+
+Existing Paid records are unchanged and initially have no Cleared mark. Both statuses are saved separately per bill and month through the existing state/save/sync system. Repeating months begin unchecked. Archive displays both statuses. Budget calculations are unchanged.
+
+Upload all extracted files to GitHub, replacing matching files. Function checks passed for old Paid marks, per-month storage and checkbox transitions. Actual-device rendering and live Firebase sync were not tested.
+
+NAMED HOLIDAY ENTRIES
+
+Holiday dates are no longer underlined. Holidays appear as named all-day entries in desktop Month cells, Week cards, and the selected-day Schedule (including phone Month view). The separate holiday list is removed. Year retains its compact date grid; selecting a holiday date opens its month and named Schedule entry. Holidays are built in and do not modify or duplicate your saved events. Uniform light-blue day boxes and today's blue tile/white number are preserved.
+
+Upload all extracted files, replacing matching files. JavaScript syntax and source preservation checked. Actual device rendering was not verified.
+
+UNIFORM CALENDAR DAY BOXES
+
+All large day boxes have the same light-blue fill, including past, selected and current dates. Only today's small number tile is blue with a white number. No glow, grey past-day fill, or purple selected-day fill. Saved plans are unchanged.
+
+Final calendar styles are included directly in index.html as well as calendar-dates.css. Upload ALL extracted files and replace matching files.
+
+Verified inline styles, JavaScript syntax and preservation of the rest of index.html. Actual device rendering was not verified.
+
+CALENDAR STYLESHEET FIX
+
+The missing calendar-dates.css link is now present, so date markers and blue calendar styles load. The original purple selected-month-cell rule is also removed. Selected day boxes match the other light-blue boxes; today has a blue circle. Saved data and sync are unchanged.
+
+Extract and upload ALL files to GitHub, replacing matching files. Refresh the dashboard after deployment.
+
+Verified stylesheet links and local files, JavaScript syntax, and preservation of the inline application source. Browser/device rendering was not verified. The older DOM helper could not run because its temporary jsdom dependency is no longer available.
+
+CURRENT MONTH/WEEK & BLUE CALENDAR STYLING
+
+Calendar purple selection backgrounds and controls are now blue. Year dates with plans use the same blue as the other date markers, including holidays with plans.
+
+Selecting Month or Week resets to the current local month/week. Returning to Calendar from another page also resets Month/Week. Previous/next arrows still let you browse other dates, and clicking a Year date still opens that specific date. Saved entries are unchanged.
+
+Interaction checks passed at 320, 375, 390, 430 and 1440px. CSS syntax passed; actual-device visual rendering was not performed.
+
+UNIFIED CALENDAR DATE MARKERS & READABLE WEEK VIEW
+
+Overview, Month, Week and Year now use the same markers: blue circle around today, blue underline on holiday dates, blue numbers for dates with plans. Markers combine when applicable, including yearly repeating plans. Past dates are not greyed out and today has no glow. The old holiday backgrounds and event dots are replaced. Dates remain clickable.
+
+Week view uses larger day labels, dark readable text, white event cards and wrapping titles. Event details and editing remain accessible. Saved data, finance calculations, account/sync and Journal sparkles are unchanged.
+
+INSTALL: Extract and upload ALL contents into your existing GitHub repository root, replacing matching files. No Firebase changes are needed. This has not been deployed for you.
+
+VERIFICATION: DOM interaction checks passed at 320, 375, 390, 430 and 1440px for all date views, combined markers, repeating plans, past-date navigation and event details. CSS syntax passed. Actual-device visual rendering was not performed.
+
+OTHER INCLUDED FEATURES
 
 GLOWCODE — FRAMED CITY, FLOWER GARDEN & SIMPLIFIED SOUND
 
