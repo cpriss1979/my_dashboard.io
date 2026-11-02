@@ -19,7 +19,7 @@
  function headingAction(s,label,fn){s.firstElementChild.append(button(label,fn,'link'))}
  function navTo(target){go(target);window.scrollTo(0,0)}
  function dialog(id,title){$(id)?.remove();const d=document.createElement('dialog');d.id=id;d.className='app-action-dialog';const h=document.createElement('div');h.className='app-dialog-heading';const t=document.createElement('h2');t.textContent=title;h.append(t,button('Close',()=>d.close()));d.append(h,document.createElement('div'));d.onclose=()=>d.remove();document.body.append(d);return d}
- function more(){const d=dialog('glowMore','More');d.lastElementChild.className='glow-more-menu';for(const [label,target] of [['Notes','Quick notes'],['Projects','Projects'],['Bookmarks','Bookmarks'],['Journal','Journal'],['Games','Games']])d.lastElementChild.append(button(label,()=>{d.close();navTo(target)}));d.lastElementChild.append(button('Settings',()=>{d.close();window.DashboardMobileUI.openSettings()}));d.showModal()}
+ function more(){const d=dialog('glowMore','More');d.lastElementChild.className='glow-more-menu';for(const [label,target] of [['Notes','Quick notes'],['Projects','Projects'],['Bookmarks','Bookmarks'],['Journal','Journal'],['Habit Tracker','Habit Tracker'],['Games','Games']])d.lastElementChild.append(button(label,()=>{d.close();navTo(target)}));d.lastElementChild.append(button('Settings',()=>{d.close();window.DashboardMobileUI.openSettings()}));d.showModal()}
  function shell(){
   document.body.classList.remove('phone-is-home');$('phoneHomePages')?.remove();
   document.body.dataset.glowPage=page;
