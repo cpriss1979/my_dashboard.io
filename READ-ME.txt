@@ -1,3 +1,9 @@
+LIVE BADGE PROGRESS FIX
+
+Badge requirements are checked after saves, on focus/return to the app, and while open. Little Wins no longer holds a stale progress snapshot; its earned awards are reconciled from the saved total/history and retained. Refresh badge progress manually reopens/checks all collections. Journal/habit award updates do not repeatedly resave unchanged results. Corrected badge code is included directly in index.html.
+
+Only qualifying badges unlock. Existing earned badges remain earned. Upload all extracted files, replacing matching files. Syntax and rule/persistence checks passed. Actual-device rendering and live cloud sync were not verified.
+
 20 LITTLE WINS MEDALS
 
 Little Wins now has 20 medals on the central Badges page. They use the same colorful dimensional medal/card styling as Journal and Habit Tracker. Locked medals stay grey; earned medals become colorful. Original 10 badge IDs, requirements and earned records are unchanged.
