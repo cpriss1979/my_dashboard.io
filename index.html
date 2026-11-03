@@ -4607,6 +4607,48 @@ body.glow-redesign main #content .glow-overview>.glow-bookmarks{grid-column:1/-1
 body.glow-redesign main #content .achievement-collection{margin-top:20px;background:#e3edf8!important;color:#172b43!important}.achievement-collection>p{font-size:14px;line-height:1.6}.achievement-collection summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:700}.achievement-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:14px}.achievement-tile{text-align:center;padding:16px 12px;background:#ffffffb8;border:1px solid #b8c9dc;border-radius:14px;display:flex;flex-direction:column;align-items:center;min-width:0}.achievement-tile h3{color:#172b43!important;font-size:15px!important;margin:12px 0 6px!important;line-height:1.4;overflow-wrap:anywhere}.achievement-tile p{color:#42546a!important;font-size:13px!important;line-height:1.5!important;margin:0 0 10px!important}.achievement-tile small{color:#42546a!important;font-size:12px!important;margin-top:auto}.achievement-medal{--medal:#e9ad38;position:relative;width:76px;height:76px;flex-shrink:0;display:grid;place-items:center;font-size:36px;border:5px solid color-mix(in srgb,var(--medal),#2c2345 28%);border-radius:28% 28% 40% 40%;background:radial-gradient(ellipse at 30% 20%,#ffffffcb,transparent 52%),linear-gradient(140deg,color-mix(in srgb,var(--medal),white 45%),var(--medal));box-shadow:inset 0 0 0 3px #ffffff80,0 5px 10px #18304a26;text-shadow:0 2px 2px #fff8}.achievement-medal:after{content:'✧';position:absolute;right:4px;top:2px;font-size:18px;color:#fff}.achievement-tile.locked .achievement-medal{filter:grayscale(1);opacity:.6}.achievement-tile.earned .achievement-medal{box-shadow:inset 0 0 0 3px #ffffff80,0 0 15px color-mix(in srgb,var(--medal),transparent 40%),0 5px 10px #18304a26}
 @media(max-width:430px){.achievement-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.achievement-tile{padding:14px 8px}.achievement-medal{width:64px;height:64px;font-size:30px}}
 </style>
+<script id="twenty-medals-current">
+(function(){
+const collection=[
+ {id:'first',name:'First Spark',detail:'Celebrate your first little win.',art:'first',color:'gold',goal:1},
+ {id:'five',name:'Five Bright Moments',detail:'Celebrate five little wins.',art:'five',color:'pink',goal:5},
+ {id:'ten',name:'Pocket of Sunshine',detail:'Celebrate ten little wins.',art:'sunshine',color:'amber',goal:10},
+ {id:'variety',name:'Curious Explorer',detail:'Try three different quests.',art:'variety',color:'blue'},
+ {id:'creative',name:'Your Own Path',detail:'Celebrate a quest you created.',art:'creative',color:'purple'},
+ {id:'growth',name:'Growing Strong',detail:'Celebrate 25 little wins.',art:'growth',color:'green',goal:25},
+ {id:'art',name:'Creative Spark',detail:'Complete a creative quest.',art:'art',color:'coral'},
+ {id:'pause',name:'Gentle Pause',detail:'Complete a break or relaxation quest.',art:'pause',color:'lavender'},
+ {id:'butterfly',name:'Butterfly Steps',detail:'Celebrate 50 little wins.',art:'butterfly',color:'teal',goal:50},
+ {id:'hundred',name:'A Hundred Little Wins',detail:'Celebrate 100 little wins.',art:'hundred',color:'rose-gold',goal:100},
+ {id:'two',name:'Double Delight',detail:'Celebrate 2 little wins.',art:'first',color:'gold',goal:2,icon:'💗'},
+ {id:'three',name:'Tiny Bouquet',detail:'Celebrate 3 little wins.',art:'first',color:'gold',goal:3,icon:'🌸'},
+ {id:'fifteen',name:'Sweet Fifteen',detail:'Celebrate 15 little wins.',art:'first',color:'gold',goal:15,icon:'🍬'},
+ {id:'twenty',name:'Twinkling Twenty',detail:'Celebrate 20 little wins.',art:'first',color:'gold',goal:20,icon:'✨'},
+ {id:'forty',name:'Flower Trail',detail:'Celebrate 40 little wins.',art:'first',color:'gold',goal:40,icon:'🌷'},
+ {id:'seventy-five',name:'Candy Celebration',detail:'Celebrate 75 little wins.',art:'first',color:'gold',goal:75,icon:'🍭'},
+ {id:'one-fifty',name:'Heart of Gold',detail:'Celebrate 150 little wins.',art:'first',color:'gold',goal:150,icon:'💛'},
+ {id:'two-hundred',name:'Garden of Wins',detail:'Celebrate 200 little wins.',art:'first',color:'gold',goal:200,icon:'🌻'},
+ {id:'two-fifty',name:'Starlight Collection',detail:'Celebrate 250 little wins.',art:'first',color:'gold',goal:250,icon:'🌟'},
+ {id:'five-hundred',name:'Treasury of Joy',detail:'Celebrate 500 little wins.',art:'first',color:'gold',goal:500,icon:'💝'}
+];
+const kinds=['general','creative','rest'];
+function facts(model){const previous=model.achievementTracking||{},ids=new Set((Array.isArray(previous.questIds)?previous.questIds:[]).filter(v=>typeof v==='string'&&v));let creative=previous.creative===true,rest=previous.rest===true,custom=previous.custom===true;
+ for(const win of Array.isArray(model.wins)?model.wins:[]){if(!win||typeof win.questId!=='string'||!win.questId)continue;ids.add(win.questId);custom ||= win.authored===true||win.questId.startsWith('custom-');
+ // Old records stored only a quest ID and title. Only the known original quest/title combinations count; never infer from keywords in custom text.
+ creative ||= win.kind==='creative'||(!win.kind&&win.questId==='create'&&win.title==='Make a little something');
+ rest ||= win.kind==='rest'||(!win.kind&&win.questId==='break'&&win.title==='A moment away');
+ }
+ return {questIds:[...ids],creative,rest,custom};
+}
+function badges(model){const f=facts(model),awards=Array.isArray(model.awards)?model.awards:[];return collection.map(b=>({...b,src:'./assets/medals/'+b.art+'.svg',earned:awards.includes(b.id)||(b.goal?model.stars>=b.goal:b.id==='variety'?f.questIds.length>=3:b.id==='creative'?f.custom:b.id==='art'?f.creative:b.id==='pause'?f.rest:false)}))}
+function remember(model){model.achievementTracking=facts(model);model.awards=[...new Set([...(Array.isArray(model.awards)?model.awards:[]),...badges(model).filter(b=>b.earned).map(b=>b.id)])];}
+const medalColors=['#e9ad38','#e686b1','#8cb8eb','#b59be2','#7bbda0','#e8a477','#78bec2','#dc8ea7','#aebc66','#c48ac7','#f0b975','#86b2da','#da8f83','#8bc3b6','#b2a0db','#d1b15f','#78b4be','#d896be','#94bd7a','#d3a27d'];
+const medalIcons=['✨','⭐','☀️','🧭','🌠','🌱','🎨','☁️','🦋','💖'];
+function renderMedals(root,model,doc,onToggle,expanded=false){const section=doc.createElement('section');section.className='little-wins-collection';const all=badges(model),heading=doc.createElement('h3');heading.textContent='Little Wins badges · '+all.filter(b=>b.earned).length+'/20';section.append(heading);const grid=doc.createElement('div');grid.className='achievement-grid';grid.id='littleWinsMedalGrid';all.forEach((badge,i)=>{const card=doc.createElement('article');card.className='achievement-tile '+(badge.earned?'earned':'locked');card.hidden=false;const medal=doc.createElement('div');medal.className='achievement-medal';medal.style.setProperty('--medal',medalColors[i]);medal.setAttribute('aria-hidden','true');medal.textContent=badge.icon||medalIcons[i];const title=doc.createElement('h3');title.textContent=badge.name;const text=doc.createElement('p');text.textContent=badge.detail;const status=doc.createElement('small');status.textContent=badge.earned?'Earned':'🔒 Locked';card.append(medal,title,text,status);grid.append(card)});section.append(grid);const toggle=doc.createElement('button');toggle.type='button';toggle.className='medal-collection-toggle';toggle.textContent=expanded?'Show fewer badges':'Show all 20 badges';toggle.setAttribute('aria-expanded',String(expanded));toggle.onclick=onToggle;section.append(toggle);root.append(section);return toggle}
+
+window.GlowAchievementMedals={collection,badges,remember,renderMedals};
+})();
+</script>
 <script id="badge-progress-current">
 (function(){
  const palette=['#e9ad38','#e686b1','#8cb8eb','#b59be2','#7bbda0','#e8a477','#78bec2','#dc8ea7','#aebc66','#c48ac7','#f0b975','#86b2da','#da8f83','#8bc3b6','#b2a0db','#d1b15f','#78b4be','#d896be','#94bd7a','#d3a27d'];
@@ -4624,7 +4666,7 @@ body.glow-redesign main #content .achievement-collection{margin-top:20px;backgro
  function refresh(){collection('journal');collection('habit');navOrder()}
  let generation=0;
  let gameKey='',gamePending=false;
- async function gamesCollection(token){if(gamePending)return;gamePending=true;const owner=state;const host=document.createElement('section');host.className='card achievement-collection';host.id='gamesBadgeCollection';document.getElementById('gamesBadgeCollection')?.remove();const title=document.createElement('h2');title.textContent='Games · Little Wins';host.append(title);document.getElementById('content').append(host);try{const medals=await import('./activities/achievement-medals.mjs?v=20261102-twenty');if(token!==generation||page!=='Badges'||state!==owner)return;const original=state.glowActivities?.['little-wins'];const model=structuredClone(original||{stars:0,wins:[],awards:[]});medals.remember(model);if(original&&JSON.stringify(original.awards||[])!==JSON.stringify(model.awards)){original.awards=model.awards;original.achievementTracking=model.achievementTracking;save()}gameKey=JSON.stringify(state.glowActivities?.['little-wins']||null);let expanded=true;const area=document.createElement('div');host.append(area);function paint(){area.replaceChildren();medals.renderMedals(area,model,document,()=>{expanded=!expanded;paint()},expanded)}paint()}catch{if(host.isConnected){const p=document.createElement('p');p.textContent='Game badges could not load. Reopen Badges to try again.';host.append(p)}}finally{gamePending=false}}
+ async function gamesCollection(token){if(gamePending)return;gamePending=true;const owner=state;const host=document.createElement('section');host.className='card achievement-collection';host.id='gamesBadgeCollection';document.getElementById('gamesBadgeCollection')?.remove();const title=document.createElement('h2');title.textContent='Games · Little Wins';host.append(title);document.getElementById('content').append(host);try{const medals=window.GlowAchievementMedals;if(!medals||medals.collection.length!==20)throw Error('Expected 20 medals');if(token!==generation||page!=='Badges'||state!==owner)return;const original=state.glowActivities?.['little-wins'];const model=structuredClone(original||{stars:0,wins:[],awards:[]});medals.remember(model);if(original&&JSON.stringify(original.awards||[])!==JSON.stringify(model.awards)){original.awards=model.awards;original.achievementTracking=model.achievementTracking;save()}gameKey=JSON.stringify(state.glowActivities?.['little-wins']||null);let expanded=true;const area=document.createElement('div');host.append(area);function paint(){area.replaceChildren();medals.renderMedals(area,model,document,()=>{expanded=!expanded;paint()},expanded)}paint()}catch{if(host.isConnected){const p=document.createElement('p');p.textContent='Game badges could not load. Reopen Badges to try again.';host.append(p)}}finally{gamePending=false}}
  const before=render;render=function(){const badgesPage=page==='Badges';generation++;if(badgesPage)page='Quick notes';try{before()}finally{if(badgesPage)page='Badges'}if(badgesPage){document.getElementById('content').replaceChildren();gameKey='';gamePending=false;const refreshButton=document.createElement('button');refreshButton.type='button';refreshButton.className='secondary';refreshButton.textContent='Refresh badge progress';refreshButton.onclick=()=>{render();notify('Badge progress checked against saved entries and wins')};document.getElementById('content').append(refreshButton);document.body.dataset.glowPage='Badges';document.getElementById('title').textContent='Badges';document.getElementById('appPageTitle').textContent='Badges';document.getElementById('description').textContent='';}refresh();if(badgesPage)gamesCollection(generation)};
  const beforeJournal=renderJournalPage;renderJournalPage=function(){beforeJournal();collection('journal')};const beforeFavorite=toggleJournalFavorite;toggleJournalFavorite=function(id){beforeFavorite(id);collection('journal')};
  let queued=false;
@@ -4646,4 +4688,20 @@ body .achievement-tile.locked h3,body .achievement-tile.locked p,body .achieveme
 body .achievement-medal-card.is-locked h4,body .achievement-medal-card.is-locked p,body .achievement-medal-card.is-locked .achievement-medal-state{color:#515964!important;background:transparent!important}
 </style>
 <style>.achievement-tile[hidden]{display:none!important}</style>
+<style id="clean-home-priorities">
+/* Home priorities: clear task cards with compact, separate actions. */
+body.glow-redesign main #content .glow-overview>.glow-tasks>.cardhead{align-items:center;gap:12px;margin-bottom:18px}
+body.glow-redesign main #content .glow-overview>.glow-tasks>.cardhead h2{font-size:20px!important;line-height:1.4!important;margin:0!important}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row{display:grid!important;grid-template-columns:28px minmax(0,1fr) auto auto!important;align-items:start!important;column-gap:8px!important;row-gap:4px!important;padding:14px!important;margin:0 0 12px!important;background:#ffffff80!important;border:1px solid #c8bfd9!important;border-radius:12px!important;min-height:0!important;box-shadow:none!important}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>input{grid-column:1;grid-row:1;appearance:auto!important;-webkit-appearance:checkbox!important;accent-color:#316aad!important;width:21px!important;height:21px!important;min-width:21px!important;min-height:21px!important;margin:4px 0 0!important;cursor:pointer}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>div{grid-column:2/-1;grid-row:1;min-width:0!important;margin:0!important}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row strong{display:block!important;font-size:15px!important;font-weight:600!important;line-height:1.55!important;color:#20354e!important;white-space:normal!important;overflow-wrap:anywhere!important}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row small{display:block!important;font-size:12px!important;line-height:1.5!important;color:#53647a!important;margin-top:5px!important}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button{grid-row:2;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;min-width:44px!important;max-width:none!important;min-height:44px!important;height:auto!important;margin:0!important;padding:4px 8px!important;background:transparent!important;border:0!important;border-radius:6px!important;box-shadow:none!important;color:#46566b!important;text-decoration:none!important;font-size:13px!important;font-weight:600!important;line-height:1.4!important}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button:nth-last-child(2){grid-column:3}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button:last-child{grid-column:4}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button:hover{background:#ffffffa6!important}
+body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button:focus-visible{outline:2px solid #1465c0!important;outline-offset:2px}
+body.glow-redesign main #content .glow-overview>.glow-tasks>button:last-child{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:44px!important;width:auto!important;padding:8px 14px!important;margin-top:4px!important;border-radius:8px!important;background:#ffffff90!important;color:#24578a!important;font-size:14px!important}
+</style>
 </body></html>

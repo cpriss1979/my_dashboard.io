@@ -1,3 +1,15 @@
+20 MATCHING LITTLE WINS MEDALS
+
+The Games collection on Badges now uses 20 visible medal cards with exactly the same achievement-grid, achievement-tile and achievement-medal styling as Journal and Habit Tracker. All 20 remain visible even when the old compact-render flag is passed. Locked medals are grey; earned medals remain colorful. Existing badge IDs and requirements are preserved.
+
+Medal definitions and rendering are included directly in index.html so this collection cannot load an old cached 10-medal module. Upload all extracted files, replacing matching files. Verified 20 rendered visible cards, shared styling classes and locked state in a renderer simulation. Physical device appearance was not verified.
+
+CLEANER HOME PRIORITIES
+
+Today's priorities retains its pastel color with separated subtle task cards, aligned checkboxes, wrapping readable titles and smaller date text. Edit/Delete are compact text actions at the bottom right of each task instead of wide dark bars. Controls keep 44px minimum height. Only Home priority styles changed; task saving, completion, editing, deletion and the Daily priorities page are unchanged.
+
+Upload all extracted files, replacing matching files. Verified a CSS-only scoped change and source preservation; physical device rendering was not verified.
+
 LIVE BADGE PROGRESS FIX
 
 Badge requirements are checked after saves, on focus/return to the app, and while open. Little Wins no longer holds a stale progress snapshot; its earned awards are reconciled from the saved total/history and retained. Refresh badge progress manually reopens/checks all collections. Journal/habit award updates do not repeatedly resave unchanged results. Corrected badge code is included directly in index.html.
