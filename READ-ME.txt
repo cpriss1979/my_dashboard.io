@@ -1,3 +1,9 @@
+CENTRAL BADGES PAGE
+
+Journal, Habit Tracker and Games/Little Wins badge collections are now on Badges in the sidebar and phone More menu. Their original badge displays are removed. Requirements and saved awards are preserved. Journal and habit milestones continue to be evaluated through the same saved state. Games badges read the existing Little Wins record directly. No achievement migration or reset is required. Habit Tracker is placed immediately above Journal in the sidebar.
+
+Upload all extracted files, replacing matching files. JavaScript syntax and game achievement-source preservation checked. Actual-device rendering and live sync were not verified.
+
 OVERVIEW & BADGE COLLECTIONS
 
 Overview: Active projects removed; Bookmarks spans the full bottom row under Schedule, Today's priorities and Quick capture.
