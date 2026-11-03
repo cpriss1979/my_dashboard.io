@@ -1,3 +1,17 @@
+ORGANIZED SIDEBAR & SMALL TIME FOR YOU SPARKLES
+
+Sidebar groups (expanded initially):
+Start here: Home.
+Plan & organize: Calendar, Tasks, Projects.
+Keep & manage: Notes, Bookmarks, Finances.
+Personal time: Time for You, Habit Tracker, Journal, Games, Badges.
+
+Visible labels Home/Tasks/Notes replace Overview/Daily priorities/Quick notes without changing saved routes/data. Uniform 22px line icons, one gradient selected page, subtle hover and a count for tasks due today. Groups can collapse and their choices use the existing saved/synced state. The Tasks page already has Overdue, Today, Upcoming and Completed groups; its heading now says Tasks.
+
+Time for You has its own 3–9px gently drifting/twinkling sparkles, smaller than Journal's stars. Pointer events pass through. They stay within the main area below the header and are removed on leaving. Reduced-motion devices get static subtle sparkles. Journal sparkle implementation is byte-for-byte unchanged.
+
+Upload all extracted files, replacing matching files. Syntax, group ordering, all routes, task count, single active selection and collapse persistence checked using simulated DOM; original index source preservation verified. Actual device visual rendering was not verified.
+
 REORDER PINNED HOME BOOKMARKS
 
 Pinned bookmarks on Overview now support the same direct mouse drag and touch press-and-hold as Bookmarks. Drag a title or empty card area to change order, then release to save. No Move label. Keyboard: focus the card and use Up/Down.
