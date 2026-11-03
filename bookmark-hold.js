@@ -1,6 +1,6 @@
 (function(){
 const installed=new WeakSet();
-function install(){if(page!=='Bookmarks')return;
+function install(){if(!['Bookmarks','Overview'].includes(page))return;
 for(const body of document.querySelectorAll('#content .glow-bookmark-grid')){
 const rows=[...body.children].filter(r=>r.dataset.bookmarkId);
 function commit(id){const ids=[...body.children].map(r=>r.dataset.bookmarkId).filter(Boolean),set=new Set(ids),map=new Map(state.bookmarks.map(b=>[b.id,b]));let i=0;state.bookmarks=state.bookmarks.map(b=>set.has(b.id)?map.get(ids[i++]):b);save();render();[...document.querySelectorAll('[data-bookmark-id]')].find(r=>r.dataset.bookmarkId===id)?.focus();notify('Bookmark order saved')}
@@ -27,6 +27,6 @@ function commit(id){const ids=[...body.children].map(r=>r.dataset.bookmarkId).fi
 }
 const previous=render;render=function(){previous();install()};
 document.addEventListener('click',e=>{if(e.target.closest('[data-suppress-link="yes"]')){e.preventDefault();e.stopImmediatePropagation()}},true);
-const observer=new MutationObserver(()=>{if(page==='Bookmarks')install()});observer.observe(document.querySelector('#content'),{childList:true,subtree:true});
+const observer=new MutationObserver(()=>{if(['Bookmarks','Overview'].includes(page))install()});observer.observe(document.querySelector('#content'),{childList:true,subtree:true});
 install();
 })();

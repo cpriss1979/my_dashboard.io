@@ -1,3 +1,37 @@
+REORDER PINNED HOME BOOKMARKS
+
+Pinned bookmarks on Overview now support the same direct mouse drag and touch press-and-hold as Bookmarks. Drag a title or empty card area to change order, then release to save. No Move label. Keyboard: focus the card and use Up/Down.
+
+Pinned and full Bookmark views share saved order. Reordering pinned cards leaves unpinned bookmarks in their existing positions; links and pin choices are unchanged. Time for You and other existing features are included.
+
+JavaScript syntax and simulated Home drag/save checks passed. Actual device dragging and live sync were not verified. Upload all extracted files, replacing matching files.
+
+TIME FOR YOU
+
+GET STARTED
+Open Time for You from the sidebar or phone More menu. Reminders start OFF. Choose half-hour intervals or Custom hours/minutes, set allowed hours, enable and Save reminder settings. Equal start/end times allow all day; overnight windows work. In-app popups appear only while the dashboard is open, visible and signed in, and wait while dialogs or games are open. No background/browser notification permission is used.
+
+SNOOZE
+5, 15, 30 minutes, one hour, or tomorrow. Tomorrow means the next local calendar day at your configured allowed start time. Snoozes outside the allowed window resume at the next allowed start. Turn reminders off is available in the popup and settings. Closing a popup defers until the next configured interval.
+
+PERSONAL ACTIVITIES
+Choose Short break or Longer activity, then receive a random enabled suggestion from painting, drawing, chess with Rick, pinball, PS4, outside/lake/swimming/zoo, bath, massage chair and creative activities. Another idea avoids the immediately previous choice where alternatives exist. Add custom activities and uncheck suggestions to temporarily exclude them.
+
+BEFORE AND AFTER
+Choose this opens five feeling faces, descriptive words and an optional note. Saving before-feelings records a pending activity. Afterward use I did this and record after-feelings. Only confirming that form records completion. A pending activity survives reopening and pauses reminders until completed or cancelled. History records reminders, snoozes, suggestions, choices, settings changes, cancellations and confirmed activities with timestamps and before/after feelings. Show more history accesses older records.
+
+20 BADGES ON BADGES PAGE
+Confirmed totals: 1, 3, 5, 10, 20, 50, 100. Short breaks: 1 and 5. Longer activities: 1 and 5. Creative activities: 1 and 5. One each: companion, outdoor, restful and play activities. Variety: 3 and 6 distinct activities. Activities on 7 distinct dates, with no consecutive-day requirement. All 20 remain grey until earned and match existing medal cards. Earned awards are retained. No mood improvement is required and no penalties or streaks exist.
+
+SAVED DATA
+Settings, activity preferences, pending check-in, history and awards use state.timeForYou through the existing save/backup/sync system. This does not change Finance calculations, Journal sparkles, other games or other badge collections.
+
+INSTALL
+Upload ALL extracted contents into your existing repository root, replacing matching files. This package has not been deployed for you. No additional service, cost or permission is required for the in-app reminder feature.
+
+CHECKS
+JavaScript syntax, normal/overnight/all-day time windows, tomorrow scheduling, opt-in defaults, all 20 badge rules, confirmed-completion requirements, award retention and original-source preservation passed. Actual-device visual/gesture checks and live Firebase sync were not performed.
+
 20 MATCHING LITTLE WINS MEDALS
 
 The Games collection on Badges now uses 20 visible medal cards with exactly the same achievement-grid, achievement-tile and achievement-medal styling as Journal and Habit Tracker. All 20 remain visible even when the old compact-render flag is passed. Locked medals are grey; earned medals remain colorful. Existing badge IDs and requirements are preserved.
