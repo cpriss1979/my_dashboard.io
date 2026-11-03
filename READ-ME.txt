@@ -1,3 +1,17 @@
+20 LITTLE WINS MEDALS
+
+Little Wins now has 20 medals on the central Badges page. They use the same colorful dimensional medal/card styling as Journal and Habit Tracker. Locked medals stay grey; earned medals become colorful. Original 10 badge IDs, requirements and earned records are unchanged.
+
+New medals: Double Delight (2 wins), Tiny Bouquet (3), Sweet Fifteen (15), Twinkling Twenty (20), Flower Trail (40), Candy Celebration (75), Heart of Gold (150), Garden of Wins (200), Starlight Collection (250), Treasury of Joy (500).
+
+Existing saved win totals count toward these milestones. No badges are awarded below their requirements. Upload all extracted files, replacing matching files. Syntax and achievement-rule checks passed, including saved award preservation. Actual-device rendering was not verified.
+
+GREY UNEARNED BADGES
+
+All unearned Journal, Habit Tracker and Games medals use grey artwork and grey cards, with readable locked labels. Earned badges retain their colors. This update only changes styling; achievement records and requirements are unchanged.
+
+Upload all extracted files, replacing matching files.
+
 CENTRAL BADGES PAGE
 
 Journal, Habit Tracker and Games/Little Wins badge collections are now on Badges in the sidebar and phone More menu. Their original badge displays are removed. Requirements and saved awards are preserved. Journal and habit milestones continue to be evaluated through the same saved state. Games badges read the existing Little Wins record directly. No achievement migration or reset is required. Habit Tracker is placed immediately above Journal in the sidebar.
