@@ -1,3 +1,33 @@
+OVERVIEW & BADGE COLLECTIONS
+
+Overview: Active projects removed; Bookmarks spans the full bottom row under Schedule, Today's priorities and Quick capture.
+
+Journal: 20 badges with flowers/hearts/stars/candy motifs. Entry milestones: 1, 3, 5, 10, 15, 20, 30, 50, 75, 100 nonempty saved entries. Different-date milestones: 2, 5, 10, 30, 90 dates. Total saved-word milestones: 100, 1000, 5000 words. Favorites: 1 and 5 saved entries. No streaks required.
+
+Habits: 20 badges. Time milestones for any one started habit: 1 hour; 1, 3, 7, 14, 30, 60, 90, 180, 365 days. Combined estimated savings milestones: $1, $5, $10, $25, $50, $100, $250, $500, $1000, $5000. Future starts do not qualify. These are tracking milestones, not medical outcomes.
+
+Badges are greyed out until earned, then colorful with a soft glow. Each displays its requirement. Collections can be collapsed. Existing qualifying records count; earned badges are retained under state.achievementCollections using the existing save/sync system even if entries are later removed or edited. Journal sparkle implementation is unchanged.
+
+Upload all extracted files, replacing matching files. Syntax and badge threshold checks passed; actual-device rendering and live sync were not verified.
+
+HABIT TRACKER
+
+Open Habit Tracker from the desktop sidebar or More on your phone. Add any number of habits. Choose a type, name it, enter the local start date/time when you stopped, and enter its usual cost per day, week or month. Zero cost is supported. Edit/Delete controls are available on each tracker.
+
+Shows estimated savings plus years, months, days, hours, minutes and seconds since stopping. Daily and weekly costs use elapsed time; monthly costs use complete calendar months plus the fractional current month anchored to your start date. Month-end dates clamp to the last valid day. Future starts remain zero. Savings are estimates and do not affect Finances.
+
+Habits are stored under state.habits using the existing save/backup/account-sync system. Timers update only on the Habit Tracker page and stop while the page is hidden. Existing finance data, bookmarks, games and Journal sparkles are preserved.
+
+Upload all extracted files, replacing matching files. JavaScript syntax and calculation checks passed for daily/weekly/monthly savings, future dates, leap-year month ends, and elapsed units. Actual device rendering and live account sync were not verified.
+
+MANUAL BOOKMARK ORDER — DIRECT DRAG
+
+Mouse: press a card title or empty space and drag directly to another card. Release to save its position. Touch: hold briefly, then drag. A blue outline indicates dragging. Edit/Delete and Show on Home retain their actions. No Move label.
+
+Prevented the browser's default link/image dragging from interfering. Search results get drag behavior too. Saved order persists through the existing save/sync system. Bills and all other sections are retained.
+
+Simulated hold and direct mouse drag verified saved order and link preservation. Physical device behavior was not verified. Upload all extracted contents, replacing matching files.
+
 PRESS AND HOLD: BOOKMARKS AND BILLS
 
 There are no visible Move labels on bookmarks or bills. Hold an empty area or title of a bookmark card for 0.4 seconds, then drag to another card and release. Bills use the same hold gesture to move up/down. Link taps and Edit/Delete/checkbox actions remain available. Escape cancels. The selected item gets a blue outline when ready.
