@@ -1,0 +1,21 @@
+/* Palette is independent of the match, piece assets, orientation and move logic. */
+body.glow-redesign main #content .chess-board[data-chess-theme]{--chess-light:#e5efda;--chess-dark:#568257;border:3px solid #718877!important}
+.chess-board[data-chess-theme=pink]{--chess-light:#f7ddeb!important;--chess-dark:#cc76aa!important}
+.chess-board[data-chess-theme=green]{--chess-light:#e5efda!important;--chess-dark:#568257!important}
+.chess-board[data-chess-theme=marble]{--chess-light:#ebe9e3!important;--chess-dark:#65737c!important}
+.chess-board[data-chess-theme=black-white]{--chess-light:#f6f6f6!important;--chess-dark:#323840!important}
+.chess-board[data-chess-theme=purple]{--chess-light:#e9def5!important;--chess-dark:#8760aa!important}
+.chess-board[data-chess-theme=red]{--chess-light:#f6e2df!important;--chess-dark:#b9505a!important}
+body.glow-redesign main #content .chess-board[data-chess-theme] button.chess-square.light{background:var(--chess-light)!important}
+body.glow-redesign main #content .chess-board[data-chess-theme] button.chess-square.dark{background:var(--chess-dark)!important}
+body.glow-redesign main #content .chess-board[data-chess-theme=marble] button.chess-square.light{background:repeating-linear-gradient(132deg,transparent 0 15px,#b5bab533 16px,transparent 18px 29px),linear-gradient(38deg,#f7f4ef,#dddeda 48%,#f2f0e8)!important}
+body.glow-redesign main #content .chess-board[data-chess-theme=marble] button.chess-square.dark{background:repeating-linear-gradient(128deg,transparent 0 19px,#dce3e233 20px,transparent 23px 36px),linear-gradient(38deg,#4a5964,#85938f 52%,#53636c)!important}
+body.glow-redesign main #content .chess-board[data-chess-theme] button.chess-square.last-move{outline:2px solid #f6cf63!important;outline-offset:-3px!important}
+body.glow-redesign main #content .chess-board[data-chess-theme] button.chess-square.picked{outline:4px solid #ffc84c!important;outline-offset:-4px!important;box-shadow:inset 0 0 0 6px #26333c!important}
+body.glow-redesign main #content .chess-board[data-chess-theme] button.chess-square:focus-visible{outline:4px solid #00d5ff!important;outline-offset:-4px!important}
+body.glow-redesign main #content .chess-board[data-chess-theme] .piece-w img{filter:drop-shadow(1px 0 0 #25313b) drop-shadow(-1px 0 0 #25313b) drop-shadow(0 1px 0 #25313b) drop-shadow(0 2px 2px #0007)!important}
+body.glow-redesign main #content .chess-board[data-chess-theme] .piece-b img{filter:drop-shadow(1px 0 0 #f1f3ec) drop-shadow(-1px 0 0 #f1f3ec) drop-shadow(0 -1px 0 #f1f3ec) drop-shadow(0 2px 2px #0009)!important}
+body.glow-redesign main #content .chess-board[data-chess-theme] .sculpted-chess-piece{width:88%!important;height:90%!important;max-width:100%!important;max-height:100%!important;object-fit:contain;pointer-events:none}
+body.glow-redesign main #content .chess-board[data-chess-theme] button.chess-square>span{display:grid;place-items:center;width:100%;height:100%;min-height:0}
+body.glow-redesign main #content .chess-board[data-chess-theme] button.chess-square.legal>i{background:#ffdd70!important;border:2px solid #26333c!important;box-shadow:0 0 0 1px #fff9}
+#chessBoardTheme{font-size:16px;min-height:44px}

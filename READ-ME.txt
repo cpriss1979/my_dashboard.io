@@ -1,3 +1,32 @@
+SIX CHESSBOARD THEMES
+
+Chess now has a Board colors dropdown: Pink, Green, Marble, Black & white, Purple, Red. Selection applies immediately and saves as state.chessBoardTheme using the existing save/sync system. Marble is a subtle CSS texture with no external assets. White pieces have a dark edge; black pieces have a pale edge, preserving the sculpted piece artwork. Move selection, keyboard focus and destination markers remain distinct.
+
+Theme changes do not restart the match or change moves/computer strength. Upload all extracted files, replacing matching files. JavaScript syntax, all six selections/persistence and source-preservation checks passed. Actual-device appearance and live sync were not verified.
+
+PEACEFUL HEARTS, ACTIVITY IDEAS & WELCOME VERSE
+
+TIME FOR YOU
+Floating hearts now use Journal's exact 88-particle count, palette, random duration/delay, placement, sizes and drift values. The shape changes from stars to hearts; Journal's code is untouched. Reduced motion remains supported.
+
+Added all 60 ideas from the attached text: 30 short breaks and 30 longer activities. The original 12 remain. Suggestions show the full idea description, and existing choices/disabled activities remain. Ideas are added once with stable IDs.
+
+New/default reminders are ON with a 60-minute interval. Existing explicit settings or Turn reminders off actions are respected. If the only old disabled value was the original default and no settings action was recorded, it changes to enabled hourly. Users can still turn them off. Allowed hours are retained.
+
+COLOR & MOOD
+Time for You uses peaceful pastel gradients, a welcoming hero card and soft activity tiles. Habit Tracker uses brighter varied pastel cards, jewel-tone counters, a trophy welcome and highlighted estimated savings. These are visual changes only.
+
+STARTUP VERSE
+A gradient NKJV verse popup appears once when the dashboard page opens, after sign-in and any other dialog. It stays until dismissed. One of six short verified NKJV passages is chosen locally, excluding the previous verse; Read in context links and copyright credit are included. No network request is needed to display it. See VERSE-SOURCES.txt.
+
+This website does not configure macOS login items. To see the popup when the computer starts, have Plash or the dashboard open at login. It appears again when the page reloads, rather than detecting the computer's power state.
+
+INSTALL
+Upload all extracted files, replacing matching files. No Firebase configuration changes are needed.
+
+CHECKS
+Syntax, reminder defaults, explicit-off retention, idempotent 60-idea migration, timing windows and badge rules passed. Popup simulation verified persistence until close, one per opening and non-repeating selection. Existing application/Journal source preservation verified. Actual-device visual rendering and live sync were not verified.
+
 ORGANIZED SIDEBAR & SMALL TIME FOR YOU SPARKLES
 
 Sidebar groups (expanded initially):
