@@ -1,3 +1,13 @@
+RESPONSIVE CHESS & FEWER HEARTS
+
+Computer Chess now evaluates moves on a separate board in short time-limited chunks, yielding between candidates rather than running its entire search synchronously. Medium/Hard have total search budgets and a legal fallback candidate. A stale turn is cancelled if the match, mode or page changes. Exceptions release the thinking lock. Resume turn retries an interrupted computer turn without resetting the match. Check status now explicitly says to protect your king.
+
+Your saved PGN match, themes, moves and chess rules are preserved. This change does not reset the match. Search budgets can affect computer strength on slower devices.
+
+Time for You floating hearts reduced from 88 to 56; motion and colors are unchanged. Journal is unchanged.
+
+Upload all extracted files, replacing matching files. Syntax and real chess-rule engine checks passed for legal computer replies, yielding, saved-match preservation, cancellation after reset and a Hard midgame. The user's exact saved position and physical-device UI were not available for reproduction.
+
 SIX CHESSBOARD THEMES
 
 Chess now has a Board colors dropdown: Pink, Green, Marble, Black & white, Purple, Red. Selection applies immediately and saves as state.chessBoardTheme using the existing save/sync system. Marble is a subtle CSS texture with no external assets. White pieces have a dark edge; black pieces have a pale edge, preserving the sculpted piece artwork. Move selection, keyboard focus and destination markers remain distinct.
