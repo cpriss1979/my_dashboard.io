@@ -1,0 +1,16 @@
+BIBLE SOURCE NOTES — November 5, 2026
+
+NKJV passage text/source links: Bible Gateway. Short daily verse collection uses the six sources in VERSE-SOURCES.txt. Full passages are not bundled.
+Optional in-app Bible service: API.Bible; eligible account/translation access required.
+https://www.api.bible/bibles
+https://www.api.bible/api-reference
+
+John MacArthur/Grace to You study summaries (paraphrases, not quotations):
+Casting Your Cares on God
+https://www.gty.org/blogs/print/B121129/casting-your-cares-on-god
+The Only Source of Peace
+https://www.gty.org/blogs/print/B121204/the-only-source-of-peace
+Entering into God's Rest
+https://www.gty.org/resources/study-guides/print/1609/entering-into-gods-rest
+
+Summaries do not constitute a full MacArthur commentary or study Bible. Original teaching is linked for context. Reading plan allocation and chapter checklist are original app functionality.

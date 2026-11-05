@@ -1,3 +1,30 @@
+BIBLE IN PERSONAL TIME
+
+Bible is in Personal time and phone More. Includes:
+- Reference/keyword search with 12 curated topic guides (and anxiety/stress/love aliases).
+- A daily encouraging NKJV verse, favorite passages and personal notes.
+- A configurable 365-day plan: straight through or Old/New Testament mix, starting on your chosen date.
+- 66-book progress shelf, 1189 chapter checkboxes, reading-day navigation and explicit I read confirmations.
+- 20 Bible badges on the central Badges page; locked until actual saved requirements are met.
+- Three clearly labeled source-based MacArthur teaching summaries with original Grace to You links. No invented commentary is attributed to him.
+
+FULL NKJV READING
+Without a service key, Read NKJV links open Bible Gateway in your browser; only the small existing daily-verse collection is displayed locally. For full in-dashboard passages, expand Private NKJV connection and connect an API.Bible key with NKJV access. The app checks available translations and stores the key only in this browser/profile, separate from dashboard sync/backup data. Set it up separately on each device. Service availability/licensing/fees are controlled by API.Bible. No key is included in the files. This authenticated external service path was not live-tested.
+
+PLAN
+Both plans cover every chapter exactly once across 365 days. The mix distributes all New Testament chapters across the year, so some days have only Old Testament chapters. Checking a chapter confirms you read it; opening a link never grants reading credit. Start date/order changes preserve confirmed chapters. No streak requirements or late-day penalties.
+
+BIBLE BADGES
+Distinct chapters: 1,5,10,25,50,100,250,500,1189. Completed plan days: 7,30,90,180,365. Entire books: 1,5,10. Favorites: 1,5. Topic guides: 3. These total 20 badges. Earned badges are retained.
+
+Existing chess fix, themes, saved games, finance calculations and Journal sparkle code are preserved. Bible data uses state.bible through existing saves, backup and sync.
+
+INSTALL
+Upload all extracted files, replacing matching files. No Firebase rule changes are required.
+
+CHECKS
+Syntax, all 66 books and 1189 chapters, both plan coverage/uniqueness, date math over leap day/DST, all 20 badge thresholds, award retention, sidebar routes, single selection and original app source preservation passed. Actual-device appearance and live Firebase/API.Bible were not verified.
+
 RESPONSIVE CHESS & FEWER HEARTS
 
 Computer Chess now evaluates moves on a separate board in short time-limited chunks, yielding between candidates rather than running its entire search synchronously. Medium/Hard have total search budgets and a legal fallback candidate. A stale turn is cancelled if the match, mode or page changes. Exceptions release the thinking lock. Resume turn retries an interrupted computer turn without resetting the match. Check status now explicitly says to protect your king.
