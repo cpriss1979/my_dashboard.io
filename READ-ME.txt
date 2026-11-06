@@ -1,3 +1,31 @@
+HOUSEHOLD CASH-FLOW PLANNER
+
+START HERE
+1. Open Finances. Classic Finances opens the original workspace with all previous records, savings, notes, checkmarks, archives and controls.
+2. In Accounts, enter each bank account’s cleared starting balance and the date through which it already includes cleared activity. No opening amount is assumed. Set a minimum cushion per account.
+3. Verify the starter income rules: Crystal $2,427 on the last calendar day, Rick $1,920 on the Friday before the fourth Wednesday. Payday deposits are available that day.
+4. In Import review, export and keep a backup first. Acknowledge the backup, then copy candidate bills for review. Dates are not assumed correct and a queued candidate has no forecast effect. Confirm the amount, account, dates and frequency before adding the rule. Do not copy the same rule manually as well.
+
+DATA PRESERVATION
+The planner stores separate state.cashFlow data through the existing save, backup and sync system. Classic records are not migrated destructively or changed by the planner. Original bills, versions, transfers, income, savings, paid/cleared history and archives are accessible in Classic Finances. Import copies the current effective bill version as a review candidate; check the original for future versions and adjust new planner rules when needed. Legacy income and transfers are not copied into projections. Start with a cleared bank balance, then record any transactions not reflected in it. Planner and Classic edits are separate; use the planner for new forecasts.
+
+BILLS & BALANCES
+Use a verified, estimated, or unknown due date. Unknown dates can use a preferred planning date, or stay unscheduled and excluded from forecasts. Preferred payment dates recur at their chosen day offset from the due date. Monthly rules clamp to the last day of shorter months. Paid and Cleared are independent checkboxes; a cleared item affects the cleared balance only if posted after the opening as-of date. Pending items remain projected once. Mark the actual sent or posting date. Older unconfirmed planned deposits do not inflate projections. A reviewed Classic monthly/one-time bill skips already-paid months. For a paid-but-not-cleared first scheduled month, confirm whether it is still pending or already included in the opening balance. Review older unresolved payments separately; Classic did not record actual posting dates.
+
+Use Edit occurrence to change just one amount/date/account or status. Saved occurrences keep their identities; recurrence changes after saved occurrences begin after the last recorded scheduled date so no replacement duplicates them. Archive pauses a rule; Delete removes it from active planning without deleting posted history.
+
+FORECAST & TRANSFERS
+30/60/90-day per-account and combined timelines, with low-balance and overdraft periods. Transfers are paired account debits/credits, shown once with zero household net effect. Same-day payday deposits and projected transfer receipts are available before bills; outgoing transfers are modeled before incoming transfers. A transfer recommendation is a draft to review, never a real bank instruction. Recommendations are capped by sender funds above its forecast cushion and next-payday reserve, and are withheld when accounts are unconfigured or bills still need scheduling/review. Estimates depend on entered transactions and actual bank timing.
+
+Reserves protect bills at the earlier known due or preferred payment date before the next deposit; the timeline keeps your payment date. Safe to spend protects the minimum projected balance, payday reserve and chosen cushion. Due dates and preferred payment dates are shown separately.
+
+INSTALL & CHECKS
+Upload all extracted files to the existing repository root, replacing matching files. No Firebase changes. Engine and simulated form tests covered payday calculations, seven frequencies, month ends, recurring occurrence changes, cleared/as-of reconciliation, separate Paid/Cleared flags, transfer accounting and sender safety, due-date reserves, period warnings, backup-gated review, original-record preservation, and all forecast windows. No personal records were read or migrated during development. Live Firebase and physical-device UI were not tested.
+
+BILL NOTES
+
+Add optional Notes in the Add/Edit bill form. The Bills table shows Notes between Repeat and Payment status. Recurring bill edits follow the existing month-version rules.
+
 BIBLE IN PERSONAL TIME
 
 Bible is in Personal time and phone More. Includes:

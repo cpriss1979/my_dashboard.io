@@ -1,0 +1,91 @@
+(function(root){
+'use strict';
+const dayMs=86400000, day=s=>Date.parse(s+'T00:00:00Z')/dayMs, iso=n=>new Date(n*dayMs).toISOString().slice(0,10), add=(s,n)=>iso(day(s)+n);
+const month=(s,n)=>{const d=new Date(s+'T00:00:00Z');return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+n,1)).toISOString().slice(0,7)};
+const monthEnd=m=>add(month(m+'-01',1)+'-01',-1);
+const at=(m,n)=>m+'-'+String(Math.min(n,Number(monthEnd(m).slice(-2)))).padStart(2,'0');
+function payday(m,rule,n){if(rule==='last')return monthEnd(m);if(rule==='rick'){const dow=new Date(m+'-01T00:00:00Z').getUTCDay();return at(m,17+(3-dow+7)%7)}return at(m,n)}
+const steps={monthly:1,bimonthly:2,quarterly:3,annually:12};
+function occurrences(r,end){
+ if(!r.start||r.start>end)return [];
+ if(r.frequency==='once')return [r.start];
+ const out=[];
+ if(r.frequency==='weekly'||r.frequency==='biweekly'){const step=r.frequency==='weekly'?7:14;for(let d=day(r.start),limit=day(end);d<=limit;d+=step)out.push(iso(d));return out}
+ const step=steps[r.frequency]||1;
+ for(let i=0;;i+=step){const m=month(r.start,i);if(m>end.slice(0,7))break;const d=payday(m,r.rule,Number(r.start.slice(-2)));if(d>=r.start&&d<=end)out.push(d)}
+ return out
+}
+function init(today){return {schema:1,accounts:[{id:'crystal',name:'Crystal',opening:null,asOf:today,cushion:0},{id:'rick',name:'Rick',opening:null,asOf:today,cushion:0}],income:[{id:'crystal-pay',name:'Crystal payday',account:'crystal',amount:242700,frequency:'monthly',rule:'last',start:today},{id:'rick-pay',name:'Rick payday',account:'rick',amount:192000,frequency:'monthly',rule:'rick',start:today}],bills:[],transfers:[],overrides:{},reviews:[],imported:{}}}
+function events(m,end){
+ const rows=[];
+ for(const r of [...m.income,...m.bills]){
+  const bill=m.bills.includes(r);
+  if(r.archived||r.deleted)continue;
+  const latest=bill&&r.offset<0?add(end,-r.offset):end;
+  for(const scheduled of occurrences(r,latest)){
+   if(r.stop&&scheduled>=r.stop)continue;
+   const id=r.id+'|'+scheduled;if(m.overrides[id])continue;
+   const due=bill&&r.certainty!=='unknown'?scheduled:null;
+   const date=bill?add(scheduled,r.offset||0):scheduled;
+   // Reviewed monthly/one-time legacy series do not replay previously marked payments.
+   if(bill&&r.legacyPaid?.[scheduled.slice(0,7)])continue;
+   if(date<=end)rows.push({id,ruleId:r.id,scheduled,date,due,amount:r.amount,account:r.account,name:r.name,kind:bill?'bill':'income',status:'planned',certainty:r.certainty,notes:r.notes||''});
+  }
+ }
+ for(const o of Object.values(m.overrides)){
+  const rule=[...m.bills,...m.income].find(r=>r.id===o.ruleId);
+  if(o.skipped||o.date>end||((rule?.archived||rule?.deleted)&&o.status==='planned'))continue;
+  rows.push(o);
+ }
+ for(const t of m.transfers)if(!t.deleted&&t.date<=end)rows.push({...t,kind:'transfer',status:t.status==='completed'?'cleared':t.status});
+ return rows;
+}
+function forecast(m,today,horizon){
+ const end=add(today,horizon),rows=events(m,end),plannerRows=events(m,add(today,366)),accounts=m.accounts.map(a=>{
+  const configured=Number.isInteger(a.opening)&&a.asOf<=today;
+  let current=configured?a.opening:null;
+  const related=list=>list.flatMap(r=>r.kind==='transfer'?(r.from===a.id?[{...r,delta:-r.amount}]:r.to===a.id?[{...r,delta:r.amount}]:[]):r.account===a.id?[{...r,delta:r.kind==='bill'?-r.amount:r.amount}]:[]);
+  const relevant=related(rows);
+  for(const r of relevant)if(configured&&r.status==='cleared'&&r.date>a.asOf&&r.date<=today)current+=r.delta;
+  const upcoming=list=>list.filter(r=>r.status!=='cleared'&&!(r.kind==='income'&&r.status==='planned'&&(r.date<today||configured&&r.date<=a.asOf))).map(r=>({...r,originalDate:r.date,date:r.date<today?today:r.date})).sort((x,y)=>x.date.localeCompare(y.date)||priority(x)-priority(y));
+  const future=upcoming(relevant),planning=upcoming(related(plannerRows)),nextDeposit=planning.find(r=>r.kind==='income');
+  const dueBeforeDeposit=planning.filter(r=>r.kind==='bill'&&r.status==='planned'&&r.due&&(nextDeposit?r.due<nextDeposit.date:r.due<=end));
+  const reserveRows=planning.map(r=>r.kind==='bill'&&r.status==='planned'&&r.due&&r.due<r.date?{...r,date:r.due<today?today:r.due}:r).filter(r=>nextDeposit?r.date<nextDeposit.date:r.date<=end).sort((x,y)=>x.date.localeCompare(y.date)||priority(x)-priority(y));
+  let running=current,min=current,firstShort=configured&&current<0?today:null,nextReserve=0,net=0;
+  // Same-day deposits are available; transfers fund the recipient before bills are paid.
+  for(const r of reserveRows){net+=r.delta;nextReserve=Math.max(nextReserve,-net)}
+  for(const r of future){if(configured){running+=r.delta;min=Math.min(min,running);if(!firstShort&&running<0)firstShort=r.date}r.balance=running}
+  const pending=future.filter(r=>r.status==='pending').reduce((n,r)=>n+r.delta,0);
+  return {...a,configured,current,pending,projected:running,reserved:nextReserve,safe:configured?Math.max(0,Math.min(current-nextReserve,min)-a.cushion):null,min,firstShort,nextDeposit,billsBeforeDeposit:reserveRows.filter(r=>r.kind==='bill'),dueBeforeDeposit,lowPeriods:periods(today,end,current,a.cushion,future),future};
+ });
+ const ready=accounts.every(a=>a.configured),sum=k=>accounts.reduce((n,a)=>n+(a[k]??0),0);
+ const timeline=accounts.flatMap(a=>a.future.map(r=>({...r,accountId:a.id}))).sort((a,b)=>a.date.localeCompare(b.date)||priority(a)-priority(b));
+ let combined=ready?sum('current'):null;const household=[];
+ const seenTransfers=new Set();for(const r of timeline){if(r.kind==='transfer'){if(seenTransfers.has(r.id))continue;seenTransfers.add(r.id);household.push({...r,delta:0,balance:combined});continue}if(ready)combined+=r.delta;household.push({...r,balance:combined})}
+ const uncertain=!ready||m.bills.some(b=>!b.archived&&!b.deleted&&!b.start)||m.reviews.some(r=>!m.imported[r.id]);
+ const recommendations=[];const remaining=new Map(accounts.map(a=>[a.id,a.safe??0]));
+ for(const to of uncertain?[]:accounts.filter(a=>a.configured&&a.min<0)){
+  let need=-to.min;
+  for(const from of accounts.filter(a=>a.id!==to.id&&a.configured)){
+   const amount=Math.min(need,remaining.get(from.id));if(amount<=0)continue;
+   recommendations.push({from:from.id,to:to.id,amount,needBy:to.firstShort,date:today});remaining.set(from.id,remaining.get(from.id)-amount);need-=amount;
+   if(!need)break;
+  }
+ }
+ return {end,accounts,timeline,household,combined:{current:ready?sum('current'):null,projected:ready?sum('projected'):null,reserved:sum('reserved'),safe:ready?sum('safe'):null},recommendations,income:household.filter(r=>r.kind==='income').reduce((n,r)=>n+r.amount,0),expenses:household.filter(r=>r.kind==='bill').reduce((n,r)=>n+r.amount,0)};
+}
+function periods(today,end,current,cushion,rows){
+ if(current===null)return [];const last=new Map(rows.map(r=>[r.date,r.balance])),out=[];let balance=current;
+ for(let d=day(today);d<=day(end);d++){const date=iso(d);if(last.has(date))balance=last.get(date);const status=balance<0?'overdraft':balance<cushion?'low balance':null;if(!status)continue;const prev=out.at(-1);if(prev?.status===status&&add(prev.end,1)===date)prev.end=date;else out.push({status,start:date,end:date})}
+ return out
+}
+function priority(r){return r.kind==='income'?0:r.kind==='transfer'?(r.delta<0?1:2):3}
+function reviewCandidates(state,today){return (state.sharedExpenses||[]).flatMap(r=>{
+ const current=today.slice(0,7),versions=[r,...(r.versions||[])].filter(v=>v.date&&(v.month||v.date.slice(0,7))<=current).sort((a,b)=>(a.month||a.date.slice(0,7)).localeCompare(b.month||b.date.slice(0,7)));
+ const v={...r,...versions.at(-1)},person=(state.people||[]).find(p=>p.id===(v.person||v.paidBy));
+ const paid={},cleared={};for(const [m,b] of Object.entries(state.billPayments?.[r.id]||{}))if(b===true)paid[m]=true;
+ for(const [m,b] of Object.entries(state.billClearances?.[r.id]||{}))if(b===true){paid[m]=true;cleared[m]=true}
+ return [{id:r.id,name:v.title,amount:Math.round(Number(v.amount)*100),originalDate:v.date,originalAccount:(state.accounts||[]).find(a=>a.id===v.account)?.name||v.account||'',person:person?.name||v.person||v.paidBy||'',frequency:v.repeatMonthly?'monthly':'once',notes:v.notes||'',paid,cleared}];
+})}
+const api={add,day,at,payday,occurrences,init,events,forecast,reviewCandidates};root.CashFlowCore=api;if(typeof module!=='undefined')module.exports=api;
+})(globalThis);
