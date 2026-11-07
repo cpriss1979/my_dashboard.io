@@ -1,3 +1,9 @@
+BIBLE ON HOME — November 7, 2026
+Sidebar groups: Start here, Plan & organize, Keep & manage, Personal Time, Bible.
+Home includes A quiet place in the Word, with Read, Plan and Favorites links.
+Existing Bible data, plans, favorites, achievements and no-popup behavior remain.
+Upload all extracted contents, replacing matching files.
+
 BIBLE SIDEBAR TAB — November 7, 2026
 Bible has its own link under Personal time, above Time for You.
 Expand Personal time using its heading if the group is collapsed.
