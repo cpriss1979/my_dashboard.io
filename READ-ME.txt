@@ -1,3 +1,19 @@
+BIBLE SIDEBAR TAB — November 7, 2026
+Bible has its own link under Personal time, above Time for You.
+Expand Personal time using its heading if the group is collapsed.
+Updated navigation asset version ensures the current sidebar file loads.
+Bible features/progress and the no-popup update are preserved.
+Upload ALL extracted files, replacing matching files.
+
+NO POPUPS UPDATE — November 7, 2026
+
+Automatic welcome verse and Time for You reminder popups are removed.
+Finance confirmations are removed; Add/Edit/payment forms open inline.
+Finance audit and conflict-checked Undo remain in History.
+Explicitly opened backup/account tools remain available.
+Other saved settings, activities and records are preserved.
+Upload ALL files, replacing matching files.
+
 GLOWCODE DASHBOARD — PASTEL FINANCES
 Updated November 7, 2026
 
@@ -65,7 +81,7 @@ recorded cleared balance on that date. It saves the discrepancy and a snapshot o
 reviewed activity. Pending transactions are not part of a cleared balance.
 No reconciliation result adjusts opening balances or transaction history.
 Review discrepancies using History/Edit and compare bank statements yourself.
-Saved finance changes require confirmation. History > Corrections & undo retains
+Finance changes save without confirmation. History > Corrections & undo retains
 original/new values and can undo a change if its touched records have not changed
 since. Conflicting later edits block undo; use Edit instead. Undo only corrects
 dashboard records, not actual bank payments. Audit records stay saved and synced.

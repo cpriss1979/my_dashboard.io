@@ -13,3 +13,5 @@ body.glow-redesign main #content .cf-record-grid>.cf-record{display:flex;flex-di
 @media(max-width:1200px){.cf-record-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.cf-record-grid{grid-template-columns:minmax(0,1fr)}.cf-bill-calendar{gap:3px}.cf-card .cf-calendar-date{min-height:54px!important}.cf-calendar-date small{font-size:9px}.cf-card .cf-actions{gap:6px}.cf-card .cf-actions label{flex:1 1 130px}.cf-card .cf-actions input{min-width:0;max-width:100%;font-size:16px}.cf-record-grid .cf-record .cf-actions{justify-content:flex-start}.cf-amount{font-size:24px}}
 .cf-savings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:600px){.cf-savings-grid{grid-template-columns:minmax(0,1fr)}}
+
+body.glow-redesign main #content .cf-inline-form{position:static!important;display:block!important;width:100%!important;max-width:100%!important;max-height:none!important;box-sizing:border-box;background:#fff2dd!important;color:#25364a!important;border:1px solid #b8c8d2;border-radius:14px;padding:16px;margin-bottom:16px;scroll-margin-top:110px}.cf-inline-form .cf-error{color:#8b2538!important}
