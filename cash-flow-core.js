@@ -37,16 +37,17 @@ function events(m,end){
   if(o.skipped||o.date>end||((rule?.archived||rule?.deleted)&&o.status==='planned'))continue;
   rows.push(o);
  }
+ for(const a of m.ledger||[])if(!a.deleted&&a.date<=end)rows.push({...a,kind:a.direction==='in'?'money-in':'money-out',status:'cleared'});
  for(const t of m.transfers)if(!t.deleted&&t.date<=end)rows.push({...t,kind:'transfer',status:t.status==='completed'?'cleared':t.status});
  return rows;
 }
 function forecast(m,today,horizon){
- const end=add(today,horizon),rows=events(m,end),plannerRows=events(m,add(today,366)),accounts=m.accounts.map(a=>{
+ const end=add(today,horizon),rows=events(m,end),plannerRows=events(m,add(today,366)),allAccounts=m.accounts.map(a=>{
   const configured=Number.isInteger(a.opening)&&a.asOf<=today;
   let current=configured?a.opening:null;
-  const related=list=>list.flatMap(r=>r.kind==='transfer'?(r.from===a.id?[{...r,delta:-r.amount}]:r.to===a.id?[{...r,delta:r.amount}]:[]):r.account===a.id?[{...r,delta:r.kind==='bill'?-r.amount:r.amount}]:[]);
+  const related=list=>list.flatMap(r=>r.kind==='transfer'?(r.from===a.id?[{...r,delta:-r.amount}]:r.to===a.id?[{...r,delta:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'?0:r.amount,unavailable:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'}]:[]):r.account===a.id?[{...r,delta:['bill','money-out'].includes(r.kind)?-r.amount:r.amount}]:[]);
   const relevant=related(rows);
-  for(const r of relevant)if(configured&&r.status==='cleared'&&r.date>a.asOf&&r.date<=today)current+=r.delta;
+  for(const r of relevant)if(configured&&r.status==='cleared'&&(r.date>a.asOf||r.date===a.asOf&&r.afterBalances?.[a.id]===balanceKey(a))&&r.date<=today)current+=r.delta;
   const upcoming=list=>list.filter(r=>r.status!=='cleared'&&!(r.kind==='income'&&r.status==='planned'&&(r.date<today||configured&&r.date<=a.asOf))).map(r=>({...r,originalDate:r.date,date:r.date<today?today:r.date})).sort((x,y)=>x.date.localeCompare(y.date)||priority(x)-priority(y));
   const future=upcoming(relevant),planning=upcoming(related(plannerRows)),nextDeposit=planning.find(r=>r.kind==='income');
   const dueBeforeDeposit=planning.filter(r=>r.kind==='bill'&&r.status==='planned'&&r.due&&(nextDeposit?r.due<nextDeposit.date:r.due<=end));
@@ -58,10 +59,11 @@ function forecast(m,today,horizon){
   const pending=future.filter(r=>r.status==='pending').reduce((n,r)=>n+r.delta,0);
   return {...a,configured,current,pending,projected:running,reserved:nextReserve,safe:configured?Math.max(0,Math.min(current-nextReserve,min)-a.cushion):null,min,firstShort,nextDeposit,billsBeforeDeposit:reserveRows.filter(r=>r.kind==='bill'),dueBeforeDeposit,lowPeriods:periods(today,end,current,a.cushion,future),future};
  });
+ const accounts=allAccounts.filter(a=>a.type!=='savings'),savings=allAccounts.filter(a=>a.type==='savings');
  const ready=accounts.every(a=>a.configured),sum=k=>accounts.reduce((n,a)=>n+(a[k]??0),0);
  const timeline=accounts.flatMap(a=>a.future.map(r=>({...r,accountId:a.id}))).sort((a,b)=>a.date.localeCompare(b.date)||priority(a)-priority(b));
  let combined=ready?sum('current'):null;const household=[];
- const seenTransfers=new Set();for(const r of timeline){if(r.kind==='transfer'){if(seenTransfers.has(r.id))continue;seenTransfers.add(r.id);household.push({...r,delta:0,balance:combined});continue}if(ready)combined+=r.delta;household.push({...r,balance:combined})}
+ const seenTransfers=new Set();for(const r of timeline){if(r.kind==='transfer'){if(seenTransfers.has(r.id))continue;seenTransfers.add(r.id);const net=accounts.some(a=>a.id===r.from)&&accounts.some(a=>a.id===r.to)?0:r.delta;if(ready)combined+=net;household.push({...r,delta:net,balance:combined});continue}if(ready)combined+=r.delta;household.push({...r,balance:combined})}
  const uncertain=!ready||m.bills.some(b=>!b.archived&&!b.deleted&&!b.start);
  const recommendations=[];const remaining=new Map(accounts.map(a=>[a.id,a.safe??0]));
  for(const to of uncertain?[]:accounts.filter(a=>a.configured&&a.min<0)){
@@ -72,13 +74,15 @@ function forecast(m,today,horizon){
    if(!need)break;
   }
  }
- return {end,accounts,timeline,household,combined:{current:ready?sum('current'):null,projected:ready?sum('projected'):null,reserved:sum('reserved'),safe:ready?sum('safe'):null},recommendations,income:household.filter(r=>r.kind==='income').reduce((n,r)=>n+r.amount,0),expenses:household.filter(r=>r.kind==='bill').reduce((n,r)=>n+r.amount,0)};
+ return {end,accounts,savings,timeline,household,combined:{current:ready?sum('current'):null,projected:ready?sum('projected'):null,reserved:sum('reserved'),safe:ready?sum('safe'):null},recommendations,income:household.filter(r=>['income','money-in'].includes(r.kind)).reduce((n,r)=>n+r.amount,0),expenses:household.filter(r=>['bill','money-out'].includes(r.kind)).reduce((n,r)=>n+r.amount,0)};
 }
 function periods(today,end,current,cushion,rows){
  if(current===null)return [];const last=new Map(rows.map(r=>[r.date,r.balance])),out=[];let balance=current;
  for(let d=day(today);d<=day(end);d++){const date=iso(d);if(last.has(date))balance=last.get(date);const status=balance<0?'overdraft':balance<cushion?'low balance':null;if(!status)continue;const prev=out.at(-1);if(prev?.status===status&&add(prev.end,1)===date)prev.end=date;else out.push({status,start:date,end:date})}
  return out
 }
-function priority(r){return r.kind==='income'?0:r.kind==='transfer'?(r.delta<0?1:2):3}
-const api={add,day,at,payday,occurrences,init,events,forecast};root.CashFlowCore=api;if(typeof module!=='undefined')module.exports=api;
+function priority(r){return ['income','money-in'].includes(r.kind)?0:r.kind==='transfer'?(r.delta<0?1:2):3}
+function balanceKey(a){return a.balanceVersion||a.asOf+'|'+a.opening}
+function billDate(r,today){if(!r.start||r.certainty==='unknown')return '';const dates=occurrences(r,add(today,370)).filter(d=>!r.stop||d<r.stop);return dates.find(d=>d>=today)||dates.at(-1)||r.start}
+const api={balanceKey,billDate,add,day,at,payday,occurrences,init,events,forecast};root.CashFlowCore=api;if(typeof module!=='undefined')module.exports=api;
 })(globalThis);

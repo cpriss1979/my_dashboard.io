@@ -1,3 +1,27 @@
+UPDATE — November 6, 2026
+
+Upload ALL extracted files to your GitHub repository, replacing matching files.
+
+Finances now uses Add Money, Subtract Money, and Move Money. Completed moves
+update both accounts and are not household income or expenses. Select an
+existing scheduled bill/deposit when recording it to prevent double counting.
+Savings has its own section and is excluded from checking totals, bill coverage,
+and safe-to-spend until a completed move brings it into checking.
+
+Bills are sorted by actual due date; bill rules by next due date. Unknown dates
+appear last. Preferred payment dates remain separate for forecasting.
+
+Existing saved data and history are retained. This package does not contain
+your personal browser records. Keep a device backup before replacing files.
+
+Verification: calculation tests and simulated form/save tests passed, including
+same-day balance changes, duplicate submission prevention and savings moves.
+Physical phone rendering and live account sync were not tested in this update.
+
+DELETE INCOME RULES
+
+Finances → Income now offers Delete on each income rule. Confirming stops future planned deposits from that rule. Recorded pending and cleared occurrences remain in the planner.
+
 FINANCE PLANNER ONLY
 
 Classic Finances and Import review were removed from the interface. Existing planner records and original finance data remain in saved state and backups. Unconfirmed review items are not scheduled bills and no longer block recommendations.
