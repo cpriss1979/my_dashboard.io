@@ -1,385 +1,87 @@
-UPDATE — November 6, 2026
-
-Upload ALL extracted files to your GitHub repository, replacing matching files.
-
-Finances now uses Add Money, Subtract Money, and Move Money. Completed moves
-update both accounts and are not household income or expenses. Select an
-existing scheduled bill/deposit when recording it to prevent double counting.
-Savings has its own section and is excluded from checking totals, bill coverage,
-and safe-to-spend until a completed move brings it into checking.
-
-Bills are sorted by actual due date; bill rules by next due date. Unknown dates
-appear last. Preferred payment dates remain separate for forecasting.
-
-Existing saved data and history are retained. This package does not contain
-your personal browser records. Keep a device backup before replacing files.
-
-Verification: calculation tests and simulated form/save tests passed, including
-same-day balance changes, duplicate submission prevention and savings moves.
-Physical phone rendering and live account sync were not tested in this update.
-
-DELETE INCOME RULES
-
-Finances → Income now offers Delete on each income rule. Confirming stops future planned deposits from that rule. Recorded pending and cleared occurrences remain in the planner.
-
-FINANCE PLANNER ONLY
-
-Classic Finances and Import review were removed from the interface. Existing planner records and original finance data remain in saved state and backups. Unconfirmed review items are not scheduled bills and no longer block recommendations.
-
-For current setup: enter cleared balances under Accounts and add bills under Bills. Upload all extracted files, replacing matching files.
-
-Previous release notes below describe features as originally shipped.
-
-HOUSEHOLD CASH-FLOW PLANNER
-
-START HERE
-1. Open Finances. Classic Finances opens the original workspace with all previous records, savings, notes, checkmarks, archives and controls.
-2. In Accounts, enter each bank account’s cleared starting balance and the date through which it already includes cleared activity. No opening amount is assumed. Set a minimum cushion per account.
-3. Verify the starter income rules: Crystal $2,427 on the last calendar day, Rick $1,920 on the Friday before the fourth Wednesday. Payday deposits are available that day.
-4. In Import review, export and keep a backup first. Acknowledge the backup, then copy candidate bills for review. Dates are not assumed correct and a queued candidate has no forecast effect. Confirm the amount, account, dates and frequency before adding the rule. Do not copy the same rule manually as well.
-
-DATA PRESERVATION
-The planner stores separate state.cashFlow data through the existing save, backup and sync system. Classic records are not migrated destructively or changed by the planner. Original bills, versions, transfers, income, savings, paid/cleared history and archives are accessible in Classic Finances. Import copies the current effective bill version as a review candidate; check the original for future versions and adjust new planner rules when needed. Legacy income and transfers are not copied into projections. Start with a cleared bank balance, then record any transactions not reflected in it. Planner and Classic edits are separate; use the planner for new forecasts.
-
-BILLS & BALANCES
-Use a verified, estimated, or unknown due date. Unknown dates can use a preferred planning date, or stay unscheduled and excluded from forecasts. Preferred payment dates recur at their chosen day offset from the due date. Monthly rules clamp to the last day of shorter months. Paid and Cleared are independent checkboxes; a cleared item affects the cleared balance only if posted after the opening as-of date. Pending items remain projected once. Mark the actual sent or posting date. Older unconfirmed planned deposits do not inflate projections. A reviewed Classic monthly/one-time bill skips already-paid months. For a paid-but-not-cleared first scheduled month, confirm whether it is still pending or already included in the opening balance. Review older unresolved payments separately; Classic did not record actual posting dates.
-
-Use Edit occurrence to change just one amount/date/account or status. Saved occurrences keep their identities; recurrence changes after saved occurrences begin after the last recorded scheduled date so no replacement duplicates them. Archive pauses a rule; Delete removes it from active planning without deleting posted history.
-
-FORECAST & TRANSFERS
-30/60/90-day per-account and combined timelines, with low-balance and overdraft periods. Transfers are paired account debits/credits, shown once with zero household net effect. Same-day payday deposits and projected transfer receipts are available before bills; outgoing transfers are modeled before incoming transfers. A transfer recommendation is a draft to review, never a real bank instruction. Recommendations are capped by sender funds above its forecast cushion and next-payday reserve, and are withheld when accounts are unconfigured or bills still need scheduling/review. Estimates depend on entered transactions and actual bank timing.
-
-Reserves protect bills at the earlier known due or preferred payment date before the next deposit; the timeline keeps your payment date. Safe to spend protects the minimum projected balance, payday reserve and chosen cushion. Due dates and preferred payment dates are shown separately.
-
-INSTALL & CHECKS
-Upload all extracted files to the existing repository root, replacing matching files. No Firebase changes. Engine and simulated form tests covered payday calculations, seven frequencies, month ends, recurring occurrence changes, cleared/as-of reconciliation, separate Paid/Cleared flags, transfer accounting and sender safety, due-date reserves, period warnings, backup-gated review, original-record preservation, and all forecast windows. No personal records were read or migrated during development. Live Firebase and physical-device UI were not tested.
-
-BILL NOTES
-
-Add optional Notes in the Add/Edit bill form. The Bills table shows Notes between Repeat and Payment status. Recurring bill edits follow the existing month-version rules.
-
-BIBLE IN PERSONAL TIME
-
-Bible is in Personal time and phone More. Includes:
-- Reference/keyword search with 12 curated topic guides (and anxiety/stress/love aliases).
-- A daily encouraging NKJV verse, favorite passages and personal notes.
-- A configurable 365-day plan: straight through or Old/New Testament mix, starting on your chosen date.
-- 66-book progress shelf, 1189 chapter checkboxes, reading-day navigation and explicit I read confirmations.
-- 20 Bible badges on the central Badges page; locked until actual saved requirements are met.
-- Three clearly labeled source-based MacArthur teaching summaries with original Grace to You links. No invented commentary is attributed to him.
-
-FULL NKJV READING
-Without a service key, Read NKJV links open Bible Gateway in your browser; only the small existing daily-verse collection is displayed locally. For full in-dashboard passages, expand Private NKJV connection and connect an API.Bible key with NKJV access. The app checks available translations and stores the key only in this browser/profile, separate from dashboard sync/backup data. Set it up separately on each device. Service availability/licensing/fees are controlled by API.Bible. No key is included in the files. This authenticated external service path was not live-tested.
-
-PLAN
-Both plans cover every chapter exactly once across 365 days. The mix distributes all New Testament chapters across the year, so some days have only Old Testament chapters. Checking a chapter confirms you read it; opening a link never grants reading credit. Start date/order changes preserve confirmed chapters. No streak requirements or late-day penalties.
-
-BIBLE BADGES
-Distinct chapters: 1,5,10,25,50,100,250,500,1189. Completed plan days: 7,30,90,180,365. Entire books: 1,5,10. Favorites: 1,5. Topic guides: 3. These total 20 badges. Earned badges are retained.
-
-Existing chess fix, themes, saved games, finance calculations and Journal sparkle code are preserved. Bible data uses state.bible through existing saves, backup and sync.
+GLOWCODE DASHBOARD — PASTEL FINANCES
+Updated November 7, 2026
 
 INSTALL
-Upload all extracted files, replacing matching files. No Firebase rule changes are required.
-
-CHECKS
-Syntax, all 66 books and 1189 chapters, both plan coverage/uniqueness, date math over leap day/DST, all 20 badge thresholds, award retention, sidebar routes, single selection and original app source preservation passed. Actual-device appearance and live Firebase/API.Bible were not verified.
-
-RESPONSIVE CHESS & FEWER HEARTS
-
-Computer Chess now evaluates moves on a separate board in short time-limited chunks, yielding between candidates rather than running its entire search synchronously. Medium/Hard have total search budgets and a legal fallback candidate. A stale turn is cancelled if the match, mode or page changes. Exceptions release the thinking lock. Resume turn retries an interrupted computer turn without resetting the match. Check status now explicitly says to protect your king.
-
-Your saved PGN match, themes, moves and chess rules are preserved. This change does not reset the match. Search budgets can affect computer strength on slower devices.
-
-Time for You floating hearts reduced from 88 to 56; motion and colors are unchanged. Journal is unchanged.
-
-Upload all extracted files, replacing matching files. Syntax and real chess-rule engine checks passed for legal computer replies, yielding, saved-match preservation, cancellation after reset and a Hard midgame. The user's exact saved position and physical-device UI were not available for reproduction.
-
-SIX CHESSBOARD THEMES
-
-Chess now has a Board colors dropdown: Pink, Green, Marble, Black & white, Purple, Red. Selection applies immediately and saves as state.chessBoardTheme using the existing save/sync system. Marble is a subtle CSS texture with no external assets. White pieces have a dark edge; black pieces have a pale edge, preserving the sculpted piece artwork. Move selection, keyboard focus and destination markers remain distinct.
-
-Theme changes do not restart the match or change moves/computer strength. Upload all extracted files, replacing matching files. JavaScript syntax, all six selections/persistence and source-preservation checks passed. Actual-device appearance and live sync were not verified.
-
-PEACEFUL HEARTS, ACTIVITY IDEAS & WELCOME VERSE
-
-TIME FOR YOU
-Floating hearts now use Journal's exact 88-particle count, palette, random duration/delay, placement, sizes and drift values. The shape changes from stars to hearts; Journal's code is untouched. Reduced motion remains supported.
-
-Added all 60 ideas from the attached text: 30 short breaks and 30 longer activities. The original 12 remain. Suggestions show the full idea description, and existing choices/disabled activities remain. Ideas are added once with stable IDs.
-
-New/default reminders are ON with a 60-minute interval. Existing explicit settings or Turn reminders off actions are respected. If the only old disabled value was the original default and no settings action was recorded, it changes to enabled hourly. Users can still turn them off. Allowed hours are retained.
-
-COLOR & MOOD
-Time for You uses peaceful pastel gradients, a welcoming hero card and soft activity tiles. Habit Tracker uses brighter varied pastel cards, jewel-tone counters, a trophy welcome and highlighted estimated savings. These are visual changes only.
-
-STARTUP VERSE
-A gradient NKJV verse popup appears once when the dashboard page opens, after sign-in and any other dialog. It stays until dismissed. One of six short verified NKJV passages is chosen locally, excluding the previous verse; Read in context links and copyright credit are included. No network request is needed to display it. See VERSE-SOURCES.txt.
-
-This website does not configure macOS login items. To see the popup when the computer starts, have Plash or the dashboard open at login. It appears again when the page reloads, rather than detecting the computer's power state.
-
-INSTALL
-Upload all extracted files, replacing matching files. No Firebase configuration changes are needed.
-
-CHECKS
-Syntax, reminder defaults, explicit-off retention, idempotent 60-idea migration, timing windows and badge rules passed. Popup simulation verified persistence until close, one per opening and non-repeating selection. Existing application/Journal source preservation verified. Actual-device visual rendering and live sync were not verified.
-
-ORGANIZED SIDEBAR & SMALL TIME FOR YOU SPARKLES
-
-Sidebar groups (expanded initially):
-Start here: Home.
-Plan & organize: Calendar, Tasks, Projects.
-Keep & manage: Notes, Bookmarks, Finances.
-Personal time: Time for You, Habit Tracker, Journal, Games, Badges.
-
-Visible labels Home/Tasks/Notes replace Overview/Daily priorities/Quick notes without changing saved routes/data. Uniform 22px line icons, one gradient selected page, subtle hover and a count for tasks due today. Groups can collapse and their choices use the existing saved/synced state. The Tasks page already has Overdue, Today, Upcoming and Completed groups; its heading now says Tasks.
-
-Time for You has its own 3–9px gently drifting/twinkling sparkles, smaller than Journal's stars. Pointer events pass through. They stay within the main area below the header and are removed on leaving. Reduced-motion devices get static subtle sparkles. Journal sparkle implementation is byte-for-byte unchanged.
-
-Upload all extracted files, replacing matching files. Syntax, group ordering, all routes, task count, single active selection and collapse persistence checked using simulated DOM; original index source preservation verified. Actual device visual rendering was not verified.
-
-REORDER PINNED HOME BOOKMARKS
-
-Pinned bookmarks on Overview now support the same direct mouse drag and touch press-and-hold as Bookmarks. Drag a title or empty card area to change order, then release to save. No Move label. Keyboard: focus the card and use Up/Down.
-
-Pinned and full Bookmark views share saved order. Reordering pinned cards leaves unpinned bookmarks in their existing positions; links and pin choices are unchanged. Time for You and other existing features are included.
-
-JavaScript syntax and simulated Home drag/save checks passed. Actual device dragging and live sync were not verified. Upload all extracted files, replacing matching files.
-
-TIME FOR YOU
-
-GET STARTED
-Open Time for You from the sidebar or phone More menu. Reminders start OFF. Choose half-hour intervals or Custom hours/minutes, set allowed hours, enable and Save reminder settings. Equal start/end times allow all day; overnight windows work. In-app popups appear only while the dashboard is open, visible and signed in, and wait while dialogs or games are open. No background/browser notification permission is used.
-
-SNOOZE
-5, 15, 30 minutes, one hour, or tomorrow. Tomorrow means the next local calendar day at your configured allowed start time. Snoozes outside the allowed window resume at the next allowed start. Turn reminders off is available in the popup and settings. Closing a popup defers until the next configured interval.
-
-PERSONAL ACTIVITIES
-Choose Short break or Longer activity, then receive a random enabled suggestion from painting, drawing, chess with Rick, pinball, PS4, outside/lake/swimming/zoo, bath, massage chair and creative activities. Another idea avoids the immediately previous choice where alternatives exist. Add custom activities and uncheck suggestions to temporarily exclude them.
-
-BEFORE AND AFTER
-Choose this opens five feeling faces, descriptive words and an optional note. Saving before-feelings records a pending activity. Afterward use I did this and record after-feelings. Only confirming that form records completion. A pending activity survives reopening and pauses reminders until completed or cancelled. History records reminders, snoozes, suggestions, choices, settings changes, cancellations and confirmed activities with timestamps and before/after feelings. Show more history accesses older records.
-
-20 BADGES ON BADGES PAGE
-Confirmed totals: 1, 3, 5, 10, 20, 50, 100. Short breaks: 1 and 5. Longer activities: 1 and 5. Creative activities: 1 and 5. One each: companion, outdoor, restful and play activities. Variety: 3 and 6 distinct activities. Activities on 7 distinct dates, with no consecutive-day requirement. All 20 remain grey until earned and match existing medal cards. Earned awards are retained. No mood improvement is required and no penalties or streaks exist.
-
-SAVED DATA
-Settings, activity preferences, pending check-in, history and awards use state.timeForYou through the existing save/backup/sync system. This does not change Finance calculations, Journal sparkles, other games or other badge collections.
-
-INSTALL
-Upload ALL extracted contents into your existing repository root, replacing matching files. This package has not been deployed for you. No additional service, cost or permission is required for the in-app reminder feature.
-
-CHECKS
-JavaScript syntax, normal/overnight/all-day time windows, tomorrow scheduling, opt-in defaults, all 20 badge rules, confirmed-completion requirements, award retention and original-source preservation passed. Actual-device visual/gesture checks and live Firebase sync were not performed.
-
-20 MATCHING LITTLE WINS MEDALS
-
-The Games collection on Badges now uses 20 visible medal cards with exactly the same achievement-grid, achievement-tile and achievement-medal styling as Journal and Habit Tracker. All 20 remain visible even when the old compact-render flag is passed. Locked medals are grey; earned medals remain colorful. Existing badge IDs and requirements are preserved.
-
-Medal definitions and rendering are included directly in index.html so this collection cannot load an old cached 10-medal module. Upload all extracted files, replacing matching files. Verified 20 rendered visible cards, shared styling classes and locked state in a renderer simulation. Physical device appearance was not verified.
-
-CLEANER HOME PRIORITIES
-
-Today's priorities retains its pastel color with separated subtle task cards, aligned checkboxes, wrapping readable titles and smaller date text. Edit/Delete are compact text actions at the bottom right of each task instead of wide dark bars. Controls keep 44px minimum height. Only Home priority styles changed; task saving, completion, editing, deletion and the Daily priorities page are unchanged.
-
-Upload all extracted files, replacing matching files. Verified a CSS-only scoped change and source preservation; physical device rendering was not verified.
-
-LIVE BADGE PROGRESS FIX
-
-Badge requirements are checked after saves, on focus/return to the app, and while open. Little Wins no longer holds a stale progress snapshot; its earned awards are reconciled from the saved total/history and retained. Refresh badge progress manually reopens/checks all collections. Journal/habit award updates do not repeatedly resave unchanged results. Corrected badge code is included directly in index.html.
-
-Only qualifying badges unlock. Existing earned badges remain earned. Upload all extracted files, replacing matching files. Syntax and rule/persistence checks passed. Actual-device rendering and live cloud sync were not verified.
-
-20 LITTLE WINS MEDALS
-
-Little Wins now has 20 medals on the central Badges page. They use the same colorful dimensional medal/card styling as Journal and Habit Tracker. Locked medals stay grey; earned medals become colorful. Original 10 badge IDs, requirements and earned records are unchanged.
-
-New medals: Double Delight (2 wins), Tiny Bouquet (3), Sweet Fifteen (15), Twinkling Twenty (20), Flower Trail (40), Candy Celebration (75), Heart of Gold (150), Garden of Wins (200), Starlight Collection (250), Treasury of Joy (500).
-
-Existing saved win totals count toward these milestones. No badges are awarded below their requirements. Upload all extracted files, replacing matching files. Syntax and achievement-rule checks passed, including saved award preservation. Actual-device rendering was not verified.
-
-GREY UNEARNED BADGES
-
-All unearned Journal, Habit Tracker and Games medals use grey artwork and grey cards, with readable locked labels. Earned badges retain their colors. This update only changes styling; achievement records and requirements are unchanged.
-
-Upload all extracted files, replacing matching files.
-
-CENTRAL BADGES PAGE
-
-Journal, Habit Tracker and Games/Little Wins badge collections are now on Badges in the sidebar and phone More menu. Their original badge displays are removed. Requirements and saved awards are preserved. Journal and habit milestones continue to be evaluated through the same saved state. Games badges read the existing Little Wins record directly. No achievement migration or reset is required. Habit Tracker is placed immediately above Journal in the sidebar.
-
-Upload all extracted files, replacing matching files. JavaScript syntax and game achievement-source preservation checked. Actual-device rendering and live sync were not verified.
-
-OVERVIEW & BADGE COLLECTIONS
-
-Overview: Active projects removed; Bookmarks spans the full bottom row under Schedule, Today's priorities and Quick capture.
-
-Journal: 20 badges with flowers/hearts/stars/candy motifs. Entry milestones: 1, 3, 5, 10, 15, 20, 30, 50, 75, 100 nonempty saved entries. Different-date milestones: 2, 5, 10, 30, 90 dates. Total saved-word milestones: 100, 1000, 5000 words. Favorites: 1 and 5 saved entries. No streaks required.
-
-Habits: 20 badges. Time milestones for any one started habit: 1 hour; 1, 3, 7, 14, 30, 60, 90, 180, 365 days. Combined estimated savings milestones: $1, $5, $10, $25, $50, $100, $250, $500, $1000, $5000. Future starts do not qualify. These are tracking milestones, not medical outcomes.
-
-Badges are greyed out until earned, then colorful with a soft glow. Each displays its requirement. Collections can be collapsed. Existing qualifying records count; earned badges are retained under state.achievementCollections using the existing save/sync system even if entries are later removed or edited. Journal sparkle implementation is unchanged.
-
-Upload all extracted files, replacing matching files. Syntax and badge threshold checks passed; actual-device rendering and live sync were not verified.
-
-HABIT TRACKER
-
-Open Habit Tracker from the desktop sidebar or More on your phone. Add any number of habits. Choose a type, name it, enter the local start date/time when you stopped, and enter its usual cost per day, week or month. Zero cost is supported. Edit/Delete controls are available on each tracker.
-
-Shows estimated savings plus years, months, days, hours, minutes and seconds since stopping. Daily and weekly costs use elapsed time; monthly costs use complete calendar months plus the fractional current month anchored to your start date. Month-end dates clamp to the last valid day. Future starts remain zero. Savings are estimates and do not affect Finances.
-
-Habits are stored under state.habits using the existing save/backup/account-sync system. Timers update only on the Habit Tracker page and stop while the page is hidden. Existing finance data, bookmarks, games and Journal sparkles are preserved.
-
-Upload all extracted files, replacing matching files. JavaScript syntax and calculation checks passed for daily/weekly/monthly savings, future dates, leap-year month ends, and elapsed units. Actual device rendering and live account sync were not verified.
-
-MANUAL BOOKMARK ORDER — DIRECT DRAG
-
-Mouse: press a card title or empty space and drag directly to another card. Release to save its position. Touch: hold briefly, then drag. A blue outline indicates dragging. Edit/Delete and Show on Home retain their actions. No Move label.
-
-Prevented the browser's default link/image dragging from interfering. Search results get drag behavior too. Saved order persists through the existing save/sync system. Bills and all other sections are retained.
-
-Simulated hold and direct mouse drag verified saved order and link preservation. Physical device behavior was not verified. Upload all extracted contents, replacing matching files.
-
-PRESS AND HOLD: BOOKMARKS AND BILLS
-
-There are no visible Move labels on bookmarks or bills. Hold an empty area or title of a bookmark card for 0.4 seconds, then drag to another card and release. Bills use the same hold gesture to move up/down. Link taps and Edit/Delete/checkbox actions remain available. Escape cancels. The selected item gets a blue outline when ready.
-
-The updated bookmark presentation/drag code and bill drag code are included directly in index.html to avoid loading older cached versions. Order saves through existing state/save/sync.
-
-Upload ALL extracted contents to your repository root, replacing matching files. Syntax checks and bill gesture simulation passed; real device gestures and live sync were not verified.
-
-BILL HOLD-AND-DRAG FIX
-
-No Move button is created for bills. Hold a bill name or empty row area for 0.4 seconds, then drag up/down and release. Fixed cancellation caused by moving a pointer-captured row. Active drag listeners now stay on the document. Paid/Cleared and Edit/Delete are excluded. Corrected code is included directly in index.html to avoid an old cached bill-order script.
-
-Simulated full hold/drag/release verified saved order and listener cleanup. Amounts stayed unchanged. Physical device behavior was not tested. Upload all extracted files, replacing matching files.
-
-BILLS: HOLD TO MOVE, NO MOVE LABEL
-
-The visible Move label/button is removed from bills. Press and hold the bill name or empty row area, drag, then release to save. Paid/Cleared and Edit/Delete remain unchanged. Keyboard users can focus the bill row and use Up/Down. Bookmark Move handles remain unchanged.
-
-Upload all extracted files, replacing matching files. JavaScript syntax checked. Physical-device dragging was not tested.
-
-PRESS, HOLD AND MOVE BILLS
-
-Press and hold a bill name or empty area of its row for about 0.4 seconds, then drag up/down. The row highlights when ready. Release to save. Moving before the hold finishes cancels, allowing ordinary touch scrolling. Paid/Cleared, Edit/Delete and other controls are excluded. Move handles and keyboard arrows still work. Order remains saved per person/month.
-
-Upload all extracted files, replacing matching files. Syntax and gesture guard/cleanup checks performed. Physical touch/mouse behavior was not device-tested.
-
-DRAG TO REORDER BILLS
-
-Use the Move handle beside each bill to drag it up or down the list. Keyboard: focus Move and press Up/Down. Escape cancels an active drag. Touch dragging uses the handle; normal scrolling elsewhere is unchanged.
-
-Order is saved separately for each person and month through the existing state/save/sync system. Reordering does not change dates, amounts, calculations, Paid or Cleared status. Archived bill IDs are retained in the saved order.
-
-Upload all extracted files, replacing matching files. Verified JavaScript syntax, person/month persistence and preservation of amounts/statuses. Mouse/touch rendering and live sync were not device-tested.
-
-DRAG TO REORDER BOOKMARKS
-
-On Bookmarks, drag the Move handle to place a card before or after another card in the grid. Works with pointer/touch controls. Normal scrolling outside the handle is unchanged. Focus Move and use arrow keys to rearrange with a keyboard. Escape cancels a drag.
-
-Order saves automatically using the existing save/sync system. Pinned Home bookmarks follow the same order. Searching preserves hidden bookmarks while rearranging visible ones. Links, colors, Edit/Delete, and Home checkboxes are retained.
-
-Upload all extracted files, replacing matching files. Verified JavaScript syntax, order persistence, filtered order preservation and existing bookmark record fields. Physical mouse/touch dragging and live sync were not device-tested.
-
-READABLE ALL CALENDAR ENTRIES
-
-All entries now uses uniform full-width light-blue cards with spacing between entries, left-aligned bold titles, a separate date line, and a separate time/repeating line. Long text wraps. The dialog is wider on desktop and fits phone widths, with vertical scrolling. Search and clicking through to details/edit/delete remain intact. Saved entries and finance logic are unchanged.
-
-Upload all extracted files, replacing matching files. Verified JavaScript syntax, source preservation and retained event-detail handlers. Device rendering was not verified.
-
-COMPACT PAYMENT STATUS
-
-Paid and Cleared checkboxes now sit side by side. Payment status behavior and saved data are unchanged. Upload all extracted files, replacing matching files. Verified this change only modifies payment-status CSS.
-
-BILL PAYMENT STATUS: PAID & CLEARED
-
-Paid: payment has been made/sent. Cleared: payment has finished processing through the bank. Check Cleared only after confirming with your bank. Checking Cleared also checks Paid. Unchecking Paid clears both; unchecking Cleared alone retains Paid.
-
-Existing Paid records are unchanged and initially have no Cleared mark. Both statuses are saved separately per bill and month through the existing state/save/sync system. Repeating months begin unchecked. Archive displays both statuses. Budget calculations are unchanged.
-
-Upload all extracted files to GitHub, replacing matching files. Function checks passed for old Paid marks, per-month storage and checkbox transitions. Actual-device rendering and live Firebase sync were not tested.
-
-NAMED HOLIDAY ENTRIES
-
-Holiday dates are no longer underlined. Holidays appear as named all-day entries in desktop Month cells, Week cards, and the selected-day Schedule (including phone Month view). The separate holiday list is removed. Year retains its compact date grid; selecting a holiday date opens its month and named Schedule entry. Holidays are built in and do not modify or duplicate your saved events. Uniform light-blue day boxes and today's blue tile/white number are preserved.
-
-Upload all extracted files, replacing matching files. JavaScript syntax and source preservation checked. Actual device rendering was not verified.
-
-UNIFORM CALENDAR DAY BOXES
-
-All large day boxes have the same light-blue fill, including past, selected and current dates. Only today's small number tile is blue with a white number. No glow, grey past-day fill, or purple selected-day fill. Saved plans are unchanged.
-
-Final calendar styles are included directly in index.html as well as calendar-dates.css. Upload ALL extracted files and replace matching files.
-
-Verified inline styles, JavaScript syntax and preservation of the rest of index.html. Actual device rendering was not verified.
-
-CALENDAR STYLESHEET FIX
-
-The missing calendar-dates.css link is now present, so date markers and blue calendar styles load. The original purple selected-month-cell rule is also removed. Selected day boxes match the other light-blue boxes; today has a blue circle. Saved data and sync are unchanged.
-
-Extract and upload ALL files to GitHub, replacing matching files. Refresh the dashboard after deployment.
-
-Verified stylesheet links and local files, JavaScript syntax, and preservation of the inline application source. Browser/device rendering was not verified. The older DOM helper could not run because its temporary jsdom dependency is no longer available.
-
-CURRENT MONTH/WEEK & BLUE CALENDAR STYLING
-
-Calendar purple selection backgrounds and controls are now blue. Year dates with plans use the same blue as the other date markers, including holidays with plans.
-
-Selecting Month or Week resets to the current local month/week. Returning to Calendar from another page also resets Month/Week. Previous/next arrows still let you browse other dates, and clicking a Year date still opens that specific date. Saved entries are unchanged.
-
-Interaction checks passed at 320, 375, 390, 430 and 1440px. CSS syntax passed; actual-device visual rendering was not performed.
-
-UNIFIED CALENDAR DATE MARKERS & READABLE WEEK VIEW
-
-Overview, Month, Week and Year now use the same markers: blue circle around today, blue underline on holiday dates, blue numbers for dates with plans. Markers combine when applicable, including yearly repeating plans. Past dates are not greyed out and today has no glow. The old holiday backgrounds and event dots are replaced. Dates remain clickable.
-
-Week view uses larger day labels, dark readable text, white event cards and wrapping titles. Event details and editing remain accessible. Saved data, finance calculations, account/sync and Journal sparkles are unchanged.
-
-INSTALL: Extract and upload ALL contents into your existing GitHub repository root, replacing matching files. No Firebase changes are needed. This has not been deployed for you.
-
-VERIFICATION: DOM interaction checks passed at 320, 375, 390, 430 and 1440px for all date views, combined markers, repeating plans, past-date navigation and event details. CSS syntax passed. Actual-device visual rendering was not performed.
-
-OTHER INCLUDED FEATURES
-
-GLOWCODE — FRAMED CITY, FLOWER GARDEN & SIMPLIFIED SOUND
-
-INSTALL
-Extract the ZIP and upload ALL contents into your existing GitHub repository root, replacing matching files. Keep activities/ and assets/ in their exact relative locations, especially assets/audio and assets/painted-world. This is the complete dashboard, not a patch. No build or Firebase/rule changes are required. It has not been uploaded to GitHub for you.
-
-SOUND ON/OFF ONLY
-All extra Relaxation and Test sound buttons are removed. Sound controls now offer one on/off button, with no separate audio-volume controls. Normal game controls such as Pause, Restart and Reduced motion remain.
-
-Journal — recorded waves crashing against rocks, splashing and retreating. The existing Ocean sound on/off button remains. Ocean audio starts off and stops on leaving Journal or hiding the page.
-Bingo — soft recorded people-chatter ambience. The spoken announcer and generic click tones are removed.
-Blackjack — recorded casino ambience with people, chips and gaming equipment. No generic UI beep overlay.
-Bowling — absolutely no background ambience or generic button tones. Enabling sound is silent until actual pins are hit. Pin hits trigger the existing clattering effect.
-
-The three recorded MP3s are included locally; their creators, source links and CC0 licenses are in assets/audio/CREDITS.txt. Playback starts only after enabling sound. The first enable may take a moment to load/decode the audio. No third-party audio URLs are used during play. Procedural fallback sound is retained if a local recording cannot be loaded. Audio closes when leaving an activity or hiding the page.
-
-BREAK GLASS — HOW IT WORKS
-1. A full oil-painted city appears behind picture glass inside a decorative golden photo frame. The glass has soft reflections and thin edges, without heavy window-grid bars.
-2. Tap all 24 glass sections. Keyboard users can focus the play area and press Space/Enter to clear the next section.
-3. When every section is cleared, an Open window into the garden button appears. The scene waits for you; it does not enter the garden automatically.
-4. Press the button. The picture opens outward, revealing a flower garden, a path through flower-covered arches and a park bench.
-5. The camera automatically approaches the bench, then tilts toward the sky. Bench armrests appear at the edge of the seated view. The sky gently darkens for the fireworks.
-6. Fireworks continue without a time limit until New game is selected or you leave the game. New game resets the glass and scene. Leaving the activity stops animation and audio.
-
-Reduced motion skips the camera journey and uses slower, gentler firework motion. It starts from the device preference and can be changed in the game. The previous Break Glass records are retained. City/traffic ambience stops when entering the garden.
-
-ORIGINAL ARTWORK
-city.jpg and garden.jpg in assets/painted-world were made with the built-in image_gen tool, then saved as optimized local JPEGs. ARTWORK.txt in the same folder contains the exact prompts and generation notes. The original generated PNGs remain in the generated_images folder. No artist names or copied third-party artwork were requested.
-
-PRESERVED
-Other games, quests, achievements, saved state, account/sync behavior, financial calculations, mobile navigation, colored bookmarks and all previous Journal features. The Journal sparkle function and keyframes/styles remain unchanged.
+Extract the ZIP. Upload ALL extracted contents to your existing GitHub repository,
+replacing matching files. Keep index.html and its assets in the same directory.
+This package does not contain your private browser records. Use the same website
+address and account as before to retain access to those records.
+
+BACKUP & DATA SAFETY
+The previous complete source package is retained in the workspace at:
+work/pastel-finance/before-redesign.zip
+On first opening Finances, a pre-update dashboard-data snapshot is saved in local
+storage, scoped to the active dashboard user. It is not overwritten on reload.
+Backup & help > View pre-update safety copy offers Download, Copy and Select all.
+The JSON works with the existing Restore backup control. Export a current backup
+before restoring; restore replaces your dashboard data. If the safety copy cannot
+be saved because storage is unavailable/full, changes are blocked with a message.
+The normal Export dashboard backup and account/sync controls remain available.
+
+LAYOUT
+Money available retains its existing layout. Other finance records use stable
+full-background lavender, blue, mint, peach and rose cards. Grids use 3 columns on
+wide screens, 2 on medium screens, and 1 on phones; savings uses at most 2 columns.
+Sections can collapse and retain their choices while the dashboard is open.
+
+BILLS
+Due Soon: overdue unpaid bills and unpaid bills due within the next 7 days.
+Later This Month: other unpaid bills for the selected month (current by default).
+Paid: paid/pending or cleared bills whose obligation falls in the selected month.
+Upcoming: other unpaid dated bills generated through the next 90 days or selected
+month end, whichever is later. Choose any month to see its generated bills.
+Due date unknown: scheduled occurrences with no verified/estimated due date.
+Bill rules remain available below the calendar, including unscheduled/archived
+rules. Rules sort by next due date; individual bills sort by due date.
+Click a calendar date to view and edit all matching bills. Filters also apply to
+the calendar. Paid bills remain editable and pending until bank clearance.
+Mark Paid records the sent date; Mark Cleared records the bank posting date.
+Each refers to the SAME occurrence, so a payment is never generated twice.
+An optional Estimated amount checkbox flags variable bills for attention within
+7 days. Enter the actual amount and uncheck the box in Edit when it is known.
+Recurring bills generate by stable rule/date IDs when viewed. History is retained;
+unpaid occurrences carry over. No rollover job, destructive reset or duplicate
+monthly copy is created. Saved occurrence edits do not change recurring rules.
+
+MONEY & SAVINGS
+Add Money and Subtract Money record actual account activity. Select the existing
+scheduled bill/deposit when recording one to avoid creating a second transaction.
+Move Money records one movement FROM one account TO another. Completed moves
+update both sides but are never household income or expenses. It does not send
+money through a bank. Existing planned/pending/completed moves stay editable.
+Savings is excluded from everyday spending, bill coverage and safe-to-spend until
+a completed move brings money into checking. Existing savings is not silently
+split: set up Crystal’s Savings and Rick’s Savings using their actual balances.
+Existing generic savings accounts and earlier savings entries remain intact.
+Savings goals display the linked account’s balance against a target. They do not
+reserve, divide, or move funds; multiple goals for one account show the same funds.
+Who Pays What compares each checking account, its bills before payday, upcoming
+income and projected available money. Expand a card to see its bill/deposit list.
+Needs Attention shows overdue/near-due bills, estimates and pending transactions.
+
+RECONCILIATION & CORRECTIONS
+Accounts > Compare bank balance compares a dated CLEARED bank balance with the
+recorded cleared balance on that date. It saves the discrepancy and a snapshot of
+reviewed activity. Pending transactions are not part of a cleared balance.
+No reconciliation result adjusts opening balances or transaction history.
+Review discrepancies using History/Edit and compare bank statements yourself.
+Saved finance changes require confirmation. History > Corrections & undo retains
+original/new values and can undo a change if its touched records have not changed
+since. Conflicting later edits block undo; use Edit instead. Undo only corrects
+dashboard records, not actual bank payments. Audit records stay saved and synced.
+
+BALANCE RULES PRESERVED
+Starting balance represents cleared activity through the end of its as-of date.
+New same-day recorded payments/moves are tagged to that balance snapshot. Rebasing
+an account does not replay those entries. Pending payments are projected once;
+cleared items are booked once. Transfers never become household income/expenses.
+No existing dates, amounts, account assignments or schedules are auto-corrected.
+Income calendar rules, account cushions, and 30/60/90-day forecasts remain intact.
 
 VERIFICATION
-- Native Canvas renders of the actual game scene were visually inspected: framed city, garden approach and seated fireworks.
-- Scene tests passed for artwork loading, 24-section clearing, the explicit button gate, opening/garden/sky phases, continuous bounded fireworks, restart, return-to-library cleanup and reduced motion.
-- Audio tests passed for loading/decoding/looping/stopping the three local MP3s, silence when enabling Bowling, pin-only effects, removal of relaxation controls and removal of the Bingo announcer.
-- MP3 files were checked with native audio metadata tools.
-- All 22 games open/return in DOM tests at 320, 375, 390, 430, 900, 1440 and 1600 CSS-pixel viewport settings. Dashboard editing, finance calculations, medal tracking and mocked account-sync regressions passed.
-- Authentication/sync/rules and other-page code were compared for identity. Journal sparkles and Memory Match photographs were preserved.
-
-LIMITS
-Native Canvas renders and DOM tests do not measure actual browser/phone layout. Audio tests simulate Web Audio playback; physical speaker output and actual listening quality must be checked on your devices after upload. Live Firebase was not exercised; its code and rules remain unchanged. No real user account data was accessed during tests.
+Passed engine regression tests, bill grouping/rollover tests, conflict-safe undo
+checks, simulated interactions across all tabs, calendar editing, Paid/Cleared,
+reconciliation, savings goals, duplicate-submit and failed-backup protection.
+Original Journal, games, Firebase/auth/sync code and other dashboard assets are
+unchanged. Physical-phone rendering and live cloud sync were not exercised in
+this update; desktop/tablet/phone CSS is responsive but not device-verified.

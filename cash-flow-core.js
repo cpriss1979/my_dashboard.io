@@ -29,7 +29,7 @@ function events(m,end){
    const date=bill?add(scheduled,r.offset||0):scheduled;
    // Reviewed monthly/one-time legacy series do not replay previously marked payments.
    if(bill&&r.legacyPaid?.[scheduled.slice(0,7)])continue;
-   if(date<=end)rows.push({id,ruleId:r.id,scheduled,date,due,amount:r.amount,account:r.account,name:r.name,kind:bill?'bill':'income',status:'planned',certainty:r.certainty,notes:r.notes||''});
+   if(date<=end)rows.push({id,ruleId:r.id,scheduled,date,due,amount:r.amount,account:r.account,name:r.name,kind:bill?'bill':'income',status:'planned',certainty:r.certainty,estimatedAmount:!!r.estimatedAmount,notes:r.notes||''});
   }
  }
  for(const o of Object.values(m.overrides)){
