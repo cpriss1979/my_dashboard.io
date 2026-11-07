@@ -1,7 +1,7 @@
 (function(){
 'use strict';
-const C=window.CashFlowCore,frequencies={once:'One time',weekly:'Weekly',biweekly:'Every two weeks',monthly:'Monthly',bimonthly:'Every two months',quarterly:'Quarterly',annually:'Annually'},tabs=['Overview','Accounts','Income','Bills','Transfers','Forecast','Import review'];
-let classic=false,tab='Overview',horizon=30,m=null,filters={account:'',status:'',frequency:'',due:''},scope='';
+const C=window.CashFlowCore,frequencies={once:'One time',weekly:'Weekly',biweekly:'Every two weeks',monthly:'Monthly',bimonthly:'Every two months',quarterly:'Quarterly',annually:'Annually'},tabs=['Overview','Accounts','Income','Bills','Transfers','Forecast'];
+let tab='Overview',horizon=30,m=null,filters={account:'',status:'',frequency:'',due:''},scope='';
 const today=()=>localDate(new Date()), dollars=n=>n===null||n===undefined?'Not set':money(n/100), name=id=>m.accounts.find(a=>a.id===id)?.name||'Unassigned', uid=()=>crypto.randomUUID();
 const minDate='1900-01-01',maxDate='2199-12-31';
 function e(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
@@ -39,37 +39,18 @@ function updateRule(list,r,next){
   r.stop=next.start;list.push(replacement);
  }else Object.assign(r,next)
 }
-function billForm(r,candidate){
+function billForm(r){
  const certainty=r?.certainty||'unknown',start=r?.start||'',preferred=start?C.add(start,r.offset||0):'';
- const suggested=candidate?m.accounts.find(a=>a.name.toLowerCase()===candidate.person.toLowerCase())?.id||'':m.accounts[0].id;
- const a=acct(r?.account||suggested,true);a.required=true;
- const pendingMonths=candidate?Object.keys(candidate.paid).filter(x=>!candidate.cleared?.[x]):[];
- form(candidate?'Verify imported bill':r?'Edit bill rule':'Add bill',[
- ...(candidate?[e('p','Original: '+candidate.name+' · '+dollars(candidate.amount)+' · '+(candidate.person||'unassigned')+(candidate.originalAccount?' · original account '+candidate.originalAccount:'')+' · date '+(candidate.originalDate||'not set')+'. The old date is not verified.','cf-wide')]:[]),
- field('Bill name',input('name','text',r?.name||candidate?.name)),field('Responsible account',a),field('Amount ($)',number('amount',r?r.amount/100:candidate?candidate.amount/100:'',.01)),field('Frequency',select('frequency',Object.entries(frequencies),r?.frequency||candidate?.frequency||'monthly')),field('Due-date confidence',select('certainty',[['verified','Verified'],['estimated','Estimated'],['unknown','Unknown']],certainty)),field('Actual / estimated first due date',input('due','date',certainty==='unknown'?'':start,false)),field('First preferred payment / planning date',input('preferred','date',preferred,false)),field('Autopay',check('autopay',r?.autopay)),field('Notes',note('notes',r?.notes||candidate?.notes)),
- ...(pendingMonths.length?[e('p','Classic marks Paid but not Cleared in: '+pendingMonths.join(', ')+'. For the first scheduled month, tell us whether the payment is still pending. Check older payments separately; their posting dates were not recorded.','cf-wide'),field('Paid payment for first scheduled month',select('legacyResolution',[['','Choose if applicable'],['included','Already reflected in cleared starting balance'],['pending','Still pending at bank']],'')),field('Date payment was sent (if pending)',input('legacyPosted','date','',false))]:[])
+ const a=acct(r?.account||m.accounts[0].id,true);a.required=true;
+ form(r?'Edit bill rule':'Add bill',[
+ field('Bill name',input('name','text',r?.name)),field('Responsible account',a),field('Amount ($)',number('amount',r?r.amount/100:'',.01)),field('Frequency',select('frequency',Object.entries(frequencies),r?.frequency||'monthly')),field('Due-date confidence',select('certainty',[['verified','Verified'],['estimated','Estimated'],['unknown','Unknown']],certainty)),field('Actual / estimated first due date',input('due','date',certainty==='unknown'?'':start,false)),field('First preferred payment / planning date',input('preferred','date',preferred,false)),field('Autopay',check('autopay',r?.autopay)),field('Notes',note('notes',r?.notes))
  ],f=>{
  const due=f.due.value,preferredDate=f.preferred.value,confidence=f.certainty.value;
  if(confidence!=='unknown'&&!due)throw Error('Enter a due date or select Unknown.');
  if(confidence==='unknown'&&due)throw Error('Choose Verified or Estimated for a due date, or clear the due date.');
  const anchor=due||preferredDate,offset=due&&preferredDate?C.day(preferredDate)-C.day(due):0;
  if(Math.abs(offset)>366)throw Error('Preferred payment date must be within one year of the due date.');
- if(candidate&&anchor&&anchor<today())throw Error('Use the first upcoming date, or leave an unknown bill unscheduled.');
  const next={name:reqName(f),account:f.account.value,amount:cents(f.amount.value),frequency:f.frequency.value,start:anchor,offset,certainty:confidence,autopay:f.autopay.checked,notes:value(f,'notes')};
- if(candidate){
-  if(m.imported[candidate.id])throw Error('This bill was already reviewed.');
-  const sameCadence=['monthly','once'].includes(next.frequency),slot=anchor.slice(0,7);
-  if(!sameCadence&&candidate.paid[slot])throw Error('Classic has a payment in that month. Start the new cadence in a later month and review that payment in Classic.');
-  const needs=pendingMonths.includes(slot);
-  if(needs&&!f.legacyResolution?.value)throw Error('Confirm whether the old payment is pending or reflected in the starting balance.');
-  const pending=needs&&f.legacyResolution.value==='pending';
-  const posted=f.legacyPosted?.value;
-  if(pending&&(!posted||posted>today()))throw Error('Enter the date the pending payment was sent.');
-  const id=uid();
-  m.bills.push({id,...next,legacyId:candidate.id,legacyPaid:sameCadence?candidate.paid:{}});
-  if(pending){const key=id+'|'+anchor;m.overrides[key]={id:key,ruleId:id,scheduled:anchor,date:posted,posted,preferred:preferredDate||anchor,due:due||null,kind:'bill',status:'pending',paid:true,cleared:false,name:next.name,amount:next.amount,account:next.account,certainty:next.certainty,notes:next.notes}}
-  m.imported[candidate.id]='confirmed';return
- }
  updateRule(m.bills,r,next)
  })
 }
@@ -92,8 +73,8 @@ function removeRule(r){if(!confirm('Remove this rule from active planning? Saved
 function toggleArchive(r){r.archived=!r.archived;commit()}
 function badge(s){const n=e('span',s,'cf-status');n.dataset.status=s;return n}
 function record(title,description,...actions){const n=e('article',undefined,'cf-record');const copy=e('div');copy.append(e('h3',title),e('p',description));n.append(copy,row(...actions));return n}
-function banner(){const p=card('Household cash flow');p.append(e('p','Plan deposits, bills and transfers against each bank account. Classic Finances remains available with your original records, notes, savings and archives.'),row(b('Classic Finances',()=>{classic=true;render()}),b('Export dashboard backup',()=>backup())));const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{tab=x;render()});btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);return p}
-function overview(root,report){const p=card('Money available');if(report.accounts.some(a=>!a.configured))p.append(e('p','Start here: enter a cleared balance and as-of date for each account, then verify old bills under Import review. No opening balance is assumed.','cf-warning'));p.append(e('p','Enter a cleared balance through the end of its as-of date. Record later bank activity once. Pending items are included in projections but not in cleared balances. Safe to spend uses the lowest projected balance and your cushion. These estimates use only the accounts and transactions you enter.'),horizonChoice());const grid=e('div',undefined,'cf-account-grid');for(const a of report.accounts){
+function banner(){const p=card('Household cash flow');p.append(e('p','Plan deposits, bills and transfers against each bank account.'),row(b('Export dashboard backup',()=>backup())));const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{tab=x;render()});btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);return p}
+function overview(root,report){const p=card('Money available');if(report.accounts.some(a=>!a.configured))p.append(e('p','Start here: enter a cleared balance and as-of date for each account. No opening balance is assumed.','cf-warning'));p.append(e('p','Enter a cleared balance through the end of its as-of date. Record later bank activity once. Pending items are included in projections but not in cleared balances. Safe to spend uses the lowest projected balance and your cushion. These estimates use only the accounts and transactions you enter.'),horizonChoice());const grid=e('div',undefined,'cf-account-grid');for(const a of report.accounts){
  const q=e('article',undefined,'cf-record');q.append(e('h3',a.name));const values=e('dl',undefined,'cf-metrics');
  for(const [label,val] of [['Current cleared',a.current],['Pending net',a.pending],['Projected at '+report.end,a.projected],['Reserve before payday',a.reserved],['Safe to spend',a.safe]])values.append(e('dt',label),e('dd',dollars(val)));
  q.append(values,e('p',a.configured?(a.nextDeposit?'Next deposit: '+a.nextDeposit.date+' · '+dollars(a.nextDeposit.amount):'No upcoming deposit found in the next year.'): 'Set a cleared starting balance before using this forecast.'));
@@ -102,7 +83,7 @@ function overview(root,report){const p=card('Money available');if(report.account
  const planner=card('Paycheck planner');for(const a of report.accounts){const list=a.billsBeforeDeposit,due=a.dueBeforeDeposit;planner.append(e('h3',a.name+' · before the next deposit'),e('p','Due before payday: '+(due.length?due.map(x=>x.name+' ('+dueLabel(x)+')').join(' · '):'None with a known due date.')),e('p','Bills in reserve: '+(list.length?list.map(x=>x.name+' ('+dollars(x.amount)+', '+x.date+')').join(' · '):'None scheduled.')));if(due.some(x=>x.originalDate>x.due))planner.append(e('p','Some preferred payments are after the due date. Reserves use the earlier date; the forecast keeps your preferred payment dates.','cf-warning'))}
  for(const t of report.recommendations)planner.append(record('Suggested transfer · '+dollars(t.amount),name(t.from)+' → '+name(t.to)+' · needed by '+t.needBy+'. Sender retains its forecast cushion.',b('Review transfer',()=>transferForm(null,t))));
  if(!report.recommendations.length)planner.append(e('p','No transfer recommendation from the entered balances and schedule.'));
- if(m.bills.some(b=>!b.archived&&!b.deleted&&!b.start)||m.reviews.some(r=>!m.imported[r.id]))planner.append(e('p','Some bills are unscheduled or still need review. Their amounts are not included in projections.','cf-warning'));
+ if(m.bills.some(b=>!b.archived&&!b.deleted&&!b.start))planner.append(e('p','Some bills are unscheduled. Their amounts are not included in projections.','cf-warning'));
  root.append(planner);const up=card('Upcoming bills');const rows=C.events(m,C.add(today(),30)).filter(x=>x.kind==='bill'&&x.status!=='cleared').sort((a,b)=>a.date.localeCompare(b.date)).slice(0,8);for(const x of rows)up.append(record(x.name,name(x.account)+' · '+dollars(x.amount)+' · payment '+x.date+' · due '+dueLabel(x),b('Edit occurrence',()=>occurrenceForm(x))));if(!rows.length)up.append(e('p','No scheduled bills within 30 days.'));root.append(up)
 }
 function accounts(root){const p=card('Bank accounts');p.append(e('p','Starting balance is the amount already cleared through the as-of date. Do not enter historical cleared transactions again if included in that balance.'),b('Add account',()=>accountForm(),'primary'));for(const a of m.accounts)p.append(record(a.name,'Starting balance '+dollars(a.opening)+' · as of '+a.asOf+' · cushion '+dollars(a.cushion),b('Edit account',()=>accountForm(a))));root.append(p)}
@@ -127,11 +108,7 @@ function timeline(root,report){const p=card('Cash-flow forecast');const view=sel
  for(const x of rows){const low=x.balance!==null&&x.balance<cushion;const status=x.balance!==null&&x.balance<0?'overdraft':low?'low balance':x.status;p.append(record(x.date+' · '+x.name,(x.kind==='transfer'?name(x.from)+' → '+name(x.to):name(x.account))+' · '+(x.kind==='transfer'&&!scope?'$0.00 net':(x.delta<0?'−':'+')+dollars(Math.abs(x.delta)))+' · after '+dollars(x.balance)+(x.originalDate!==x.date?' · originally '+x.originalDate:'')+(x.certainty==='estimated'?' · estimated due':x.certainty==='unknown'?' · due unknown':''),badge(status)))}
  if(!rows.length)p.append(e('p','No transactions in this forecast window.'));root.append(p)
 }
-function imports(root){const p=card('Review original bills');p.append(e('p','Classic Finances is unchanged. The import copies candidate bills only. Old incomes, transfers, savings, payment records and archives stay in Classic Finances. Confirm new starting balances against the bank before relying on the forecast.'),e('p','Export and keep a backup first. Imported dates are not verified. Choose the first upcoming actual due or preferred payment date for each bill. Reviewed monthly and one-time bills skip previously paid months. If the first scheduled payment is still pending, record when it was sent during review.'),b('Export original dashboard backup',()=>backup()));
- const ack=check('backup',false),copy=b('Copy bills into review queue',()=>{if(!ack.checked)return;const existing=new Set(m.reviews.map(r=>r.id));const candidates=C.reviewCandidates(state,today());for(const r of candidates)if(!existing.has(r.id)&&!m.imported[r.id])m.reviews.push(r);m.importedAt=new Date().toISOString();commit()},'primary');copy.disabled=true;ack.onchange=()=>copy.disabled=!ack.checked;p.append(field('I saved a backup',ack),copy);
- for(const r of m.reviews){const status=m.imported[r.id];p.append(record(r.name,dollars(r.amount)+' · '+(r.person||'Unassigned')+' · original date '+r.originalDate+' (unverified) · '+(status||'Needs review'),...(status?[badge(status)]:[b('Verify & add',()=>billForm(null,r)),b('Leave in Classic',()=>{m.imported[r.id]='classic only';commit()},'link')]))) }if(!m.reviews.length)p.append(e('p','No bills copied for review yet.'));root.append(p)
-}
-function paint(){const content=document.getElementById('content');if(classic){const back=card('Classic Finances');back.append(b('Open cash-flow planner',()=>{classic=false;render()},'primary'));content.prepend(back);return}m=state.cashFlow||C.init(today());content.replaceChildren(banner());const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),horizon):null;
- if(tab==='Accounts')accounts(content);else if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Transfers')transfers(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Import review')imports(content);else overview(content,report)}
+function paint(){const content=document.getElementById('content');m=state.cashFlow||C.init(today());content.replaceChildren(banner());const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),horizon):null;
+ if(tab==='Accounts')accounts(content);else if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Transfers')transfers(content);else if(tab==='Forecast')timeline(content,report);else overview(content,report)}
 const prior=render;render=function(){prior();if(page==='Finances')paint()};render();
 })();

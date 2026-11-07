@@ -1,3 +1,11 @@
+FINANCE PLANNER ONLY
+
+Classic Finances and Import review were removed from the interface. Existing planner records and original finance data remain in saved state and backups. Unconfirmed review items are not scheduled bills and no longer block recommendations.
+
+For current setup: enter cleared balances under Accounts and add bills under Bills. Upload all extracted files, replacing matching files.
+
+Previous release notes below describe features as originally shipped.
+
 HOUSEHOLD CASH-FLOW PLANNER
 
 START HERE

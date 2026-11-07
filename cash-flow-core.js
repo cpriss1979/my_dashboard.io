@@ -15,7 +15,7 @@ function occurrences(r,end){
  for(let i=0;;i+=step){const m=month(r.start,i);if(m>end.slice(0,7))break;const d=payday(m,r.rule,Number(r.start.slice(-2)));if(d>=r.start&&d<=end)out.push(d)}
  return out
 }
-function init(today){return {schema:1,accounts:[{id:'crystal',name:'Crystal',opening:null,asOf:today,cushion:0},{id:'rick',name:'Rick',opening:null,asOf:today,cushion:0}],income:[{id:'crystal-pay',name:'Crystal payday',account:'crystal',amount:242700,frequency:'monthly',rule:'last',start:today},{id:'rick-pay',name:'Rick payday',account:'rick',amount:192000,frequency:'monthly',rule:'rick',start:today}],bills:[],transfers:[],overrides:{},reviews:[],imported:{}}}
+function init(today){return {schema:1,accounts:[{id:'crystal',name:'Crystal',opening:null,asOf:today,cushion:0},{id:'rick',name:'Rick',opening:null,asOf:today,cushion:0}],income:[{id:'crystal-pay',name:'Crystal payday',account:'crystal',amount:242700,frequency:'monthly',rule:'last',start:today},{id:'rick-pay',name:'Rick payday',account:'rick',amount:192000,frequency:'monthly',rule:'rick',start:today}],bills:[],transfers:[],overrides:{}}}
 function events(m,end){
  const rows=[];
  for(const r of [...m.income,...m.bills]){
@@ -62,7 +62,7 @@ function forecast(m,today,horizon){
  const timeline=accounts.flatMap(a=>a.future.map(r=>({...r,accountId:a.id}))).sort((a,b)=>a.date.localeCompare(b.date)||priority(a)-priority(b));
  let combined=ready?sum('current'):null;const household=[];
  const seenTransfers=new Set();for(const r of timeline){if(r.kind==='transfer'){if(seenTransfers.has(r.id))continue;seenTransfers.add(r.id);household.push({...r,delta:0,balance:combined});continue}if(ready)combined+=r.delta;household.push({...r,balance:combined})}
- const uncertain=!ready||m.bills.some(b=>!b.archived&&!b.deleted&&!b.start)||m.reviews.some(r=>!m.imported[r.id]);
+ const uncertain=!ready||m.bills.some(b=>!b.archived&&!b.deleted&&!b.start);
  const recommendations=[];const remaining=new Map(accounts.map(a=>[a.id,a.safe??0]));
  for(const to of uncertain?[]:accounts.filter(a=>a.configured&&a.min<0)){
   let need=-to.min;
@@ -80,12 +80,5 @@ function periods(today,end,current,cushion,rows){
  return out
 }
 function priority(r){return r.kind==='income'?0:r.kind==='transfer'?(r.delta<0?1:2):3}
-function reviewCandidates(state,today){return (state.sharedExpenses||[]).flatMap(r=>{
- const current=today.slice(0,7),versions=[r,...(r.versions||[])].filter(v=>v.date&&(v.month||v.date.slice(0,7))<=current).sort((a,b)=>(a.month||a.date.slice(0,7)).localeCompare(b.month||b.date.slice(0,7)));
- const v={...r,...versions.at(-1)},person=(state.people||[]).find(p=>p.id===(v.person||v.paidBy));
- const paid={},cleared={};for(const [m,b] of Object.entries(state.billPayments?.[r.id]||{}))if(b===true)paid[m]=true;
- for(const [m,b] of Object.entries(state.billClearances?.[r.id]||{}))if(b===true){paid[m]=true;cleared[m]=true}
- return [{id:r.id,name:v.title,amount:Math.round(Number(v.amount)*100),originalDate:v.date,originalAccount:(state.accounts||[]).find(a=>a.id===v.account)?.name||v.account||'',person:person?.name||v.person||v.paidBy||'',frequency:v.repeatMonthly?'monthly':'once',notes:v.notes||'',paid,cleared}];
-})}
-const api={add,day,at,payday,occurrences,init,events,forecast,reviewCandidates};root.CashFlowCore=api;if(typeof module!=='undefined')module.exports=api;
+const api={add,day,at,payday,occurrences,init,events,forecast};root.CashFlowCore=api;if(typeof module!=='undefined')module.exports=api;
 })(globalThis);
