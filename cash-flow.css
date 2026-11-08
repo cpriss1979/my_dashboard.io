@@ -15,3 +15,5 @@ body.glow-redesign main #content .cf-record-grid>.cf-record{display:flex;flex-di
 .cf-savings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:600px){.cf-savings-grid{grid-template-columns:minmax(0,1fr)}}
 
 body.glow-redesign main #content .cf-inline-form{position:static!important;display:block!important;width:100%!important;max-width:100%!important;max-height:none!important;box-sizing:border-box;background:#fff2dd!important;color:#25364a!important;border:1px solid #b8c8d2;border-radius:14px;padding:16px;margin-bottom:16px;scroll-margin-top:110px}.cf-inline-form .cf-error{color:#8b2538!important}
+
+.cf-action-notice{padding:10px 14px;background:#d9f0e3;color:#20364e;border-radius:10px;line-height:1.5;margin:8px 0 12px}

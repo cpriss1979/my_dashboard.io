@@ -1,3 +1,25 @@
+PAID / DELETE / ONE-TIME BILLS — November 8, 2026
+
+Mark Paid now records the payment immediately, with no additional Save step.
+The bill shows Paid — Awaiting clearance. Mark Cleared records bank processing.
+These are intentionally separate: Paid alone does not mean the bank has cleared
+it. History now displays that distinction instead of just saying Pending.
+Edit remains available for changing the actual payment or posting date.
+
+Bills offers Add one-time bill (no rule) and Set up bill rule. One-time entries
+appear in Bills, the bill calendar and forecasts without a recurring schedule.
+
+Delete is available for individual bill occurrences, deposits, direct money
+entries, transfers, savings goals, reconciliation records and earlier savings
+entries. Deleting a recurring occurrence does not delete its rule or other months.
+Use Delete under Bill rules / Income rules to stop future generation.
+Deletion excludes the entry from calculations; undo restores it. Source values
+remain in the audit trail so accidental deletion can be corrected in History.
+Balances already included in a starting-balance snapshot are not silently rebased.
+
+Upload ALL extracted files, replacing matching files.
+Existing Bible sidebar/Home cards and the no-popup behavior are preserved.
+
 BIBLE ON HOME — November 7, 2026
 Sidebar groups: Start here, Plan & organize, Keep & manage, Personal Time, Bible.
 Home includes A quiet place in the Word, with Read, Plan and Favorites links.

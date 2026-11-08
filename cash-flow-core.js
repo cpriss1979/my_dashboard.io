@@ -34,7 +34,7 @@ function events(m,end){
  }
  for(const o of Object.values(m.overrides)){
   const rule=[...m.bills,...m.income].find(r=>r.id===o.ruleId);
-  if(o.skipped||o.date>end||((rule?.archived||rule?.deleted)&&o.status==='planned'))continue;
+  if(o.deleted||o.skipped||o.date>end||((rule?.archived||rule?.deleted)&&o.status==='planned'))continue;
   rows.push(o);
  }
  for(const a of m.ledger||[])if(!a.deleted&&a.date<=end)rows.push({...a,kind:a.direction==='in'?'money-in':'money-out',status:'cleared'});
