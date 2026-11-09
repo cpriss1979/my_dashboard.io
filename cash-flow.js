@@ -116,7 +116,21 @@ function goalForm(g){const choices=activeAccounts().filter(a=>a.type==='savings'
 function banner(){const p=card('Household cash flow');p.append(e('p','Plan deposits, bills and transfers against each bank account.'),moneyActions());const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{tab=x;render()});btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);const tools=e('details');tools.append(e('summary','Backup & help'),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Every change has a conflict-checked undo in History.'));p.append(tools);return p}
 function overview(root,report){const p=card('Money available');if(report.accounts.some(a=>!a.configured))p.append(e('p','Start here: enter a cleared balance and as-of date for each account. No opening balance is assumed.','cf-warning'));p.append(e('p','Enter a cleared balance through the end of its as-of date. Record later bank activity once. Pending items are included in projections but not in cleared balances. Safe to spend uses the lowest projected balance and your cushion. These estimates use only the accounts and transactions you enter.'),horizonChoice());const grid=e('div',undefined,'cf-account-grid');for(const a of report.accounts){
  const q=e('article',undefined,'cf-record');q.append(e('h3',a.name));const values=e('dl',undefined,'cf-metrics');
- for(const [label,val] of [['Current cleared',a.current],['Pending net',a.pending],['Projected at '+report.end,a.projected],['Reserve before payday',a.reserved],['Safe to spend',a.safe]])values.append(e('dt',label),e('dd',dollars(val)));
+ const currentShortfall = a.configured ? Math.max(0,-a.current) : null;
+ const projectedShortfall = a.configured ? Math.max(0,-a.min) : null;
+ const metrics = [
+  ['Current cleared',a.current],
+  ['Current shortfall',currentShortfall,currentShortfall>0],
+  ['Pending net',a.pending],
+  ['Projected at '+report.end,a.projected],
+  ['Largest forecast shortfall',projectedShortfall,projectedShortfall>0],
+  ['Reserve before payday',a.reserved],
+  ['Safe to spend',a.safe]
+ ];
+ for(const [label,amount,isShortfall] of metrics){
+  const style = isShortfall ? 'cf-shortfall' : undefined;
+  values.append(e('dt',label,style),e('dd',dollars(amount),style));
+ }
  q.append(values,e('p',a.configured?(a.nextDeposit?'Next deposit: '+a.nextDeposit.date+' · '+dollars(a.nextDeposit.amount):'No upcoming deposit found in the next year.'): 'Set a cleared starting balance before using this forecast.'));
  if(a.configured&&a.min<a.cushion&&a.min>=0)q.append(badge('low balance'),e('p','Lowest projected balance: '+dollars(a.min)));if(a.firstShort)q.append(badge('overdraft'),e('p','First projected shortfall: '+a.firstShort));q.append(b('Edit balance',()=>accountForm(m.accounts.find(x=>x.id===a.id))));grid.append(q)
  }p.append(grid,e('p','Checking total: '+dollars(report.combined.current)+' · projected: '+dollars(report.combined.projected)+' · reserved: '+dollars(report.combined.reserved)+' · safe to spend: '+dollars(report.combined.safe)));root.append(p);
