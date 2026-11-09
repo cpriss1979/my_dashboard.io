@@ -18,9 +18,10 @@ function occurrences(r,end){
 function init(today){return {schema:1,accounts:[{id:'crystal',name:'Crystal',opening:null,asOf:today,cushion:0},{id:'rick',name:'Rick',opening:null,asOf:today,cushion:0}],income:[{id:'crystal-pay',name:'Crystal payday',account:'crystal',amount:242700,frequency:'monthly',rule:'last',start:today},{id:'rick-pay',name:'Rick payday',account:'rick',amount:192000,frequency:'monthly',rule:'rick',start:today}],bills:[],transfers:[],overrides:{}}}
 function events(m,end){
  const rows=[];
+ const deletedAccounts = new Set(m.accounts.filter(a=>a.deleted).map(a=>a.id));
  for(const r of [...m.income,...m.bills]){
   const bill=m.bills.includes(r);
-  if(r.archived||r.deleted)continue;
+  if(r.archived||r.deleted||deletedAccounts.has(r.account))continue;
   const latest=bill&&r.offset<0?add(end,-r.offset):end;
   for(const scheduled of occurrences(r,latest)){
    if(r.stop&&scheduled>=r.stop)continue;
@@ -34,7 +35,7 @@ function events(m,end){
  }
  for(const o of Object.values(m.overrides)){
   const rule=[...m.bills,...m.income].find(r=>r.id===o.ruleId);
-  if(o.deleted||o.skipped||o.date>end||((rule?.archived||rule?.deleted)&&o.status==='planned'))continue;
+  if((o.status==='planned'&&deletedAccounts.has(o.account))||o.deleted||o.skipped||o.date>end||((rule?.archived||rule?.deleted)&&o.status==='planned'))continue;
   rows.push(o);
  }
  for(const a of m.ledger||[])if(!a.deleted&&a.date<=end)rows.push({...a,kind:a.direction==='in'?'money-in':'money-out',status:'cleared'});
@@ -42,7 +43,13 @@ function events(m,end){
  return rows;
 }
 function forecast(m,today,horizon){
- const end=add(today,horizon),rows=events(m,end),plannerRows=events(m,add(today,366)),allAccounts=m.accounts.map(a=>{
+ const deletedAccounts = new Set(m.accounts.filter(a=>a.deleted).map(a=>a.id));
+ const included = row => row.status==='cleared' ||
+  ![row.account,row.from,row.to].some(id=>deletedAccounts.has(id));
+ const end=add(today,horizon);
+ const rows=events(m,end).filter(included);
+ const plannerRows=events(m,add(today,366)).filter(included);
+ const allAccounts=m.accounts.filter(a=>!a.deleted).map(a=>{
   const configured=Number.isInteger(a.opening)&&a.asOf<=today;
   let current=configured?a.opening:null;
   const related=list=>list.flatMap(r=>r.kind==='transfer'?(r.from===a.id?[{...r,delta:-r.amount}]:r.to===a.id?[{...r,delta:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'?0:r.amount,unavailable:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'}]:[]):r.account===a.id?[{...r,delta:['bill','money-out'].includes(r.kind)?-r.amount:r.amount}]:[]);
