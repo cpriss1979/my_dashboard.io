@@ -40,6 +40,46 @@
     }
   } catch {}
 
+  const sparkleLayer = document.createElement('div');
+  sparkleLayer.className = 'journal-magic-layer home-journal-sparkles';
+  sparkleLayer.setAttribute('aria-hidden', 'true');
+  document.body.append(sparkleLayer);
+
+  function scatter(star, dot) {
+    const random = (min, max) => min + Math.random() * (max - min);
+    const duration = random(2.4, 6.2);
+    const values = {
+      x: random(2, 98) + '%',
+      y: random(2, 98) + '%',
+      size: (dot ? random(4, 8) : random(12, 24)) + 'px',
+      duration: duration + 's',
+      delay: -random(0, duration) + 's',
+      'drift-x': random(-90, 90) + 'px',
+      'drift-y': random(-110, 110) + 'px'
+    };
+    for (const [key, value] of Object.entries(values)) star.style.setProperty('--spark-' + key, value);
+  }
+
+  function refreshSparkles() {
+    const counts = { off: 0, subtle: 18, dreamy: 36, full: 56 };
+    const colors = ['one', 'two', 'three'];
+    sparkleLayer.replaceChildren();
+    for (let index = 0; index < counts[applied.intensity]; index++) {
+      const dot = index % 2 === 1;
+      const star = document.createElement('i');
+      star.className = 'journal-magic-star' + (dot ? ' glitter-dot' : '');
+      star.style.setProperty('--spark-color', 'var(--glitter-' + colors[index % colors.length] + ')');
+      scatter(star, dot);
+      star.addEventListener('animationiteration', event => {
+        if (event.animationName === 'journalRandomFloat') {
+          star.style.setProperty('--spark-x', (2 + Math.random() * 96) + '%');
+          star.style.setProperty('--spark-y', (2 + Math.random() * 96) + '%');
+        }
+      });
+      sparkleLayer.append(star);
+    }
+  }
+
   function applyAppearance() {
     const body = document.body;
     if (applied.theme !== 'midnight') base = applied.theme;
@@ -50,30 +90,14 @@
     body.dataset.glitterMotion = applied.motion ? 'on' : 'off';
     body.dataset.glitterAccent = applied.accent;
     body.dataset.glitterColor = applied.glitterColor;
+    refreshSparkles();
   }
 
   applyAppearance();
   const main = document.querySelector('body > main');
   if (main) {
-    const ornaments = document.createElement('div');
-    ornaments.className = 'midnight-ornaments';
-    ornaments.setAttribute('aria-hidden', 'true');
-    for (const symbol of ['✦', '♡', '🦋', '✧']) {
-      const ornament = document.createElement('span');
-      ornament.textContent = symbol;
-      ornaments.append(ornament);
-    }
-    main.prepend(ornaments);
     const content = main.querySelector('#content');
     if (content) {
-      const sparkleBand = document.createElement('div');
-      sparkleBand.className = 'midnight-sparkle-band';
-      sparkleBand.setAttribute('aria-hidden', 'true');
-      for (const symbol of ['✧', '✦', '·', '♡', '✧', '·', '✦', '✧', '·', '✦', '♡', '✧']) {
-        const sparkle = document.createElement('span');
-        sparkle.textContent = symbol;
-        sparkleBand.append(sparkle);
-      }
       const welcome = document.createElement('section');
       welcome.className = 'midnight-home-welcome';
       const label = document.createElement('p');
@@ -92,7 +116,6 @@
         studio.onclick = () => { if (!settings.open) settings.showModal(); };
         welcome.append(studio);
       }
-      content.before(sparkleBand);
       if (!demo) content.before(welcome);
     }
   }

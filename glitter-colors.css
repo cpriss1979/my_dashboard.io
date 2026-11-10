@@ -155,39 +155,6 @@ body.glow-redesign[data-midnight-glitter]:is([data-glow-page="Overview"],[data-g
 body[data-midnight-glitter]:is([data-glow-page="Overview"],[data-glow-page="Home"]) :is(.glow-overview,#homeBibleHero) button:focus-visible,
 body[data-midnight-glitter] > aside button:focus-visible { outline:2px solid #628ae0; outline-offset:2px; }
 
-.midnight-ornaments { display:none; }
-body[data-glitter-enabled]:is([data-glow-page="Overview"],[data-glow-page="Home"]) .midnight-ornaments {
-  display:block;
-  position:absolute;
-  inset:0;
-  overflow:hidden;
-  pointer-events:none;
-  user-select:none;
-  z-index:0;
-}
-.midnight-ornaments::before {
-  content:'';
-  position:absolute;
-  inset:0;
-  background:
-    radial-gradient(circle at 13px 12px,var(--glitter-one,#dfc7ff) 0 1px,transparent 2px) 0 0/137px 97px,
-    radial-gradient(circle at 36px 21px,var(--glitter-two,#acf0f7) 0 1px,transparent 2px) 15px 24px/181px 137px,
-    radial-gradient(circle at 20px 20px,var(--glitter-three,#ffd0e6) 0 1px,transparent 2px) 0 0/109px 151px;
-  opacity:var(--midnight-stars);
-  animation:midnight-twinkle 9s ease-in-out infinite alternate;
-}
-.midnight-ornaments span {
-  position:absolute;
-  inset-inline-start:2%;
-  top:18%;
-  color:var(--midnight-accent);
-  font-size:clamp(12px,2vw,20px);
-  opacity:var(--midnight-float);
-  animation:midnight-drift 15s ease-in-out infinite;
-}
-.midnight-ornaments span:nth-child(2) { inset-inline-start:auto; inset-inline-end:1%; top:25%; animation-delay:-4s; }
-.midnight-ornaments span:nth-child(3) { top:64%; animation-delay:-8s; }
-.midnight-ornaments span:nth-child(4) { inset-inline-start:auto; inset-inline-end:2%; top:77%; animation-delay:-11s; }
 @keyframes midnight-twinkle { from{filter:brightness(.58)} to{filter:brightness(1.08)} }
 @keyframes midnight-drift { 0%,100%{transform:translateY(0) rotate(-7deg)} 50%{transform:translateY(-18px) rotate(8deg)} }
 @keyframes midnight-enter { from{opacity:.92;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
@@ -204,18 +171,7 @@ body[data-midnight-glitter][data-glitter-motion="on"]:is([data-glow-page="Overvi
     box-shadow:0 0 14px color-mix(in srgb,var(--midnight-accent) 46%,transparent);
   }
 }
-body[data-glitter-enabled][data-glitter-motion="off"] .midnight-ornaments :is(span),
-body[data-glitter-enabled][data-glitter-motion="off"] .midnight-ornaments::before,
-body[data-glitter-enabled][data-glitter-motion="off"] > aside .brand::after { animation:none; }
-body[data-glitter-enabled][data-glitter-intensity="off"] .midnight-ornaments,
-body[data-glitter-enabled][data-glitter-intensity="off"] > aside .brand::after { display:none; }
 @media (prefers-reduced-motion:reduce) {
-  body[data-glitter-enabled] .midnight-ornaments span,
-  body[data-glitter-enabled] .midnight-ornaments::before,
-  body[data-glitter-enabled] > aside .brand::after,
-  body[data-midnight-glitter][data-glitter-motion="on"]:is([data-glow-page="Overview"],[data-glow-page="Home"]) #content {
-    animation:none;
-  }
   body[data-midnight-glitter][data-glitter-motion="on"] > aside nav button,
   body[data-midnight-glitter][data-glitter-motion="on"]:is([data-glow-page="Overview"],[data-glow-page="Home"]) #content :is(.glow-overview > .card,#homeBibleHero,button) {
     transition:none;
@@ -233,34 +189,6 @@ body[data-glitter-enabled][data-glitter-intensity="off"] > aside .brand::after {
 
 .theme-studio-controls[hidden] { display:none!important; }
 
-.midnight-sparkle-band { display:none; }
-body[data-glitter-enabled]:is([data-glow-page="Overview"],[data-glow-page="Home"]):not([data-glitter-intensity="off"]) .midnight-sparkle-band {
-  display:flex;
-  position:relative;
-  justify-content:space-around;
-  align-items:center;
-  gap:4px;
-  min-height:24px;
-  margin:0 0 8px;
-  color:var(--midnight-accent);
-  pointer-events:none;
-}
-.midnight-sparkle-band span {
-  font-size:15px;
-  opacity:var(--midnight-float);
-  text-shadow:0 0 9px currentColor;
-}
-.midnight-sparkle-band span:nth-child(3n) { color:var(--midnight-ice); font-size:12px; }
-.midnight-sparkle-band span:nth-child(4n) { color:var(--midnight-pink); }
-body[data-glitter-enabled][data-glitter-intensity="subtle"] .midnight-sparkle-band span:nth-child(even) { display:none; }
-body[data-glitter-enabled][data-glitter-intensity="full"] .midnight-sparkle-band span { font-size:18px; }
-@media (prefers-reduced-motion:no-preference) {
-  body[data-glitter-enabled][data-glitter-motion="on"] .midnight-sparkle-band span {
-    animation:midnight-twinkle 3.4s ease-in-out infinite alternate;
-  }
-  .midnight-sparkle-band span:nth-child(3n+1) { animation-delay:-2.1s!important; }
-  .midnight-sparkle-band span:nth-child(3n+2) { animation-delay:-.8s!important; }
-}
 
 [data-dashboard-theme="sage"] {
   --theme-background: #111e19;
@@ -385,8 +313,20 @@ body[data-glitter-color="lime"] { --glitter-one:#c8ff61; --glitter-two:#6ff6a6; 
 body[data-glitter-color="violet"] { --glitter-one:#bc91ff; --glitter-two:#e5b6ff; --glitter-three:#ffe1fc; }
 body[data-glitter-color="silver"] { --glitter-one:#fff; --glitter-two:#c6daf5; --glitter-three:#eef5ff; }
 body[data-glitter-color="coral"] { --glitter-one:#ff946f; --glitter-two:#ffb9a0; --glitter-three:#ffe1a3; }
-body[data-glitter-enabled] .midnight-sparkle-band span,
-body[data-glitter-enabled] .midnight-ornaments span,
-body[data-glitter-enabled] > aside .brand::after { color:var(--glitter-one); }
-body[data-glitter-enabled] .midnight-sparkle-band span:nth-child(3n) { color:var(--glitter-two); }
-body[data-glitter-enabled] .midnight-sparkle-band span:nth-child(4n) { color:var(--glitter-three); }
+
+.home-journal-sparkles { display:none; }
+body[data-glitter-enabled]:is([data-glow-page="Overview"],[data-glow-page="Home"]) > .home-journal-sparkles {
+  display:block;
+}
+body[data-glitter-motion="off"] .home-journal-sparkles .journal-magic-star {
+  animation:none!important;
+  opacity:.7;
+}
+
+body[data-glitter-motion="off"] > aside .brand::after { animation:none; }
+@media (prefers-reduced-motion:reduce) {
+  body[data-glitter-enabled] > aside .brand::after,
+  body[data-midnight-glitter][data-glitter-motion="on"]:is([data-glow-page="Overview"],[data-glow-page="Home"]) #content {
+    animation:none!important;
+  }
+}
