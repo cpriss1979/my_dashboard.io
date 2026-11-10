@@ -9,7 +9,9 @@
     ['sage', 'Sage Garden'],
     ['peach', 'Peach Sunrise'],
     ['honey', 'Honey Glow'],
-    ['blueberry', 'Blueberry Dream']
+    ['blueberry', 'Blueberry Dream'],
+    ['citrus', 'Citrus Pop'],
+    ['electric', 'Electric Bloom']
   ];
   const key = 'glowcode-dashboard-theme';
   const demo = document.body.hasAttribute('data-midnight-demo');
@@ -18,7 +20,7 @@
   const accents = [['lavender','Lavender'],['pink','Pink'],['ice','Icy Blue'],['mint','Mint'],['peach','Soft Peach']];
   const standardTheme = id => themes.some(([value]) => value === id && id !== 'midnight');
   let base = 'glow';
-  let applied = { theme: demo ? 'midnight' : base, intensity: 'dreamy', motion: true, accent: 'lavender' };
+  let applied = { theme: demo ? 'midnight' : base, intensity: demo ? 'dreamy' : 'off', motion: true, accent: 'lavender' };
   try {
     const previous = localStorage.getItem(key);
     if (!demo && standardTheme(previous)) base = previous;
@@ -37,6 +39,7 @@
     if (applied.theme !== 'midnight') base = applied.theme;
     body.dataset.dashboardTheme = base;
     body.toggleAttribute('data-midnight-glitter', applied.theme === 'midnight');
+    body.toggleAttribute('data-glitter-enabled', applied.intensity !== 'off');
     body.dataset.glitterIntensity = applied.intensity;
     body.dataset.glitterMotion = applied.motion ? 'on' : 'off';
     body.dataset.glitterAccent = applied.accent;
@@ -116,11 +119,10 @@
   const motion = document.createElement('input');
   motion.type = 'checkbox';
   motionLabel.className = 'theme-studio-motion';
-  motionLabel.append(motion, document.createTextNode('Animate Midnight Glitter'));
+  motionLabel.append(motion, document.createTextNode('Animate sparkles'));
   controls.append(motionLabel);
 
   function updateControls() {
-    controls.hidden = !choices.get('midnight').checked;
     choices.get('midnight').parentElement.dataset.glitterAccent = accent.value;
   }
   for (const radio of choices.values()) radio.addEventListener('change', updateControls);
@@ -133,7 +135,7 @@
   const status = document.createElement('p');
   status.setAttribute('role', 'status');
   const help = document.createElement('p');
-  help.textContent = 'Select a theme and apply it to see the dashboard. Midnight Glitter adds sparkles to Home and the sidebar. Turn on animation for twinkling.';
+  help.textContent = 'Sparkles work with every theme on Home and the sidebar. Choose Off to hide them, or turn animation off to keep them still.';
 
   function resetControls() {
     choices.get(applied.theme).checked = true;
