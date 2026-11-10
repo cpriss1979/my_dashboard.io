@@ -3,6 +3,8 @@
   --theme-sidebar: #16102b;
   --theme-sidebar-end: #090e24;
   --theme-header: #0c1128f5;
+  --theme-active-start: #763caa;
+  --theme-active-end: #2b6097;
   --theme-accent: #7637a4;
   --theme-accent-end: #285f9c;
   --theme-finance-panel: #fff2dd;
@@ -64,7 +66,7 @@
 }
 .theme-preview-header {
   border-radius: 3px;
-  background: linear-gradient(110deg, var(--theme-accent), var(--theme-accent-end));
+  background: linear-gradient(105deg, var(--theme-active-start,var(--theme-accent)), var(--theme-active-end,var(--theme-accent-end)));
 }
 .theme-preview-panel {
   border-radius: 3px;
@@ -91,19 +93,21 @@
   --theme-background: var(--midnight-navy);
   --theme-sidebar: var(--midnight-sidebar);
   --theme-sidebar-end: var(--midnight-sidebar-end);
-  --theme-accent: var(--midnight-accent);
-  --theme-accent-end: #a6d9fb;
+  --theme-active-start: var(--midnight-accent-dark);
+  --theme-active-end: #263b66;
   --theme-finance-panel: var(--midnight-lavender);
 }
-body[data-midnight-glitter][data-glitter-accent="pink"] { --midnight-accent:#ffafd4; --midnight-accent-dark:#6c2a54; }
-body[data-midnight-glitter][data-glitter-accent="ice"] { --midnight-accent:#a6dcff; --midnight-accent-dark:#194b70; }
-body[data-midnight-glitter][data-glitter-accent="mint"] { --midnight-accent:#a7ecd4; --midnight-accent-dark:#215b4d; }
-body[data-midnight-glitter][data-glitter-accent="peach"] { --midnight-accent:#ffc7ad; --midnight-accent-dark:#713e34; }
+:is(body[data-midnight-glitter],[data-dashboard-theme="midnight"])[data-glitter-accent="pink"] { --midnight-accent:#ffafd4; --midnight-accent-dark:#6c2a54; }
+:is(body[data-midnight-glitter],[data-dashboard-theme="midnight"])[data-glitter-accent="ice"] { --midnight-accent:#a6dcff; --midnight-accent-dark:#194b70; }
+:is(body[data-midnight-glitter],[data-dashboard-theme="midnight"])[data-glitter-accent="mint"] { --midnight-accent:#a7ecd4; --midnight-accent-dark:#215b4d; }
+:is(body[data-midnight-glitter],[data-dashboard-theme="midnight"])[data-glitter-accent="peach"] { --midnight-accent:#ffc7ad; --midnight-accent-dark:#713e34; }
 body[data-midnight-glitter][data-glitter-intensity="off"] { --midnight-stars:0; --midnight-float:0; }
 body[data-midnight-glitter][data-glitter-intensity="subtle"] { --midnight-stars:.24; --midnight-float:.22; }
 body[data-midnight-glitter][data-glitter-intensity="full"] { --midnight-stars:.76; --midnight-float:.78; }
 
 body.glow-redesign[data-midnight-glitter] > aside {
+  --theme-active-start:var(--midnight-accent-dark);
+  --theme-active-end:#263b66;
   background: linear-gradient(165deg,var(--midnight-sidebar),var(--midnight-sidebar-end));
   border-right-color:#494063;
 }
@@ -226,3 +230,75 @@ body[data-midnight-glitter][data-glitter-intensity="off"] > aside .brand::after 
 .theme-studio-controls label { display:grid; gap:4px; }
 .theme-studio-controls select { min-height:44px; font-size:16px; max-width:100%; }
 .theme-studio-controls .theme-studio-motion { display:flex; align-items:center; gap:8px; min-height:44px; }
+
+.theme-studio-controls[hidden] { display:none!important; }
+
+.midnight-sparkle-band { display:none; }
+body[data-midnight-glitter][data-glow-page="Overview"]:not([data-glitter-intensity="off"]) .midnight-sparkle-band {
+  display:flex;
+  position:relative;
+  justify-content:space-around;
+  align-items:center;
+  gap:4px;
+  min-height:24px;
+  margin:0 0 8px;
+  color:var(--midnight-accent);
+  pointer-events:none;
+}
+.midnight-sparkle-band span {
+  font-size:15px;
+  opacity:var(--midnight-float);
+  text-shadow:0 0 9px currentColor;
+}
+.midnight-sparkle-band span:nth-child(3n) { color:var(--midnight-ice); font-size:12px; }
+.midnight-sparkle-band span:nth-child(4n) { color:var(--midnight-pink); }
+body[data-midnight-glitter][data-glitter-intensity="subtle"] .midnight-sparkle-band span:nth-child(even) { display:none; }
+body[data-midnight-glitter][data-glitter-intensity="full"] .midnight-sparkle-band span { font-size:18px; }
+@media (prefers-reduced-motion:no-preference) {
+  body[data-midnight-glitter][data-glitter-motion="on"] .midnight-sparkle-band span {
+    animation:midnight-twinkle 3.4s ease-in-out infinite alternate;
+  }
+  .midnight-sparkle-band span:nth-child(3n+1) { animation-delay:-2.1s!important; }
+  .midnight-sparkle-band span:nth-child(3n+2) { animation-delay:-.8s!important; }
+}
+
+[data-dashboard-theme="sage"] {
+  --theme-background: #111e19;
+  --theme-sidebar: #274337;
+  --theme-sidebar-end: #13251e;
+  --theme-header: #1d362c;
+  --theme-accent: #38614b;
+  --theme-accent-end: #325b57;
+  --theme-page-panel: #e8f2e5;
+  --theme-finance-panel: #f1f5e4;
+}
+[data-dashboard-theme="peach"] {
+  --theme-background: #251a24;
+  --theme-sidebar: #462a39;
+  --theme-sidebar-end: #281c2a;
+  --theme-header: #352535;
+  --theme-accent: #98514d;
+  --theme-accent-end: #784568;
+  --theme-page-panel: #ffebdf;
+  --theme-finance-panel: #fff1dc;
+}
+[data-dashboard-theme="honey"] {
+  --theme-background: #241e15;
+  --theme-sidebar: #42321d;
+  --theme-sidebar-end: #271f18;
+  --theme-header: #36291e;
+  --theme-accent: #7a552c;
+  --theme-accent-end: #655237;
+  --theme-page-panel: #fff1d4;
+  --theme-finance-panel: #fff6e3;
+}
+[data-dashboard-theme="blueberry"] {
+  --theme-background: #111731;
+  --theme-sidebar: #292e56;
+  --theme-sidebar-end: #171d38;
+  --theme-header: #202849;
+  --theme-accent: #4c53a0;
+  --theme-accent-end: #6d4687;
+  --theme-page-panel: #e9edff;
+  --theme-finance-panel: #f3eaff;
+}

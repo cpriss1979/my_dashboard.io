@@ -5,7 +5,11 @@
     ['glow', 'Original Glow'],
     ['midnight', 'Midnight Glitter'],
     ['ocean', 'Ocean'],
-    ['dusk', 'Lavender Dusk']
+    ['dusk', 'Lavender Dusk'],
+    ['sage', 'Sage Garden'],
+    ['peach', 'Peach Sunrise'],
+    ['honey', 'Honey Glow'],
+    ['blueberry', 'Blueberry Dream']
   ];
   const key = 'glowcode-dashboard-theme';
   const demo = document.body.hasAttribute('data-midnight-demo');
@@ -50,6 +54,18 @@
       ornaments.append(ornament);
     }
     main.prepend(ornaments);
+    const content = main.querySelector('#content');
+    if (content) {
+      const sparkleBand = document.createElement('div');
+      sparkleBand.className = 'midnight-sparkle-band';
+      sparkleBand.setAttribute('aria-hidden', 'true');
+      for (const symbol of ['✧', '✦', '·', '♡', '✧', '·', '✦', '✧', '·', '✦', '♡', '✧']) {
+        const sparkle = document.createElement('span');
+        sparkle.textContent = symbol;
+        sparkleBand.append(sparkle);
+      }
+      content.before(sparkleBand);
+    }
   }
   if (!settings) return;
 
@@ -103,20 +119,28 @@
   motionLabel.append(motion, document.createTextNode('Animate Midnight Glitter'));
   controls.append(motionLabel);
 
+  function updateControls() {
+    controls.hidden = !choices.get('midnight').checked;
+    choices.get('midnight').parentElement.dataset.glitterAccent = accent.value;
+  }
+  for (const radio of choices.values()) radio.addEventListener('change', updateControls);
+  accent.addEventListener('change', updateControls);
+
   const apply = document.createElement('button');
   apply.type = 'button';
   apply.className = 'secondary';
-  apply.textContent = 'Apply theme';
+  apply.textContent = 'Apply theme and close';
   const status = document.createElement('p');
   status.setAttribute('role', 'status');
   const help = document.createElement('p');
-  help.textContent = 'Midnight Glitter preview styles Home and the sidebar. Motion follows your device’s reduced-motion setting.';
+  help.textContent = 'Select a theme and apply it to see the dashboard. Midnight Glitter adds sparkles to Home and the sidebar. Turn on animation for twinkling.';
 
   function resetControls() {
     choices.get(applied.theme).checked = true;
     intensity.value = applied.intensity;
     accent.value = applied.accent;
     motion.checked = applied.motion;
+    updateControls();
     status.textContent = '';
   }
 
@@ -129,7 +153,7 @@
     try {
       localStorage.setItem(studioKey, JSON.stringify(applied));
       if (!demo) localStorage.setItem(key, base);
-      status.textContent = name + ' applied.';
+      settings.close();
     } catch {
       status.textContent = name + ' applied for this session.';
     }
@@ -138,5 +162,7 @@
   settings.addEventListener('close', resetControls);
   resetControls();
   appearance.append(legend, help, grid, controls, apply, status);
-  settings.append(appearance);
+  const accountControls = document.getElementById('appSettingsContent');
+  if (accountControls) accountControls.before(appearance);
+  else settings.append(appearance);
 })();

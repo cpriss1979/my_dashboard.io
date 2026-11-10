@@ -6,7 +6,7 @@ body.glow-redesign>aside nav .app-nav-group>summary:after{content:'⌄';font-siz
 body.glow-redesign>aside nav .app-nav-group[open]>summary:after{transform:none}
 body.glow-redesign>aside nav button.app-nav-link{display:flex!important;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 14px!important;margin:3px 0!important;background:transparent!important;border:1px solid transparent!important;border-radius:10px!important;box-shadow:none!important;color:#c7c9dc!important;font:inherit;font-size:15px!important;text-align:left;font-weight:500!important}
 body.glow-redesign>aside nav button.app-nav-link:hover{background:#ffffff0c!important;color:#fff!important}
-body.glow-redesign>aside nav button.app-nav-link.active{background:linear-gradient(105deg,#763caa,#2b6097)!important;color:#fff!important;border-color:#8299d044!important;font-weight:650!important}
+body.glow-redesign>aside nav button.app-nav-link.active{background:linear-gradient(105deg,var(--theme-active-start,var(--theme-accent,#763caa)),var(--theme-active-end,var(--theme-accent-end,#2b6097)))!important;color:#fff!important;border-color:#8299d044!important;font-weight:650!important}
 body.glow-redesign>aside nav .app-nav-icon{display:flex!important;align-items:center;justify-content:center;flex:0 0 22px;width:22px!important;height:22px!important;font-size:22px!important}
 body.glow-redesign>aside nav .app-nav-icon svg{width:22px;height:22px}
 body.glow-redesign>aside nav .app-nav-label{flex:1;min-width:0;font-size:inherit!important}
