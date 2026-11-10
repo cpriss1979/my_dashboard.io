@@ -54,3 +54,12 @@ body.glow-redesign main #content .glow-journal-layout{display:grid!important;gri
 body.glow-redesign #appSettings #fbAccountAccess:not([hidden]){display:block!important}
 .glow-recovery{border-top:1px solid #514767;padding-top:12px;margin-top:16px}.glow-recovery>summary{display:flex;align-items:center;min-height:44px;font-weight:650}.glow-recovery label{font-size:13px}.glow-recovery input{min-height:44px;width:100%}.glow-recovery>button{display:block;margin:3px 0;background:none;color:#eee7ff;border:0;padding:4px 0;font-size:14px;min-height:44px;text-align:left}.glow-recovery p{line-height:1.6;overflow-wrap:anywhere;font-size:13px}
 @media(min-width:751px){body.glow-redesign #phoneBottomNavigation{display:none!important}body.glow-redesign>main{padding-bottom:32px!important}}
+
+/* Anchor the desktop sidebar beside the page header. */
+@media (min-width:751px) {
+  body.glow-redesign > aside {
+    top:0;
+    left:0;
+    height:100dvh;
+  }
+}
