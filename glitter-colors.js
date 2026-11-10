@@ -12,6 +12,7 @@
     ['blueberry', 'Blueberry Dream'],
     ['citrus', 'Citrus Pop'],
     ['electric', 'Electric Bloom'],
+    ['rose-ribbon', 'Rose Ribbon'],
     ['custom', 'Custom']
   ];
   const key = 'glowcode-dashboard-theme';

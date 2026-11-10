@@ -371,3 +371,14 @@ body.glow-redesign[data-dashboard-theme="custom"] main #content .cf-card {
   --theme-active-start:var(--theme-accent);
   --theme-active-end:var(--theme-accent-end);
 }
+
+[data-dashboard-theme="rose-ribbon"] {
+  --theme-background: #25101f;
+  --theme-sidebar: #55213f;
+  --theme-sidebar-end: #32152b;
+  --theme-header: #431b35;
+  --theme-accent: #8e245b;
+  --theme-accent-end: #a83b70;
+  --theme-page-panel: #fce2ed;
+  --theme-finance-panel: #fff0f4;
+}
