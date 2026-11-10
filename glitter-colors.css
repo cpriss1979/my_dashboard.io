@@ -330,3 +330,44 @@ body[data-glitter-motion="off"] > aside .brand::after { animation:none; }
     animation:none!important;
   }
 }
+
+body.glow-redesign[data-dashboard-theme="custom"] {
+  --glow-text:var(--theme-panel-text);
+}
+body.glow-redesign[data-dashboard-theme="custom"] > aside nav button:not(.active),
+body.glow-redesign[data-dashboard-theme="custom"] #appPageTitle {
+  color:var(--theme-light-text)!important;
+}
+body.glow-redesign[data-dashboard-theme="custom"] main #content .cf-card {
+  color:var(--theme-panel-text)!important;
+}
+.custom-theme-palette[hidden] { display:none!important; }
+.custom-theme-palette { margin-block:12px; }
+.custom-theme-swatches {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,155px),1fr));
+  gap:8px 12px;
+}
+.custom-theme-swatches label {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0;
+  min-height:44px;
+}
+.custom-theme-swatches input[type="color"] {
+  flex:none;
+  width:44px;
+  height:44px;
+  padding:4px;
+  border:1px solid #8797ad;
+  border-radius:50%;
+  cursor:pointer;
+}
+.custom-theme-swatches input[type="color"]::-webkit-color-swatch-wrapper { padding:0; }
+.custom-theme-swatches input[type="color"]::-webkit-color-swatch { border:0; border-radius:50%; }
+.custom-theme-swatches input[type="color"]::-moz-color-swatch { border:0; border-radius:50%; }
+[data-dashboard-theme="custom"] {
+  --theme-active-start:var(--theme-accent);
+  --theme-active-end:var(--theme-accent-end);
+}
