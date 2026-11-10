@@ -324,3 +324,51 @@ body[data-glitter-enabled][data-glitter-intensity="full"] .midnight-sparkle-band
   --theme-page-panel: #ffd7f0;
   --theme-finance-panel: #e9d9ff;
 }
+
+/* Match the Midnight Glitter Home preview using live dashboard cards. */
+.midnight-home-welcome { display:none; }
+body[data-midnight-glitter][data-glow-page="Overview"] .midnight-home-welcome {
+  display:block;
+  position:relative;
+  padding:22px 0 30px;
+  color:#eff1ff;
+}
+.midnight-home-welcome p { margin:0; color:#d7d9f1; }
+.midnight-home-welcome .midnight-home-kicker {
+  color:#cbc5ef;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.midnight-home-welcome h1 {
+  margin:5px 0 14px;
+  font:500 clamp(29px,4.2vw,54px)/1.08 Georgia,serif;
+}
+.midnight-home-studio { margin-top:12px; min-height:44px; }
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] main #content {
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview {
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview > .card {
+  grid-row:auto;
+  grid-column:auto;
+}
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content #homeBibleHero {
+  order:1;
+}
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] main #content :is(.glow-overview > .card,#homeBibleHero) {
+  background:linear-gradient(145deg,#fffdf9,var(--midnight-lavender))!important;
+  border:1px solid var(--midnight-accent)!important;
+  border-radius:18px!important;
+}
+@media (max-width:750px) {
+  body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview {
+    grid-template-columns:minmax(0,1fr);
+  }
+  .midnight-home-welcome { padding-block:12px 20px!important; }
+}

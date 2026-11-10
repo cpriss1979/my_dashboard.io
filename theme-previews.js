@@ -67,7 +67,25 @@
         sparkle.textContent = symbol;
         sparkleBand.append(sparkle);
       }
-      content.before(sparkleBand);
+      const welcome = document.createElement('section');
+      welcome.className = 'midnight-home-welcome';
+      const label = document.createElement('p');
+      label.className = 'midnight-home-kicker';
+      label.textContent = 'Midnight Glitter';
+      const title = document.createElement('h1');
+      title.textContent = 'A little glow for your day.';
+      const subtitle = document.createElement('p');
+      subtitle.textContent = 'Your schedule, priorities, and favorite places together.';
+      welcome.append(label, title, subtitle);
+      if (settings) {
+        const studio = document.createElement('button');
+        studio.type = 'button';
+        studio.className = 'secondary midnight-home-studio';
+        studio.textContent = 'Theme Studio';
+        studio.onclick = () => { if (!settings.open) settings.showModal(); };
+        welcome.append(studio);
+      }
+      content.before(sparkleBand, welcome);
     }
   }
   if (!settings) return;
