@@ -1,4 +1,4 @@
-body.glow-redesign main #content .cf-card{background:#fff2dd!important;color:#25364a!important;border:1px solid #c9b99e!important;margin-bottom:16px!important;border-radius:16px!important}
+body.glow-redesign main #content .cf-card{background:var(--theme-finance-panel,#fff2dd)!important;color:#25364a!important;border:1px solid #c9b99e!important;margin-bottom:16px!important;border-radius:16px!important}
 .cf-card h2,.cf-card h3{color:#243b54!important;overflow-wrap:anywhere}.cf-card h3{font-size:16px!important;margin:0 0 6px}.cf-card p,.cf-dialog p{line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}.cf-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:10px 0}.cf-actions label{min-width:0}.cf-actions button,.cf-card button,.cf-dialog button{min-height:44px;white-space:normal;max-width:100%}.cf-tabs{border-top:1px solid #cfbea5;padding-top:12px}.cf-tabs button[aria-pressed=true]{background:#235976!important;color:white!important}.cf-account-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}.cf-record{border:1px solid #b8c8d2;border-radius:11px;background:#ffffffbd;padding:13px;margin:9px 0;min-width:0}.cf-record>div:first-child{min-width:0}.cf-record p{margin:4px 0;font-size:14px;color:#344e65!important}.cf-record .cf-actions{margin:8px 0 0}.cf-metrics{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;font-size:14px;line-height:1.5}.cf-metrics dd{margin:0;font-weight:700;text-align:right;overflow-wrap:anywhere}.cf-metrics dt:last-of-type,.cf-metrics dd:last-child{color:#155744;font-weight:750}.cf-status{display:inline-flex;align-items:center;background:#e4ebf1;color:#28465d;padding:5px 9px;border-radius:7px;font-size:12px;font-weight:700;text-transform:capitalize}.cf-status[data-status=pending],.cf-status[data-status="low balance"]{background:#ffe8ad;color:#62430d}.cf-status[data-status=cleared],.cf-status[data-status=completed],.cf-status[data-status=confirmed]{background:#d6efdf;color:#184f37}.cf-status[data-status=overdraft],.cf-warning{background:#f9d9dc;color:#7d2231!important}.cf-warning{padding:12px;border-radius:8px}.cf-dialog{box-sizing:border-box;width:min(680px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow-y:auto!important}.cf-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.cf-fields label,.cf-card .cf-actions label{display:grid;gap:5px;min-width:0}.cf-wide{grid-column:1/-1}.cf-dialog :is(input,select,textarea),.cf-card select{box-sizing:border-box;font-size:16px!important;min-height:44px;max-width:100%;min-width:0}.cf-dialog :is(input,select,textarea){width:100%}.cf-dialog input[type=checkbox],.cf-card input[type=checkbox]{width:20px;min-height:20px;accent-color:#236377}.cf-error{color:#ffbdc5;min-height:1.4em}.cf-card select{display:block}.cf-card>label:has(input[type=checkbox]){display:inline-flex;align-items:center;gap:8px;margin:12px}.cf-card .cf-record button.link{color:#244c71!important}
 @media(max-width:480px){.cf-fields{grid-template-columns:1fr}.cf-metrics{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.cf-actions select{width:100%}.cf-tabs button{flex:1 1 auto}}
 
@@ -14,8 +14,36 @@ body.glow-redesign main #content .cf-record-grid>.cf-record{display:flex;flex-di
 @media(max-width:600px){.cf-record-grid{grid-template-columns:minmax(0,1fr)}.cf-bill-calendar{gap:3px}.cf-card .cf-calendar-date{min-height:54px!important}.cf-calendar-date small{font-size:9px}.cf-card .cf-actions{gap:6px}.cf-card .cf-actions label{flex:1 1 130px}.cf-card .cf-actions input{min-width:0;max-width:100%;font-size:16px}.cf-record-grid .cf-record .cf-actions{justify-content:flex-start}.cf-amount{font-size:24px}}
 .cf-savings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:600px){.cf-savings-grid{grid-template-columns:minmax(0,1fr)}}
 
-body.glow-redesign main #content .cf-inline-form{position:static!important;display:block!important;width:100%!important;max-width:100%!important;max-height:none!important;box-sizing:border-box;background:#fff2dd!important;color:#25364a!important;border:1px solid #b8c8d2;border-radius:14px;padding:16px;margin-bottom:16px;scroll-margin-top:110px}.cf-inline-form .cf-error{color:#8b2538!important}
+body.glow-redesign main #content .cf-inline-form{position:static!important;display:block!important;width:100%!important;max-width:100%!important;max-height:none!important;box-sizing:border-box;background:var(--theme-finance-panel,#fff2dd)!important;color:#25364a!important;border:1px solid #b8c8d2;border-radius:14px;padding:16px;margin-bottom:16px;scroll-margin-top:110px}.cf-inline-form .cf-error{color:#8b2538!important}
 
 .cf-action-notice{padding:10px 14px;background:#d9f0e3;color:#20364e;border-radius:10px;line-height:1.5;margin:8px 0 12px}
 
 .cf-metrics .cf-shortfall{color:#8b2538!important;font-weight:700}
+
+/* Finance workspace controls and compact records */
+.cf-toolbar h2{margin:0 0 6px}
+.cf-toolbar .cf-actions,.cf-toolbar .cf-tabs{margin:6px 0;gap:6px}
+.cf-toolbar .cf-tabs{padding-top:6px}
+.cf-toolbar small{display:block;color:#435871}
+.cf-toolbar select[name="financeOwner"]{font-weight:700;color:#193e62;border:2px solid #50779b;border-radius:8px;padding:4px 10px}
+.cf-tab-count{font-size:.85em;font-weight:700}
+.cf-bill-views button[aria-pressed="true"]{background:#235976!important;color:#fff!important}
+.cf-compact-list>.cf-record-grid{grid-template-columns:minmax(0,1fr);gap:6px}
+body.glow-redesign main #content .cf-compact-list .cf-record-grid>.cf-record{
+ display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:start;gap:6px 14px;padding:8px 12px!important
+}
+.cf-compact-list .cf-record>div:first-child{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;min-width:0}
+.cf-compact-list .cf-record>div:first-child h3,.cf-compact-list .cf-record>div:first-child p{margin:0!important;overflow-wrap:anywhere}
+.cf-compact-list .cf-record .cf-amount{margin:0;font-size:17px}
+.cf-compact-list .cf-record>.cf-actions:empty{display:none}
+.cf-compact-list .cf-record>.cf-actions{margin:0}
+.cf-compact-list .cf-record .cf-manage summary,.cf-compact-list .cf-record .cf-row-details summary{
+ cursor:pointer;padding:6px;min-height:44px;align-content:center;font-weight:650;color:#224c72
+}
+.cf-compact-list .cf-record>details[open]{grid-column:1/-1}
+.cf-card input[type="search"],.cf-card input[type="date"]{font-size:16px;max-width:100%;min-width:0;min-height:44px}
+@media(max-width:600px){
+ body.glow-redesign main #content .cf-compact-list .cf-record-grid>.cf-record{grid-template-columns:minmax(0,1fr) auto;gap:4px 8px}
+ .cf-compact-list .cf-record>div:first-child h3{flex-basis:100%}
+ .cf-compact-list .cf-record>details[open],.cf-compact-list .cf-record>.cf-actions{grid-column:1/-1}
+}
