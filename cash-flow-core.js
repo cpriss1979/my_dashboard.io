@@ -58,8 +58,16 @@ function forecast(m,today,horizon){
   const related=list=>list.flatMap(r=>r.kind==='transfer'?(r.from===a.id?[{...r,delta:-r.amount}]:r.to===a.id?[{...r,delta:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'?0:r.amount,unavailable:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'}]:[]):r.account===a.id?[{...r,delta:['bill','money-out'].includes(r.kind)?-r.amount:r.amount}]:[]);
   const relevant=related(rows);
   for(const r of relevant)if(configured&&r.status==='cleared'&&(r.date>a.asOf||r.date===a.asOf&&r.afterBalances?.[a.id]===balanceKey(a))&&r.date<=today)current+=r.delta;
-  const upcoming=list=>list.filter(r=>r.status!=='cleared'&&!(r.kind==='income'&&r.status==='planned'&&(r.date<today||configured&&r.date<=a.asOf))).map(r=>({...r,originalDate:r.date,date:r.date<today?today:r.date})).sort((x,y)=>x.date.localeCompare(y.date)||priority(x)-priority(y));
-  const future=upcoming(relevant),planning=upcoming(related(plannerRows)),nextDeposit=planning.find(r=>r.kind==='income');
+  const upcoming=list=>{
+   const pending=list.filter(r=>r.status!=='cleared'&&!(r.kind==='income'&&r.status==='planned'&&(r.date<today||configured&&r.date<=a.asOf))).map(r=>{
+    const expected=r.kind==='income'&&r.status==='pending'?r.expectedDate||r.date:r.date;
+    return {...r,originalDate:r.date,date:expected<today?today:expected};
+   });
+   const depositDays=new Set(pending.filter(r=>r.kind==='income').map(r=>r.date));
+   const order=r=>r.kind==='bill'&&r.paydayTiming==='before'&&depositDays.has(r.date)?-1:priority(r);
+   return pending.sort((x,y)=>x.date.localeCompare(y.date)||order(x)-order(y));
+  };
+  const future=upcoming(relevant).filter(r=>r.date<=end),planning=upcoming(related(plannerRows)),nextDeposit=planning.find(r=>r.kind==='income');
   const dueBeforeDeposit=planning.filter(r=>r.kind==='bill'&&r.status==='planned'&&r.due&&(nextDeposit?r.due<nextDeposit.date:r.due<=end));
   const reserveRows=planning.map(r=>r.kind==='bill'&&r.status==='planned'&&r.due&&r.due<r.date?{...r,date:r.due<today?today:r.due}:r).filter(r=>nextDeposit?r.date<nextDeposit.date:r.date<=end).sort((x,y)=>x.date.localeCompare(y.date)||priority(x)-priority(y));
   let running=current,min=current,firstShort=configured&&current<0?today:null,nextReserve=0,net=0;

@@ -151,3 +151,14 @@ body.glow-redesign main #content .cf-bill-cells h3 { margin:0!important;font-siz
  .cf-account-label { grid-column:1;grid-row:3; }
  .cf-bill-indicator { grid-column:2;grid-row:3;justify-items:end; }
 }
+
+.cf-payday-breakdown { border-top:1px solid #17324c35;margin-top:10px;padding-top:9px; }
+.cf-payday-breakdown h4 { margin:0 0 6px;font-size:15px; }
+.cf-payday-entries { display:grid;gap:6px; }
+.cf-payday-line {
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 8px;
+  font-size:13px;padding:5px 0;border-bottom:1px solid #17324c24;
+}
+.cf-payday-line strong { font-variant-numeric:tabular-nums;text-align:right; }
+.cf-payday-line select,.cf-payday-line small { grid-column:1/-1;justify-self:start;max-width:100%; }
+.cf-payday-line small:empty { display:none; }

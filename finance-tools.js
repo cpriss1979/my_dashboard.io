@@ -47,23 +47,33 @@ function splitBillRule(model,core,rule,original,next,newRuleId){
  model.overrides[id]={...next,id,ruleId:newRuleId,scheduled:start};
 }
 function paydayPlan(account,today,fallbackEnd){
+ const hasPayday=!!account.nextDeposit;
  const cutoff=account.nextDeposit?.date||fallbackEnd;
  const items=account.future.map(item=>{
   const date=item.kind==='bill'&&item.status==='planned'&&item.due&&item.due<item.date
    ? (item.due<today?today:item.due) : item.date;
   return {...item,date};
- }).filter(item=>item.date<=cutoff).sort((a,b)=>a.date.localeCompare(b.date)||a.delta-b.delta);
- const uncertain=!!account.nextDeposit&&items.some(item=>item.kind==='bill'&&[item.date,item.due,item.originalDate].includes(cutoff));
- // On payday, reserve outgoing money before counting that day's incoming funds.
- const before=items.filter(item=>!account.nextDeposit||item.date<cutoff||item.delta<0);
- let available=account.current,lowest=account.current,firstShort=account.current<0?today:null;
+ }).filter(item=>item.date<=cutoff).sort((a,b)=>a.date.localeCompare(b.date));
+ const before=items.filter(item=>!hasPayday||item.date<cutoff);
+ const onDay=hasPayday?items.filter(item=>item.date===cutoff):[];
+ const bills=onDay.filter(item=>item.kind==='bill'&&item.delta<0);
+ const knownBefore=bills.filter(item=>item.paydayTiming==='before');
+ const unknown=bills.filter(item=>item.paydayTiming!=='before'&&item.paydayTiming!=='after');
+ const knownIds=new Set(knownBefore.map(item=>item.id));
+ const orderedPayday=[...knownBefore,...onDay.filter(item=>!knownIds.has(item.id)).sort((a,b)=>b.delta-a.delta)];
+ let available=account.current,lowest=account.current,firstShort=account.current<0?today:null,firstShortBalance=account.current<0?account.current:null;
  for(const item of before){
   if(available===null)break;
   available+=item.delta;
   lowest=Math.min(lowest,available);
-  if(!firstShort&&available<0)firstShort=item.date;
+  if(!firstShort&&available<0){firstShort=item.date;firstShortBalance=available}
  }
- return {cutoff,items,before,available,lowest,firstShort,uncertain,hasPayday:!!account.nextDeposit};
+ const net=rows=>rows.reduce((sum,item)=>sum+item.delta,0);
+ const preDeposit=available===null?null:available+net(knownBefore);
+ const conditionalShortfall=preDeposit===null||!unknown.length?0:Math.max(0,-(preDeposit+net(unknown)));
+ const after=available===null||!hasPayday?null:available+net(onDay);
+ return {cutoff,items:[...before,...orderedPayday],before,onDay,bills,unknown,available,after,
+  lowest,firstShort,firstShortBalance,preDeposit,conditionalShortfall,hasPayday};
 }
 const arrays=['accounts','income','bills','transfers','ledger','goals','reconciliations'];
 function changes(before,after){const out=[];for(const key of [...arrays,'overrides']){const a=key==='overrides'?before[key]||{}:Object.fromEntries((before[key]||[]).map(x=>[x.id,x])),b=key==='overrides'?after[key]||{}:Object.fromEntries((after[key]||[]).map(x=>[x.id,x]));for(const id of new Set([...Object.keys(a),...Object.keys(b)])){if(JSON.stringify(a[id])===JSON.stringify(b[id]))continue;out.push({key,id,hadBefore:a[id]!==undefined,hadAfter:b[id]!==undefined,before:copy(a[id])??null,after:copy(b[id])??null})}}return out}
