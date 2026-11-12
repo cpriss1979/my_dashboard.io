@@ -47,12 +47,9 @@ body.glow-redesign main #content .glow-mini-calendar button.event{color:#1465c0!
 body.glow-redesign main #content .glow-calendar-layout button .calendar-date-number,
 body.glow-redesign main #content .glow-mini-calendar button .calendar-date-number{color:inherit!important;background:transparent!important;border:0!important;border-radius:6px!important;text-shadow:none!important;box-shadow:none!important}
 body.glow-redesign main #content .glow-calendar-layout .calendar button.today,
-body.glow-redesign main #content .glow-mini-calendar .calendar button.today,
 body.glow-redesign main #content .glow-calendar-layout button.year-day.year-today,
-body.glow-redesign main #content .glow-calendar-layout button.overview-today:not(.week-date),
-body.glow-redesign main #content .glow-mini-calendar button.overview-today{background:#1465c0!important;color:#fff!important;font-weight:700!important;box-shadow:none!important;text-shadow:none!important;border-radius:7px!important}
+body.glow-redesign main #content .glow-calendar-layout button.overview-today:not(.week-date){background:#1465c0!important;color:#fff!important;font-weight:700!important;box-shadow:none!important;text-shadow:none!important;border-radius:7px!important}
 body.glow-redesign main #content .glow-calendar-layout button.overview-today .calendar-date-number,
-body.glow-redesign main #content .glow-mini-calendar button.overview-today .calendar-date-number,
 body.glow-redesign main #content .glow-calendar-layout button.week-date.is-today strong{background:#1465c0!important;color:#fff!important;border:0!important;border-radius:6px!important;font-weight:700!important;text-shadow:none!important;text-decoration-color:#fff!important}
 body.glow-redesign main #content .glow-calendar-layout button.year-day.overview-today.overview-plan .calendar-date-number{color:#fff!important}
 body.glow-redesign main #content .glow-calendar-layout button.overview-date:focus-visible,
