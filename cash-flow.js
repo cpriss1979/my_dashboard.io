@@ -1,12 +1,12 @@
 (function(){
 'use strict';
 const C=window.CashFlowCore,T=window.FinanceTools,frequencies={once:'One time',weekly:'Weekly',biweekly:'Every two weeks',monthly:'Monthly',bimonthly:'Every two months',quarterly:'Quarterly',annually:'Annually'},tabs=['Overview','Accounts','Income','Bills','Savings','History','Forecast'];
-let tab='Overview',horizon=30,m=null,filters={account:'',status:'',frequency:'',due:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='',backupProblem='',actionNotice='';
-const today=()=>localDate(new Date()), dollars=n=>n===null||n===undefined?'Not set':money(n/100), name=id=>m.accounts.find(a=>a.id===id)?.name||'Unassigned', uid=()=>crypto.randomUUID();
+let tab='Overview',horizon=0,m=null,filters={frequency:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='',backupProblem='',actionNotice='',paymentJustSaved=false;
+const today=()=>localDate(new Date()), dollars=n=>n===null||n===undefined?'Not set':money(n/100), name=accountName, uid=()=>crypto.randomUUID();
 const minDate='1900-01-01',maxDate='2199-12-31';
 function e(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
-const owners = [['','Both'],['crystal','Crystal'],['rick','Rick']];
-const preferenceKey = () => (typeof dashboardActivePrefix==='string'?dashboardActivePrefix:'')+'finance-owner';
+const owners = [['','Household'],['crystal','Crystal'],['rick','Rick']];
+const preferenceKey = () => (typeof dashboardActivePrefix==='string'?dashboardActivePrefix:'')+'finance-planner-owner';
 const ownerPreferences = new Map();
 function selectedOwner(){
  const key=preferenceKey();
@@ -20,12 +20,12 @@ function selectOwner(id){
 }
 function matchesOwner(id){
  const owner=selectedOwner();
- return !owner||id===owner||m.accounts.find(a=>a.id===id)?.ownerId===owner;
+ return !owner||accountOwner(m.accounts.find(a=>a.id===id))===owner;
 }
 function matchesTransaction(item){
  return item.kind==='transfer'?matchesOwner(item.from)||matchesOwner(item.to):matchesOwner(item.account);
 }
-let billView='Needs Attention', billSearch='', showAllAttention=false;
+let billView='All bills', billSearch='', showAllAttention=false;
 const historyFilters={from:'',to:'',search:'',type:'',status:''};
 function searchField(label,value,apply){
  const control=input('search','search',value,false);
@@ -66,17 +66,29 @@ function field(label,node){const l=e('label',label);l.append(node);return l}
 function input(key,type,value='',required=true){const n=e('input');n.name=key;n.type=type;n.value=value??'';n.required=required;if(type==='date'){n.min=minDate;n.max=maxDate}if(type==='text')n.maxLength=180;return n}
 function number(key,value='',min=0,required=true){const n=input(key,'number',value,required);n.step='0.01';n.min=min;n.max=1e9;return n}
 function select(key,choices,value){const n=e('select');n.name=key;for(const [v,label] of choices)n.add(new Option(label,v));n.value=value;return n}
+function accountOwner(account){
+ if(account?.ownerId==='crystal'||account?.ownerId==='rick')return account.ownerId;
+ if(account?.id==='crystal'||account?.id==='rick')return account.id;
+ const legacy=account?.name?.match(/^(Crystal|Rick)(?:’s|'s)? (?:Checking|Savings)$/i);
+ return legacy?.[1].toLowerCase()||'';
+}
+function accountName(id){
+ const account=m.accounts.find(item=>item.id===id);
+ if(!account)return 'Unassigned account';
+ if(account.name==='Crystal'||account.name==='Rick')return account.name+(account.type==='savings'?' Savings':' Checking');
+ return account.name;
+}
 const activeAccounts = () => m.accounts.filter(a=>!a.deleted);
-const acct=(value,blank=false)=>select('account',[...(blank?[['','Choose an account']]:[]),...activeAccounts().filter(a=>a.type!=='savings').map(a=>[a.id,a.name])],value);
+const acct=(value,blank=false)=>select('account',[...(blank?[['','Choose an account']]:[]),...activeAccounts().filter(a=>a.type!=='savings').map(a=>[a.id,name(a.id)])],value);
 function check(key,value){const n=input(key,'checkbox','',false);n.checked=!!value;return n}
 function note(key,value=''){const n=e('textarea');n.name=key;n.value=value;n.rows=3;n.maxLength=2000;return n}
 function cents(v){return Math.round(Number(v)*100)}
 function snapshot(){const x=T.copy(m);delete x.audit;return x}
 function safetyBackup(){if(backupOwner===state)return;try{const key=(typeof dashboardActivePrefix==='string'?dashboardActivePrefix:'')+'finance-before-pastel-v1';const saved=localStorage.getItem(key);if(saved)JSON.parse(saved);const text=saved||JSON.stringify(state,null,2);if(!saved)localStorage.setItem(key,text);backupText=text;backupOwner=state;backupProblem=''}catch(err){throw Error('The safety backup could not be stored. Use Export dashboard backup, free device storage, then try again. No change has been saved.')}}
-function commit(label='Finance update'){actionNotice=label==='Mark bill Paid'?'✓ Paid — awaiting bank clearance. Use Mark Cleared after it posts.':label==='Mark bill Cleared'?'✓ Paid and cleared.':label+' saved.';if(baselineOwner!==state)throw Error('Account changed. Reopen Finances.');const delta=T.changes(baseline,snapshot());if(delta.length&&!undoing){m.audit??=[];m.audit.push({id:uid(),at:new Date().toISOString(),label,changes:delta})}state.cashFlow=m;save();render()}
+function commit(label='Finance update'){paymentJustSaved=label==='Mark bill Paid'||label==='Mark bill Cleared';actionNotice=label==='Mark bill Paid'?'✓ Payment saved.':label==='Mark bill Cleared'?'✓ Paid and cleared.':label+' saved.';if(baselineOwner!==state)throw Error('Account changed. Reopen Finances.');const delta=T.changes(baseline,snapshot());if(delta.length&&!undoing){m.audit??=[];m.audit.push({id:uid(),at:new Date().toISOString(),label,changes:delta})}state.cashFlow=m;save();render()}
 function safeAction(label,fn){safetyBackup();fn();commit(label)}
 function group(title,items,open=true){const d=e('details',undefined,'cf-group'),key=tab+'|'+title;d.open=folded.has(key)?folded.get(key):open;d.append(e('summary',title+' · '+items.length));d.addEventListener('toggle',()=>folded.set(key,d.open));const grid=e('div',undefined,'cf-record-grid');items.forEach(n=>grid.append(n));if(!items.length)grid.append(e('p','Nothing here.'));d.append(grid);return d}
-function tint(n,key){let h=0;for(const ch of String(key))h=(h*31+ch.charCodeAt(0))>>>0;n.dataset.pastel=String(h%5);return n}
+function tint(n,key){const owner=accountOwner(m.accounts.find(a=>a.id===key));if(owner)n.dataset.cfOwner=owner;let h=0;for(const ch of String(key))h=(h*31+ch.charCodeAt(0))>>>0;n.dataset.pastel=String(h%5);return n}
 function tile(title,amount,lines,actions=[],key=title){const n=record(title,'',...actions);n.children[0].append(e('strong',dollars(amount),'cf-amount'));for(const text of lines.filter(Boolean))n.children[0].append(e('p',text));return tint(n,key)}
 function statusLabel(x){return x.status==='cleared'?'Paid · Cleared':x.status==='pending'?'Paid · Awaiting clearance':'Unpaid'}
 function dateLabel(d){return d?d.slice(5,7)+'/'+d.slice(8,10)+'/'+d.slice(0,4):'Unknown'}
@@ -85,8 +97,8 @@ function value(f,key){return f[key].value.trim()}
 function ensureChecking(id){if(!activeAccounts().some(a=>a.id===id&&a.type!=='savings'))throw Error('Choose a checking account for bills and income rules.');}
 function reqName(f){const v=value(f,'name');if(!v)throw Error('Enter a name.');return v}
 function accountForm(a,kind='checking',suggested=''){form(a?'Edit account':'Add bank account',[
- field('Account name',input('name','text',a?.name||suggested)),field('Account type',select('type',[['checking','Checking'],['savings','Savings']],a?.type||kind)),field('Cleared starting balance ($)',number('opening',a?.opening==null?'':a.opening/100,-1e9)),field('Balance as of (end of day)',input('asOf','date',a?.asOf||today())),field('Minimum balance cushion ($)',number('cushion',(a?.cushion||0)/100))
- ],f=>{if(value(f,'asOf')>today())throw Error('Use today or a past date.');if(a&&f.type.value==='savings'&&[...m.bills,...m.income].some(r=>!r.deleted&&!r.archived&&r.account===a.id))throw Error('Reassign or archive active income/bill rules before changing this account to Savings.');const next={id:a?.id||uid(),type:f.type.value,name:reqName(f),opening:cents(f.opening.value),asOf:value(f,'asOf'),cushion:cents(f.cushion.value)};next.balanceVersion=a&&a.opening===next.opening&&a.asOf===next.asOf?a.balanceVersion||C.balanceKey(a):uid();if(a)Object.assign(a,next);else m.accounts.push(next)})}
+ field('Account name',input('name','text',a?.name||suggested)),field('Owner',select('owner', [['','Household'],['crystal','Crystal'],['rick','Rick']],accountOwner(a)||selectedOwner())),field('Account type',select('type',[['checking','Checking'],['savings','Savings']],a?.type||kind)),field('Cleared starting balance ($)',number('opening',a?.opening==null?'':a.opening/100,-1e9)),field('Balance as of (end of day)',input('asOf','date',a?.asOf||today())),field('Minimum balance cushion ($)',number('cushion',(a?.cushion||0)/100))
+ ],f=>{if(value(f,'asOf')>today())throw Error('Use today or a past date.');if(a&&f.type.value==='savings'&&[...m.bills,...m.income].some(r=>!r.deleted&&!r.archived&&r.account===a.id))throw Error('Reassign or archive active income/bill rules before changing this account to Savings.');const next={id:a?.id||uid(),type:f.type.value,ownerId:f.owner?.value||'',name:reqName(f),opening:cents(f.opening.value),asOf:value(f,'asOf'),cushion:cents(f.cushion.value)};next.balanceVersion=a&&a.opening===next.opening&&a.asOf===next.asOf?a.balanceVersion||C.balanceKey(a):uid();if(a)Object.assign(a,next);else m.accounts.push(next)})}
 function incomeForm(r){form(r?'Edit income rule':'Add income rule',[
  field('Name',input('name','text',r?.name)),field('Account',acct(r?.account||activeAccounts().find(a=>a.id===selectedOwner())?.id||activeAccounts()[0]?.id)),field('Deposit amount ($)',number('amount',r?r.amount/100:'',.01)),field('First eligible date',input('start','date',r?.start||today())),field('Frequency',select('frequency',Object.entries(frequencies),r?.frequency||'monthly')),field('Monthly calendar rule',select('rule',[['fixed','Same day number (clamp to month end)'],['last','Last calendar day'],['rick','Friday before the fourth Wednesday']],r?.rule||'fixed'))
  ],f=>{ensureChecking(f.account.value);if(f.rule.value!=='fixed'&&f.frequency.value!=='monthly')throw Error('The last-day and fourth-Wednesday rules require Monthly.');updateRule(m.income,r,{name:reqName(f),account:f.account.value,amount:cents(f.amount.value),frequency:f.frequency.value,rule:f.rule.value,start:f.start.value})})}
@@ -118,19 +130,35 @@ function billForm(r){
  updateRule(m.bills,r,next)
  })
 }
-function transferForm(r,preset){const t=r||preset||{},id=r?.id||uid(),choices=activeAccounts().map(a=>[a.id,a.name+(a.type==='savings'?' · Savings':'')]);const f=form('Move Money',[
+function transferForm(r,preset){const t=r||preset||{},id=r?.id||uid(),choices=activeAccounts().map(a=>[a.id,name(a.id)]);const f=form('Transfer money',[
  field('FROM',select('from',choices,t.from||choices[0]?.[0])),field('TO',select('to',choices,t.to||choices.find(x=>x[0]!==(t.from||choices[0]?.[0]))?.[0])),field('Amount ($)',number('amount',t.amount?t.amount/100:'',.01)),field('Date',input('date','date',t.date||today())),field('Status',select('status',[['completed','Completed'],['pending','Pending'],['planned','Planned']],t.status||'completed')),field('Description',input('name','text',t.name||'Money moved')),e('p','Records one movement between accounts. It does not send a bank transfer.','cf-wide')
- ],fields=>{if(!fields.from.value||!fields.to.value||fields.from.value===fields.to.value)throw Error('Choose different FROM and TO accounts.');if(fields.status.value==='completed'&&fields.date.value>today())throw Error('Use today or earlier for a completed move.');const ids=[fields.from.value,fields.to.value];if(fields.status.value==='completed'&&ids.some(id=>m.accounts.find(a=>a.id===id).opening===null))throw Error('Set both starting balances before recording a completed move.');const from=m.accounts.find(a=>a.id===fields.from.value);if(fields.status.value==='completed'&&from.type==='savings'){const available=C.forecast(m,today(),30).savings.find(a=>a.id===from.id).current;const oldDebit=r?.status==='completed'&&r.from===from.id&&(r.date>from.asOf||r.date===from.asOf&&r.afterBalances?.[from.id]===C.balanceKey(from))?r.amount:0;if(available+oldDebit<cents(fields.amount.value))throw Error('Savings does not have enough cleared money for this move.');}const next={id,name:reqName(fields),from:fields.from.value,to:fields.to.value,amount:cents(fields.amount.value),date:fields.date.value,status:fields.status.value,afterBalances:r&&r.status==='completed'&&r.date===fields.date.value&&r.from===fields.from.value&&r.to===fields.to.value?r.afterBalances:balanceTags(ids)};const index=m.transfers.findIndex(x=>x.id===id);if(index<0)m.transfers.push(next);else Object.assign(m.transfers[index],next)});f.querySelector('button[type=submit]').textContent='Move Money'}
-function occurrenceForm(o){const bill=o.kind==='bill',fields=[
+ ],fields=>{if(!fields.from.value||!fields.to.value||fields.from.value===fields.to.value)throw Error('Choose different FROM and TO accounts.');if(fields.status.value==='completed'&&fields.date.value>today())throw Error('Use today or earlier for a completed move.');const ids=[fields.from.value,fields.to.value];if(fields.status.value==='completed'&&ids.some(id=>m.accounts.find(a=>a.id===id).opening===null))throw Error('Set both starting balances before recording a completed move.');const from=m.accounts.find(a=>a.id===fields.from.value);if(fields.status.value==='completed'&&from.type==='savings'){const available=C.forecast(m,today(),30).savings.find(a=>a.id===from.id).current;const oldDebit=r?.status==='completed'&&r.from===from.id&&(r.date>from.asOf||r.date===from.asOf&&r.afterBalances?.[from.id]===C.balanceKey(from))?r.amount:0;if(available+oldDebit<cents(fields.amount.value))throw Error('Savings does not have enough cleared money for this move.');}const next={id,name:reqName(fields),from:fields.from.value,to:fields.to.value,amount:cents(fields.amount.value),date:fields.date.value,status:fields.status.value,afterBalances:r&&r.status==='completed'&&r.date===fields.date.value&&r.from===fields.from.value&&r.to===fields.to.value?r.afterBalances:balanceTags(ids)};const index=m.transfers.findIndex(x=>x.id===id);if(index<0)m.transfers.push(next);else Object.assign(m.transfers[index],next)});f.querySelector('button[type=submit]').textContent='Save transfer';
+ const route=e('p',undefined,'cf-transfer-route');
+ route.setAttribute('aria-live','polite');
+ const updateRoute=()=>{route.textContent=name(f.elements.from.value)+' → '+name(f.elements.to.value)};
+ f.elements.from.addEventListener('change',updateRoute);
+ f.elements.to.addEventListener('change',updateRoute);
+ f.prepend(route);
+ updateRoute()}
+function occurrenceForm(o){
+ const bill=o.kind==='bill';
+ const rule=bill?m.bills.find(item=>item.id===o.ruleId&&!item.deleted&&!item.archived&&item.frequency!=='once'):null;
+ const fields=[
  field('Name',input('name','text',o.name)),field('Amount ($)',number('amount',o.amount/100,.01)),field('Account',acct(o.account)),...(bill?[field('Due date',input('due','date',o.due,false)),field('Due-date confidence',select('certainty',[['verified','Verified'],['estimated','Estimated'],['unknown','Unknown']],o.certainty||'unknown'))]:[]),
  field(bill?'Preferred payment date':'Deposit date',input('preferred','date',o.preferred||o.date)),field('Actual payment / posting date',input('posted','date',o.posted||'',false)),...(bill?[field('Amount is an estimate',check('estimatedAmount',o.estimatedAmount)),field('Paid / sent',check('paid',o.paid||o.status==='pending')),field('Cleared at bank',check('cleared',o.cleared||o.status==='cleared'))]:[field('Deposit status',select('status',[['planned','Planned'],['pending','Pending'],['cleared','Cleared']],o.status))]),
- field('Notes',note('notes',o.notes||''))];
- form('Edit this occurrence only',fields,f=>{
+ field('Notes',note('notes',o.notes||'')),
+ ...(rule?[field('Apply date or account change to',select('scope',[['one','This bill only'],['future','This and future bills']],'one'))]:[])];
+ form(bill?'Edit bill':'Edit deposit',fields,f=>{
  ensureChecking(f.account.value);const status=bill?(f.cleared.checked?'cleared':f.paid.checked?'pending':'planned'):f.status.value;
  if(status!=='planned'&&(!f.posted.value||f.posted.value>today()))throw Error('Enter the actual payment or posting date (today or earlier).');
  if(bill&&f.certainty.value!=='unknown'&&!f.due.value)throw Error('Enter the due date or mark it unknown.');
  if(bill&&f.certainty.value==='unknown'&&f.due.value)throw Error('Clear the due date or set its confidence.');
- m.overrides[o.id]={...o,name:reqName(f),account:f.account.value,amount:cents(f.amount.value),preferred:f.preferred.value,posted:f.posted.value,date:status==='planned'?f.preferred.value:f.posted.value,due:bill?f.due.value||null:null,certainty:bill?f.certainty.value:null,paid:bill&&f.paid.checked,cleared:bill&&f.cleared.checked,status,estimatedAmount:bill&&f.estimatedAmount.checked,afterBalances:status==='cleared'&&o.status!=='cleared'?balanceTags([f.account.value]):o.afterBalances,notes:value(f,'notes')};
+ const next={...o,name:reqName(f),account:f.account.value,amount:cents(f.amount.value),preferred:f.preferred.value,posted:f.posted.value,date:status==='planned'?f.preferred.value:f.posted.value,due:bill?f.due.value||null:null,certainty:bill?f.certainty.value:null,paid:bill&&(f.paid.checked||status==='cleared'),cleared:bill&&f.cleared.checked,status,estimatedAmount:bill&&f.estimatedAmount.checked,
+  afterBalances:status==='cleared'&&(o.status!=='cleared'||o.account!==f.account.value||o.date!==f.posted.value)?balanceTags([f.account.value]):o.afterBalances,notes:value(f,'notes')};
+ if(bill&&status!=='planned')next.paymentDate=o.paymentDate||f.posted.value;
+ if(rule&&f.scope.value==='future'&&(next.due!==o.due||next.account!==o.account)){
+  T.splitBillRule(m,C,rule,o,next,uid());
+ }else m.overrides[o.id]=next;
  })
 }
 function removeRule(r){safeAction('Delete rule',()=>{r.deleted=true;r.archived=true})}
@@ -142,19 +170,20 @@ function moneyActions(account){return row(b('Add Money',()=>moneyForm('in',null,
 function moneyForm(direction,existing,chosen){const id=existing?.id||uid(),account=existing?.account||chosen||activeAccounts().find(a=>a.type!=='savings')?.id||activeAccounts().find(a=>a.id===selectedOwner())?.id||activeAccounts()[0]?.id;
  const scheduled=existing?[]:C.events(m,C.add(today(),90)).filter(o=>o.kind===(direction==='in'?'income':'bill')&&o.status!=='cleared');
  const pick=select('source',[['','New transaction'],...scheduled.map(o=>[o.id,o.name+' · '+o.date+' · '+dollars(o.amount)])],'');
- const f=form(direction==='in'?'Add Money':'Subtract Money',[
- field('Account',select('account',activeAccounts().map(a=>[a.id,a.name+(a.type==='savings'?' · Savings':'')]),account)),field('Amount ($)',number('amount',existing?existing.amount/100:'',.01)),
- ...(!existing?[field('Apply to a scheduled '+(direction==='in'?'deposit':'bill')+' (optional)',pick)]:[]),field('Description',input('name','text',existing?.name||(direction==='in'?'Money added':'Money subtracted'))),field('Date',input('date','date',existing?.date||today())),field('Notes',note('notes',existing?.notes||'')),e('p','Records money already added or subtracted. If this is an existing bill or deposit, select it above so it is updated instead of counted twice. For money between your accounts, use Move Money.','cf-wide')
+ const f=form(direction==='in'?'Record a deposit':'Record a purchase',[
+ field('Account',select('account',activeAccounts().map(a=>[a.id,name(a.id)]),account)),field('Amount ($)',number('amount',existing?existing.amount/100:'',.01)),
+ ...(!existing?[field('Apply to a scheduled '+(direction==='in'?'deposit':'bill')+' (optional)',pick)]:[]),field('Description',input('name','text',existing?.name||(direction==='in'?'Money added':'Money subtracted'))),field('Date',input('date','date',existing?.date||today())),field('Notes',note('notes',existing?.notes||''))
  ],fields=>{
   if(fields.date.value>today())throw Error('Use today or an earlier date for money already recorded. Plan future items under Income or Bills.');
   const a=activeAccounts().find(a=>a.id===fields.account.value);if(!a)throw Error('Choose an active account first.');if(a.opening===null)throw Error('Set this account’s starting balance first.');
   const amount=cents(fields.amount.value),src=fields.source?.value;
-  if(src){const item=C.events(m,C.add(today(),90)).find(o=>o.id===src);if(!item||item.status==='cleared')throw Error('That item was already recorded. Reopen the form.');if(item.account!==a.id)throw Error('The account must match the scheduled item.');m.overrides[src]={...item,amount,name:reqName(fields),date:fields.date.value,posted:fields.date.value,preferred:item.preferred||item.date,status:'cleared',paid:direction==='out',cleared:true,notes:value(fields,'notes'),afterBalances:balanceTags([a.id])};return}
+  if(src){const item=C.events(m,C.add(today(),90)).find(o=>o.id===src);if(!item||item.status==='cleared')throw Error('That item was already recorded. Reopen the form.');if(item.account!==a.id)throw Error('The account must match the scheduled item.');m.overrides[src]={...item,amount,name:reqName(fields),date:fields.date.value,posted:fields.date.value,...(direction==='out'?{paymentDate:fields.date.value}:{}),preferred:item.preferred||item.date,status:'cleared',paid:direction==='out',cleared:true,notes:value(fields,'notes'),afterBalances:balanceTags([a.id])};return}
   const next={id,direction,account:a.id,amount,name:reqName(fields),date:fields.date.value,notes:value(fields,'notes'),afterBalances:existing&&existing.account===a.id&&existing.date===fields.date.value?existing.afterBalances:balanceTags([a.id])};
   m.ledger??=[];const i=m.ledger.findIndex(x=>x.id===id);if(i<0)m.ledger.push(next);else m.ledger[i]={...m.ledger[i],...next}
  });if(!existing)pick.onchange=()=>{const item=scheduled.find(x=>x.id===pick.value);if(item){f.elements.account.value=item.account;f.elements.amount.value=item.amount/100;f.elements.name.value=item.name;f.elements.notes.value=item.notes||''}};
 }
 function editEvent(o){if(o.kind==='transfer')transferForm(m.transfers.find(t=>t.id===o.id));else if(['money-in','money-out'].includes(o.kind))moneyForm(o.direction,m.ledger.find(t=>t.id===o.id));else occurrenceForm(o)}
+function historyDate(item){return item.kind==='bill'?(item.paymentDate||item.posted||item.date):item.date}
 function history(root,savingsOnly=false){const p=card(savingsOnly?'Savings activity':'Transaction history'),ids=new Set(m.accounts.filter(a=>!savingsOnly||a.type==='savings').map(a=>a.id));
  const historyEnd=[C.add(today(),90),...m.transfers.filter(t=>!t.deleted).map(t=>t.date)].sort().at(-1);if(!savingsOnly){
   const controls=row(searchField('Search transactions',historyFilters.search,v=>{historyFilters.search=v;historyLimit=24}));
@@ -174,11 +203,11 @@ function history(root,savingsOnly=false){const p=card(savingsOnly?'Savings activ
   p.append(controls);
  }
  const visible=item=>savingsOnly||matchesTransaction(item)&&
-  (!historyFilters.from||item.date>=historyFilters.from)&&(!historyFilters.to||item.date<=historyFilters.to)&&
+  (!historyFilters.from||historyDate(item)>=historyFilters.from)&&(!historyFilters.to||historyDate(item)<=historyFilters.to)&&
   (!historyFilters.type||item.kind===historyFilters.type)&&(!historyFilters.status||item.status===historyFilters.status)&&
   [item.name,item.notes,name(item.account),name(item.from),name(item.to)].join(' ').toLowerCase().includes(historyFilters.search);
- const rows=C.events(m,historyEnd).filter(visible).filter(o=>(o.status!=='planned'||o.kind==='transfer')&&(o.kind==='transfer'?(ids.has(o.from)||ids.has(o.to)):ids.has(o.account))).sort((a,b)=>b.date.localeCompare(a.date)||a.id.localeCompare(b.id));
- p.append(e('p',rows.length+' transactions · newest first'));p.append((savingsOnly?group:compactList)('Transactions & planned moves',rows.slice(0,historyLimit).map(o=>(savingsOnly?tile:compactRow)(o.name,o.amount,[dateLabel(o.date),o.kind==='transfer'?name(o.from)+' → '+name(o.to):name(o.account),savingsOnly?o.notes:o.kind==='bill'?statusLabel(o):o.status], [badge(o.kind==='bill'?statusLabel(o):o.status),b('Edit',()=>editEvent(o)),...(o.kind==='bill'&&o.status==='pending'?[b('Mark Cleared',()=>payment(o,true))]:[]),b('Delete',()=>deleteEvent(o),'link')],o.account||o.from,[o.notes])),true));if(rows.length>historyLimit)p.append(b('Show more transactions',()=>{historyLimit+=24;render()}));root.append(p);
+ const rows=C.events(m,historyEnd).filter(visible).filter(o=>(o.status!=='planned'||o.kind==='transfer')&&(o.kind==='transfer'?(ids.has(o.from)||ids.has(o.to)):ids.has(o.account))).sort((a,b)=>historyDate(b).localeCompare(historyDate(a))||a.id.localeCompare(b.id));
+ p.append(e('p',rows.length+' transactions · newest first'));p.append((savingsOnly?group:compactList)('Transactions & planned moves',rows.slice(0,historyLimit).map(o=>(savingsOnly?tile:compactRow)(o.name,o.amount,[dateLabel(historyDate(o)),o.kind==='transfer'?name(o.from)+' → '+name(o.to):name(o.account),savingsOnly?o.notes:o.kind==='bill'?statusLabel(o):o.status], [badge(o.kind==='bill'?statusLabel(o):o.status),b('Edit',()=>editEvent(o)),...(o.kind==='bill'&&o.status==='pending'?[b('Mark Cleared',()=>payment(o,true))]:[]),b('Delete',()=>deleteEvent(o),'link')],o.account||o.from,[o.notes])),true));if(rows.length>historyLimit)p.append(b('Show more transactions',()=>{historyLimit+=24;render()}));root.append(p);
  if(!savingsOnly){const audit=card('Corrections & undo');audit.append(e('p','Saved changes cover both accounts. Undo restores the dashboard entry. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].reverse();audit.append(group('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.undone?'Undone':'Saved'),...(!x.undone?[b('Undo',()=>undoChange(x))]:[]));const details=e('details');details.append(e('summary','Original / new values'));for(const op of x.changes)details.append(e('p',op.key+' · '+(op.after?.name||op.before?.name||op.id)+'\nBefore: '+JSON.stringify(op.before)+'\nAfter: '+JSON.stringify(op.after)));n.append(details);return n}),false));root.append(audit)}
 }
 function savings(root){const report=C.forecast(m,today(),horizon),p=card('Savings');const configured=report.savings.every(a=>a.configured);p.append(e('strong','Total Savings · '+(configured?dollars(report.savings.reduce((n,a)=>n+a.current,0)):'Set starting balances'),'cf-savings-balance'),e('p','Separate from everyday spending and bill coverage. Move money into checking when needed.'));const grid=e('div',undefined,'cf-record-grid cf-savings-grid');for(const a of report.savings)grid.append(tile(a.name,a.current,['Projected '+dollars(a.projected),'Pending change '+dollars(a.pending)], [...moneyActions(a.id).children,b('Edit account',()=>accountForm(m.accounts.find(x=>x.id===a.id)))],a.id));
@@ -186,45 +215,74 @@ function savings(root){const report=C.forecast(m,today(),horizon),p=card('Saving
  const goals=card('Optional savings goals');goals.append(b('Add goal',()=>goalForm()));const goalCards=(m.goals||[]).filter(g=>!g.archived&&!g.deleted).map(g=>{const a=report.savings.find(a=>a.id===g.account),n=tile(g.name,a?.current??null,['Target '+dollars(g.target),name(g.account),'Progress uses this account’s balance; goals do not reserve or move money.'],[b('Edit goal',()=>goalForm(g)),b('Delete',()=>safeAction('Delete savings goal',()=>{g.deleted=true}),'link')],g.id),progress=e('progress');progress.max=g.target;progress.value=Math.max(0,Math.min(g.target,a?.current||0));progress.setAttribute('aria-label',g.name+' savings progress');n.append(progress,e('p',Math.round(Math.max(0,Math.min(1,(a?.current||0)/g.target))*100)+'%'));return n});goals.append(group('Goals',goalCards));root.append(goals);history(root,true);
  if(state.savingsEntries?.length){const old=e('details',undefined,'cf-old-savings');old.append(e('summary','Earlier savings records · '+state.savingsEntries.length),e('p','Preserved separately; not replayed into current balances.'));for(const x of [...state.savingsEntries].filter(x=>!m.overrides['legacy-savings|'+x.id]?.skipped).sort((a,b)=>(b.date||'').localeCompare(a.date||'')))old.append(record(dateLabel(x.date)+' · '+x.kind,(state.people?.find(p=>p.id===x.person)?.name||'')+' · '+money(Number(x.amount))+(x.note?' · '+x.note:''),b('Delete',()=>safeAction('Delete earlier savings entry',()=>{m.overrides['legacy-savings|'+x.id]={id:'legacy-savings|'+x.id,skipped:true,legacyId:x.id}}),'link')));root.append(old)}
 }
-function goalForm(g){const choices=activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,a.name]);if(!choices.length){alert('Create a savings account first.');return}form(g?'Edit savings goal':'Add savings goal',[field('Goal name',input('name','text',g?.name)),field('Savings account',select('account',choices,g?.account||choices[0][0])),field('Target ($)',number('target',g?g.target/100:'',.01)),field('Archive goal',check('archived',g?.archived))],f=>{const next={id:g?.id||uid(),name:reqName(f),account:f.account.value,target:cents(f.target.value),archived:f.archived.checked};if(next.target<=0)throw Error('Enter a positive target.');m.goals??=[];if(g)Object.assign(g,next);else m.goals.push(next)})}
+function goalForm(g){const choices=activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,name(a.id)]);if(!choices.length){alert('Create a savings account first.');return}form(g?'Edit savings goal':'Add savings goal',[field('Goal name',input('name','text',g?.name)),field('Savings account',select('account',choices,g?.account||choices[0][0])),field('Target ($)',number('target',g?g.target/100:'',.01)),field('Archive goal',check('archived',g?.archived))],f=>{const next={id:g?.id||uid(),name:reqName(f),account:f.account.value,target:cents(f.target.value),archived:f.archived.checked};if(next.target<=0)throw Error('Enter a positive target.');m.goals??=[];if(g)Object.assign(g,next);else m.goals.push(next)})}
 
-function banner(){const p=card('Household cash flow');
+function banner(){const p=card('Finances');
  p.classList.add('cf-toolbar');
  const owner=select('financeOwner',owners,selectedOwner());
  owner.onchange=()=>{selectOwner(owner.value);historyLimit=24;calendarDay='';render()};
- p.append(row(field('Finance account',owner),...moneyActions(tab==='Overview'||tab==='Savings'?undefined:activeAccounts().find(a=>a.id===selectedOwner())?.id).children));
- if(tab==='Overview'||tab==='Savings')p.append(e('small','Showing both accounts on '+tab));
+ const chosen=activeAccounts().find(a=>a.type!=='savings'&&accountOwner(a)===selectedOwner())?.id;
+ p.append(row(field('Account view',owner),b('Record a purchase',()=>moneyForm('out',null,chosen)),
+  b('Record a deposit',()=>moneyForm('in',null,chosen)),b('Transfer money',()=>transferForm(null,chosen?{from:chosen}:null))));
+ if(tab==='Savings')p.append(e('small','Savings shows both accounts.'));
  const householdEvents=C.events(m,C.add(today(),90));
  const actionable=householdEvents.filter(matchesTransaction);const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{
-  if(x==='Bills'&&tab!=='Bills')billView='Needs Attention';
+  if(x==='Bills'&&tab!=='Bills'){billView='All bills';billMonth=today().slice(0,7);billSearch='';filters.frequency='';calendarDay='';}
+  if(x==='Forecast'&&tab!=='Forecast')horizon=0;
   tab=x;render();
  }); 
  const count=x==='Bills'?actionable.filter(item=>item.kind==='bill'&&needsBill(item)).length:
   x==='Income'?actionable.filter(item=>item.kind==='income'&&item.status==='pending').length:
   x==='Overview'?householdEvents.filter(item=>item.status==='pending'||item.kind==='bill'&&needsBill(item)).length:0;
  if(count)btn.append(e('span',' · '+count,'cf-tab-count'));btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);const tools=e('details');tools.append(e('summary','Backup & help'),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Every change has a conflict-checked undo in History.'));p.append(tools);return p}
-function overview(root,report){const p=card('Money available');if(report.accounts.some(a=>!a.configured))p.append(e('p','Start here: enter a cleared balance and as-of date for each account. No opening balance is assumed.','cf-warning'));p.append(e('p','Enter a cleared balance through the end of its as-of date. Record later bank activity once. Pending items are included in projections but not in cleared balances. Safe to spend uses the lowest projected balance and your cushion. These estimates use only the accounts and transactions you enter.'),horizonChoice());const grid=e('div',undefined,'cf-account-grid');for(const a of report.accounts){
- const q=e('article',undefined,'cf-record');q.append(e('h3',a.name));const values=e('dl',undefined,'cf-metrics');
- const currentShortfall = a.configured ? Math.max(0,-a.current) : null;
- const projectedShortfall = a.configured ? Math.max(0,-a.min) : null;
- const metrics = [
-  ['Current cleared',a.current],
-  ['Current shortfall',currentShortfall,currentShortfall>0],
-  ['Pending net',a.pending],
-  ['Projected at '+report.end,a.projected],
-  ['Largest forecast shortfall',projectedShortfall,projectedShortfall>0],
-  ['Reserve before payday',a.reserved],
-  ['Safe to spend',a.safe]
- ];
- for(const [label,amount,isShortfall] of metrics){
-  const style = isShortfall ? 'cf-shortfall' : undefined;
-  values.append(e('dt',label,style),e('dd',dollars(amount),style));
+function visiblePlans(report){
+ return report.accounts.filter(account=>matchesOwner(account.id)).map(account=>({
+  account,plan:T.paydayPlan(account,today(),C.add(today(),30))
+ }));
+}
+function paydayNote(plan){
+ if(!plan.hasPayday)return 'No payday scheduled. This estimate covers the next 30 days.';
+ if(plan.uncertain)return 'A bill and deposit fall on payday. The estimate reserves the bill first because their order is unknown.';
+ return '';
+}
+function overview(root,report){
+ const p=card('Money available'), grid=e('div',undefined,'cf-payday-grid');
+ const plans=visiblePlans(report);
+ const upcoming=[];
+ const originalBills=new Map(C.events(m,report.end,{byDue:true}).filter(x=>x.kind==='bill').map(x=>[x.id,x]));
+ for(const {account,plan} of plans){
+  const item=tile(name(account.id),account.current,[
+   'Cleared balance','Pending activity '+dollars(account.pending),
+   account.nextDeposit?'Next expected deposit '+dateLabel(account.nextDeposit.date)+' · '+dollars(account.nextDeposit.amount):'Next deposit not scheduled'
+  ],[b('Edit balance',()=>accountForm(m.accounts.find(x=>x.id===account.id)))],account.id);
+  const estimate=e('div',undefined,'cf-payday-estimate');
+  estimate.append(e('span','Available after bills until payday'),e('strong',dollars(plan.available),plan.available<0?'cf-shortfall':''));
+  item.children[0].append(estimate);
+  const uncertainty=paydayNote(plan);
+  if(uncertainty)item.children[0].append(e('p',uncertainty,'cf-payday-note'));
+  if(plan.firstShort)item.children[0].append(e('p','Projected shortfall '+dollars(-plan.lowest)+' starting '+dateLabel(plan.firstShort),'cf-shortfall'));
+  const math=e('details');
+  math.append(e('summary','See estimate math'),e('p','Cleared balance '+dollars(account.current)));
+  for(const entry of plan.before)math.append(e('p',dateLabel(entry.date)+' · '+entry.name+' · '+dollars(entry.delta)));
+  math.append(e('p','Estimate '+dollars(plan.available)));
+  item.append(math);grid.append(item);
+  upcoming.push(...plan.before.filter(entry=>entry.kind==='bill').map(entry=>originalBills.get(entry.id)||entry));
  }
- q.append(values,e('p',a.configured?(a.nextDeposit?'Next deposit: '+a.nextDeposit.date+' · '+dollars(a.nextDeposit.amount):'No upcoming deposit found in the next year.'): 'Set a cleared starting balance before using this forecast.'));
- if(a.configured&&a.min<a.cushion&&a.min>=0)q.append(badge('low balance'),e('p','Lowest projected balance: '+dollars(a.min)));if(a.firstShort)q.append(badge('overdraft'),e('p','First projected shortfall: '+a.firstShort));q.append(b('Edit balance',()=>accountForm(m.accounts.find(x=>x.id===a.id))));grid.append(q)
- }p.append(grid,e('p','Checking total: '+dollars(report.combined.current)+' · projected: '+dollars(report.combined.projected)+' · reserved: '+dollars(report.combined.reserved)+' · safe to spend: '+dollars(report.combined.safe)));root.append(p);
- attention(root,report);comparison(root,report);if(report.recommendations.length){const plan=card('Suggested money moves');plan.append(group('Protect bill coverage',report.recommendations.map(t=>tile('Move between checking accounts',t.amount,[name(t.from)+' → '+name(t.to),'Needed by '+dateLabel(t.needBy),'Sender retains its forecast cushion.'],[b('Move Money',()=>transferForm(null,t))],t.from))));root.append(plan)}
- if(m.bills.some(b=>!b.archived&&!b.deleted&&!b.start))root.append(e('p','Some bills have unknown planning dates and are not included in projections. Review Bill rules.','cf-warning'));
+ p.append(grid);
+ const savings=report.savings.filter(a=>matchesOwner(a.id));
+ p.append(e('p','Savings total · '+dollars(savings.every(a=>a.configured)?savings.reduce((sum,a)=>sum+a.current,0):null),'cf-savings-total'));
+ root.append(p);
+ const before=card('Before payday');
+ before.append(compactList('Bills by due date',upcoming.sort(T.compareBillDue).map(x=>billCard(x))));
+ root.append(before);
+ attention(root,{...report,accounts:plans.map(({account,plan})=>({...account,min:plan.lowest,firstShort:plan.firstShort}))});
+ const suggestions=report.recommendations.filter(t=>matchesOwner(t.to));
+ if(suggestions.length){
+  const moves=card('Suggested money moves');
+  moves.append(group('Protect bill coverage',suggestions.map(t=>tile('Move between checking accounts',t.amount,[name(t.from)+' → '+name(t.to),'Needed by '+dateLabel(t.needBy)],[b('Transfer money',()=>transferForm(null,t))],t.to))));
+  root.append(moves);
+ }
+ if(m.bills.some(b=>!b.archived&&!b.deleted&&!b.start&&matchesOwner(b.account)))root.append(e('p','Some bills have unknown planning dates. Add a due or planning date under Bill rules to include them in projections.','cf-warning'));
 }
 
 function deleteAccount(id){
@@ -232,7 +290,7 @@ function deleteAccount(id){
  if(!account)return;
  safeAction('Delete account',()=>{
   account.deleted = true;
-  if(filters.account===id)filters.account = '';
+  
  });
 }
 function accounts(root){
@@ -274,8 +332,8 @@ function income(root){
 function dueLabel(x){return x.due?(x.certainty==='estimated'?'Estimated ':'')+dateLabel(x.due):'Unknown'}
 function billCard(x){
  const actions=[b('Edit',()=>occurrenceForm(x)),b('Delete',()=>deleteEvent(x),'link')];
- if(x.status==='planned')actions.unshift(b('Mark Paid',()=>payment(x,false)),b('Skip this one',()=>safeAction('Skip bill occurrence',()=>{m.overrides[x.id]={...x,skipped:true}}),'link'));
- if(x.status==='pending')actions.unshift(b('Mark Cleared',()=>payment(x,true)));
+ if(x.status==='planned')actions.unshift(b('Skip this one',()=>safeAction('Skip bill occurrence',()=>{m.overrides[x.id]={...x,skipped:true}}),'link'));
+
  const item=compactRow(x.name,x.amount,['Due '+dueLabel(x),name(x.account)],actions,x.account,[
   'Preferred payment '+dateLabel(x.preferred||x.date),x.posted?'Sent / posted '+dateLabel(x.posted):'',
   x.estimatedAmount?'Estimated amount · update when known':'',x.notes,
@@ -284,71 +342,113 @@ function billCard(x){
  const status=badge(statusLabel(x));
  status.dataset.status=x.status;
  item.children[0].append(status);
+ if(x.status==='planned')item.append(b('Mark paid',()=>payment(x,false),'cf-quick-pay'));
+ if(x.status==='pending')item.append(b('Mark cleared',()=>payment(x,true),'cf-quick-pay'));
+ if(x.status==='pending'||x.status==='cleared')item.children[0].append(e('small','Paid '+dateLabel(historyDate(x))));
  return item;
 }
-function payment(x,cleared){safeAction(cleared?'Mark bill Cleared':'Mark bill Paid',()=>{m.overrides[x.id]={...x,paid:true,cleared,status:cleared?'cleared':'pending',posted:today(),date:today(),preferred:x.preferred||x.date,afterBalances:x.status==='cleared'?x.afterBalances:balanceTags([x.account])}})}
+function payment(bill,clearing){
+ const date=input('paymentDate','date',clearing?today():bill.paymentDate||today());
+ const status=select('paymentStatus',[['cleared','Paid · cleared'],['pending','Pending bank clearance']],clearing?'cleared':'pending');
+ const choices=(m.ledger||[]).filter(x=>!x.deleted&&x.direction==='out'&&x.account===bill.account&&x.amount===bill.amount&&x.date<=today());
+ const existing=select('ledgerId',[['','Record this payment'],...choices.map(x=>[x.id,dateLabel(x.date)+' · '+x.name+' · '+dollars(x.amount)])],'');
+ const f=form(clearing?'Mark bill Cleared':'Mark bill Paid',[
+  e('p',bill.name+' · '+dollars(bill.amount)+' · '+name(bill.account),'cf-payment-preview'),
+  field(clearing?'Bank clearance date':'Payment date',date),
+  ...(!clearing?[field('Payment status',status)]:[]),field('Use matching transaction',existing)
+ ],fields=>{
+  const actual=fields.paymentDate.value;
+  const paidOn=clearing?historyDate(bill):actual;
+  if(!actual||actual>today()||actual<paidOn)throw Error('Enter a valid date from payment through today.');
+  T.billPayment(m,C,bill,{date:actual,paymentDate:paidOn,status:clearing?'cleared':fields.paymentStatus.value,ledgerId:fields.ledgerId?.value});
+ });
+ existing.onchange=()=>{
+  const matching=choices.find(x=>x.id===existing.value);
+  if(matching){date.value=matching.date;status.value='cleared'}
+ };
+ f.querySelector('button[type=submit]').textContent=clearing?'Save clearance':'Save payment';
+}
 function deleteEvent(o){safeAction('Delete '+(o.kind==='bill'?'bill occurrence':'transaction'),()=>{if(o.kind==='transfer'){m.transfers.find(t=>t.id===o.id).deleted=true}else if(['money-in','money-out'].includes(o.kind)){m.ledger.find(t=>t.id===o.id).deleted=true}else{m.overrides[o.id]={...o,deleted:true}}})}
 function oneTimeBill(){const id=uid();form('Add one-time bill',[
  field('Bill name',input('name','text','')),field('Paying account',acct(activeAccounts().find(a=>a.id===selectedOwner())?.id||activeAccounts().find(a=>a.type!=='savings')?.id)),field('Amount ($)',number('amount','',.01)),field('Due date',input('due','date',today(),false)),field('Preferred payment date',input('preferred','date',today())),field('Due-date confidence',select('certainty',[['verified','Verified'],['estimated','Estimated'],['unknown','Unknown']],'verified')),field('Amount is an estimate',check('estimatedAmount',false)),field('Notes',note('notes'))],f=>{ensureChecking(f.account.value);if(f.certainty.value!=='unknown'&&!f.due.value)throw Error('Enter a due date or choose Unknown.');if(f.certainty.value==='unknown'&&f.due.value)throw Error('Clear the due date or choose Verified / Estimated.');m.overrides[id]={id,kind:'bill',standalone:true,name:reqName(f),account:f.account.value,amount:cents(f.amount.value),date:f.preferred.value,preferred:f.preferred.value,scheduled:f.due.value||f.preferred.value,due:f.due.value||null,certainty:f.certainty.value,estimatedAmount:f.estimatedAmount.checked,notes:value(f,'notes'),status:'planned',paid:false,cleared:false}})}
-function billRows(){const end=[C.add(today(),90),T.monthEnd(billMonth)].sort().at(-1);return C.events(m,end).filter(x=>x.kind==='bill')}
-function bills(root){const p=card('Bills & expenses'),month=input('billMonth','month',billMonth);month.onchange=()=>{if(/^\d{4}-\d{2}$/.test(month.value)){billMonth=month.value;calendarDay='';render()}};p.append(row(field('Selected month',month),b('Add one-time bill',()=>oneTimeBill(),'primary'),b('Set up bill rule',()=>billForm())));
- const filter=row(searchField('Search bills',billSearch,v=>billSearch=v));
- const views=row(...['Needs Attention','Upcoming','Paid','All'].map(label=>{
-  const button=b(label,()=>{billView=label;render()});
-  button.setAttribute('aria-pressed',String(billView===label));
-  return button;
- }));
- views.classList.add('cf-bill-views');
- p.append(views);
- if(billView==='Needs Attention'&&billMonth===today().slice(0,7)){
-  p.append(e('small','Includes overdue bills from earlier months and near-term items that need review.'));
+function bills(root){
+ const p=card('Bills & expenses'), month=input('billMonth','month',billMonth);
+ const monthName=(value,withYear=false)=>new Intl.DateTimeFormat('en-US',{month:'long',...(withYear?{year:'numeric'}:{}),timeZone:'UTC'}).format(new Date(value+'-01T00:00:00Z'));
+ function changeMonth(value){
+  if(/^\d{4}-(0[1-9]|1[0-2])$/.test(value)&&value>='1900-01'&&value<='2199-12'){
+   billMonth=value;calendarDay='';render();
+  }
  }
- const defs=[['status','Status',[['','All statuses'],['planned','Unpaid'],['pending','Paid · Awaiting clearance'],['cleared','Paid · Cleared']]],['frequency','Frequency',[['','All frequencies'],...Object.entries(frequencies)]],['due','Due date',[['','Any date'],['week','Next 7 days'],['month','Selected month'],['overdue','Past due'],['unknown','Unknown']]]];for(const [k,label,opts] of defs){const n=select(k,opts,filters[k]);n.onchange=()=>{filters[k]=n.value;render()};filter.append(field(label,n))}
- p.append(filter);
- const relevant=r=>matchesOwner(r.account)&&(!filters.frequency||r.frequency===filters.frequency);let rows=billRows().filter(x=>matchesOwner(x.account)&&[x.name,x.notes,name(x.account)].join(' ').toLowerCase().includes(billSearch)&&(!filters.status||x.status===filters.status)&&(!filters.frequency||m.bills.find(r=>r.id===x.ruleId)?.frequency===filters.frequency));rows=rows.filter(x=>!filters.due||filters.due==='unknown'&&!x.due||x.due&&(filters.due==='overdue'?x.due<today()&&x.status==='planned':filters.due==='month'?x.due.slice(0,7)===billMonth:x.due>=today()&&x.due<=C.add(today(),7)));
- rows.sort(T.compareBillDue);
- const orderedBills = rows.filter(item=>{
-  const month=(item.due||item.scheduled||item.date).slice(0,7);
-  const paid=item.status==='pending'||item.status==='cleared';
-  if(billView==='Needs Attention')return needsBill(item)&&(month===billMonth||billMonth===today().slice(0,7));
-  if(billView==='Upcoming')return !paid&&month===billMonth&&(item.due||item.date)>=today();
-  if(billView==='Paid')return paid&&month===billMonth;
-  return month===billMonth;
- });
- p.append(compactList('Bills · soonest due first',orderedBills.map(billCard)));
- root.append(p);billCalendar(root,rows);
- const rules=card('Bill rules');const ordered=m.bills.filter(r=>!r.deleted&&relevant(r)).sort((a,b)=>(C.billDate(a,today())||'9999').localeCompare(C.billDate(b,today())||'9999')||a.name.localeCompare(b.name));rules.append(compactList('Manage recurring schedules',ordered.map(r=>compactRow(r.name,r.amount,[name(r.account)+' · '+frequencies[r.frequency],'Next due '+(C.billDate(r,today())?dateLabel(C.billDate(r,today())):'Unknown'),r.autopay?'Autopay':'Manual pay',r.archived?'Archived':'',r.stop?'Replaced from '+dateLabel(r.stop):'',r.notes],[...(r.stop?[]:[b('Edit rule',()=>billForm(r))]),b(r.archived?'Restore':'Archive',()=>toggleArchive(r)),b('Delete',()=>removeRule(r),'link')],r.account)),false));root.append(rules)}
-function billCalendar(root,rows){const p=card('Monthly bill calendar'),details=e('details',undefined,'cf-group');details.open=false;details.append(e('summary','Due dates · '+billMonth));const grid=e('div',undefined,'cf-bill-calendar');for(const label of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'])grid.append(e('span',label,'cf-day-label'));const first=new Date(billMonth+'-01T00:00:00Z').getUTCDay();for(let i=0;i<first;i++)grid.append(e('span'));for(let day=1;day<=Number(T.monthEnd(billMonth).slice(-2));day++){const date=billMonth+'-'+String(day).padStart(2,'0'),items=rows.filter(x=>x.due===date);const n=b(String(day),()=>{calendarDay=date;render()},'cf-calendar-date');n.setAttribute('aria-label',dateLabel(date)+' · '+items.length+' bills');n.setAttribute('aria-pressed',String(calendarDay===date));if(items.length)n.append(e('small',items.length+' bills'));if(date===today())n.dataset.today='true';grid.append(n)}details.append(grid);if(calendarDay){const dayItems=rows.filter(x=>x.due===calendarDay);details.append(compactList(dateLabel(calendarDay),dayItems.map(billCard)))}p.append(details);root.append(p)}
+ month.min='1900-01';month.max='2199-12';
+ month.onchange=()=>changeMonth(month.value);
+ const previous=C.add(billMonth+'-01',-1).slice(0,7), next=C.add(T.monthEnd(billMonth),1).slice(0,7);
+ const monthNav=row(b('‹ '+monthName(previous),()=>changeMonth(previous)),e('h3',monthName(billMonth,true),'cf-month-title'),b(monthName(next)+' ›',()=>changeMonth(next)));
+ monthNav.classList.add('cf-month-nav');
+ p.append(monthNav,row(field('Month picker',month),b('This month',()=>changeMonth(today().slice(0,7))),b('Add bill',oneTimeBill,'primary'),b('Recurring schedules',()=>{
+  const schedules=document.getElementById('cfRecurringSchedules');
+  if(schedules){schedules.open=true;schedules.scrollIntoView?.({block:'start'});schedules.querySelector('summary')?.focus()}
+ })));
+ const all=C.events(m,T.monthEnd(billMonth),{byDue:true}).filter(x=>x.kind==='bill'&&matchesOwner(x.account));
+ const monthly=T.billMonthRows(all,billMonth), totals=T.billTotals(monthly);
+ const ownerLabel=owners.find(([id])=>id===selectedOwner())?.[1]||'Household';
+ const totalGrid=e('div',undefined,'cf-month-totals');
+ for(const [label,amount] of [['Total due this month',totals.total],['Paid',totals.cleared],['Pending',totals.pending],['Still to pay',totals.planned]]){
+  const total=e('div');total.append(e('span',label),e('strong',dollars(amount)));totalGrid.append(total);
+ }
+ p.append(e('p',monthName(billMonth,true)+' · '+ownerLabel,'cf-totals-scope'),totalGrid);
+ const views=row(...['All bills','Unpaid','Pending','Paid'].map(label=>{
+  const button=b(label,()=>{billView=label;render()});
+  button.setAttribute('aria-pressed',String(billView===label));return button;
+ }));
+ views.classList.add('cf-bill-views');p.append(views);
+ const advanced=e('details');
+ advanced.open=!!(billSearch||filters.frequency);
+ const frequency=select('frequency',[['','All frequencies'],...Object.entries(frequencies)],filters.frequency);
+ frequency.onchange=()=>{filters.frequency=frequency.value;render()};
+ advanced.append(e('summary','Advanced filters'),row(searchField('Search bills',billSearch,value=>{billSearch=value}),field('Frequency',frequency)));
+ p.append(advanced);
+ const statusFor={Unpaid:'planned',Pending:'pending',Paid:'cleared'};
+ const rows=monthly.filter(x=>(!statusFor[billView]||x.status===statusFor[billView])&&
+  [x.name,x.notes,name(x.account)].join(' ').toLowerCase().includes(billSearch)&&
+  (!filters.frequency||(m.bills.find(r=>r.id===x.ruleId)?.frequency||'once')===filters.frequency));
+ p.append(compactList('Bills · soonest due first',rows.map(billCard)));
+ root.append(p);
+ const earlier=all.filter(x=>x.status==='planned'&&x.due&&x.due<billMonth+'-01'&&x.due<=today()).sort(T.compareBillDue);
+ if(earlier.length){
+  const carry=card('Still unpaid from earlier months');
+  carry.append(compactList('Earlier bills · '+dollars(earlier.reduce((sum,x)=>sum+x.amount,0)),earlier.map(billCard)));
+  root.append(carry);
+ }
+ const undated=all.filter(x=>!x.due&&(x.scheduled||x.preferred||x.date).slice(0,7)===billMonth);
+ if(undated.length){
+  const unknown=card('Bills with no due date');
+  unknown.append(compactList('Planned for '+monthName(billMonth,true),undated.sort(T.compareBillDue).map(billCard),false));
+  root.append(unknown);
+ }
+ billCalendar(root,monthly);
+ const rules=card('Bill rules');rules.append(b('Set up recurring bill',()=>billForm(),'primary'));const ordered=m.bills.filter(r=>!r.deleted&&matchesOwner(r.account)).sort((a,b)=>(C.billDate(a,today())||'9999').localeCompare(C.billDate(b,today())||'9999')||a.name.localeCompare(b.name));const schedules=compactList('Manage recurring schedules',ordered.map(r=>compactRow(r.name,r.amount,[name(r.account)+' · '+frequencies[r.frequency],'Next due '+(C.billDate(r,today())?dateLabel(C.billDate(r,today())):'Unknown'),r.autopay?'Autopay':'Manual pay',r.archived?'Archived':'',r.stop?'Replaced from '+dateLabel(r.stop):'',r.notes],[...(r.stop?[]:[b('Edit rule',()=>billForm(r))]),b(r.archived?'Restore':'Archive',()=>toggleArchive(r)),b('Delete',()=>removeRule(r),'link')],r.account)),false);schedules.id='cfRecurringSchedules';rules.append(schedules);root.append(rules)}
+function billCalendar(root,rows){const p=card('Monthly bill calendar'),details=e('details',undefined,'cf-group');details.open=!!calendarDay;details.append(e('summary','Due dates · '+billMonth));const grid=e('div',undefined,'cf-bill-calendar');for(const label of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'])grid.append(e('span',label,'cf-day-label'));const first=new Date(billMonth+'-01T00:00:00Z').getUTCDay();for(let i=0;i<first;i++)grid.append(e('span'));for(let day=1;day<=Number(T.monthEnd(billMonth).slice(-2));day++){const date=billMonth+'-'+String(day).padStart(2,'0'),items=rows.filter(x=>x.due===date);const n=b(String(day),()=>{calendarDay=date;render()},'cf-calendar-date');n.setAttribute('aria-label',dateLabel(date)+' · '+items.length+' bills');n.setAttribute('aria-pressed',String(calendarDay===date));if(items.length)n.append(e('small',items.length+' bills'));if(date===today())n.dataset.today='true';grid.append(n)}details.append(grid);if(calendarDay){const dayItems=rows.filter(x=>x.due===calendarDay);details.append(compactList(dateLabel(calendarDay),dayItems.map(billCard)))}p.append(details);root.append(p)}
 
-function transfers(root){const p=card('Between-account transfers');p.append(b('Move Money',()=>transferForm(),'primary'),e('p','Moves money between accounts without changing household income or expenses. Mark completed using the date posted at the bank.'));for(const t of [...m.transfers].filter(t=>!t.deleted).sort((a,b)=>b.date.localeCompare(a.date)))p.append(record(t.name,name(t.from)+' → '+name(t.to)+' · '+dollars(t.amount)+' · '+t.date,badge(t.status),b('Edit transfer',()=>transferForm(t)),b('Delete',()=>{safeAction('Delete transfer',()=>{t.deleted=true})},'link')));root.append(p)}
-function horizonChoice(){const h=select('horizon',[['30','30 days'],['60','60 days'],['90','90 days']],String(horizon));h.onchange=()=>{horizon=Number(h.value);render()};return field('Forecast window',h)}
 function timeline(root,report){
  const p=card('Cash-flow forecast');
- p.append(horizonChoice());
- for(const account of report.accounts.filter(a=>matchesOwner(a.id))){
-  const card=tile(account.name,account.current,[
-   'Current cleared balance','Projected through '+dateLabel(report.end)+' · '+dollars(account.projected),
-   'Next deposit · '+(account.nextDeposit?dateLabel(account.nextDeposit.date)+' · '+dollars(account.nextDeposit.amount):'None scheduled'),
-   'Bills before payday · '+account.billsBeforeDeposit.length+' · reserve '+dollars(account.reserved),
-   'Lowest projected balance · '+dollars(account.min),
-   'Potential shortage · '+dollars(account.configured?Math.max(0,-account.min):null),
-   'Safe to spend · '+dollars(account.safe)
-  ],[],account.id);
-  p.append(card);
-  const payday=account.billsBeforeDeposit.map(item=>compactRow(
-   item.name,item.amount,[dateLabel(item.due||item.date),statusLabel(item)],[],account.id
-  ));
-  p.append(compactList(account.name+' · bills before payday',payday,false));
-  const entries=report.timeline.filter(item=>item.accountId===account.id);
-  const rows=entries.map(item=>compactRow(item.name,item.delta,[
-   dateLabel(item.date),item.balance!==null&&item.balance<0?'Overdraft':item.balance!==null&&item.balance<account.cushion?'Low balance':item.status,'Projected after · '+dollars(item.balance)
-  ],[],account.id,[item.kind==='transfer'?name(item.from)+' → '+name(item.to):'',item.originalDate!==item.date?'Originally '+dateLabel(item.originalDate):'',
-   item.unavailable?'Available after the savings transfer completes':'',
-   item.certainty==='estimated'?'Estimated due date':item.certainty==='unknown'?'Due date unknown':'']));
-  for(const period of account.lowPeriods){
-   rows.unshift(compactRow(period.status,null,[dateLabel(period.start)+(period.start===period.end?'':' through '+dateLabel(period.end))],[],account.id));
-  }
-  p.append(compactList(account.name+' · detailed projections',rows,false));
+ const options=row(...[[0,'Until next payday'],[30,'Next 30 days'],[60,'Next 60 days'],[90,'Next 90 days']].map(([days,label])=>{
+  const button=b(label,()=>{horizon=days;render()});
+  button.setAttribute('aria-pressed',String(horizon===days));return button;
+ }));
+ options.classList.add('cf-bill-views');p.append(options);
+ if(horizon)p.append(e('p',dateLabel(today())+' through '+dateLabel(report.end)));
+ for(const {account,plan} of visiblePlans(report)){
+  const cutoff=horizon?report.end:plan.cutoff;
+  let running=account.current,minimum=account.current;
+  const entries=horizon?account.future:plan.items;
+  const rows=entries.map(x=>{
+   if(running!==null){running+=x.delta;minimum=Math.min(minimum,running)}
+   return compactRow(x.name,x.delta,[dateLabel(x.date),name(account.id),x.kind==='transfer'?name(x.from)+' → '+name(x.to):x.kind,running===null?'Balance not set':'Balance after '+dollars(running)],[],account.id);
+  });
+  const lines=[dateLabel(today())+' through '+dateLabel(cutoff),'Cleared today','Projected at end '+dollars(running),'Lowest projected balance '+dollars(minimum)];
+  if(minimum<0)lines.push('Shortfall '+dollars(-minimum));
+  if(!horizon&&paydayNote(plan))lines.push(paydayNote(plan));
+  p.append(tile(name(account.id),account.current,lines,[],account.id),compactList(name(account.id)+' · planned activity',rows,false));
  }
  root.append(p);
 }
@@ -356,7 +456,7 @@ function showSafetyCopy(){if(backupOwner!==state||!backupText){alert('No safety 
 function undoChange(entry){try{safetyBackup();T.undo(m,entry);undoing=true;commit('Undo');}catch(err){alert(err.message)}finally{undoing=false}}
 function attention(root,report){
  const p=card('Needs Attention');
- const events=C.events(m,C.add(today(),90)).filter(item=>item.status==='pending'||item.kind==='bill'&&needsBill(item));
+ const events=C.events(m,C.add(today(),90)).filter(matchesTransaction).filter(item=>item.status==='pending'||item.kind==='bill'&&needsBill(item));
  const sorted=[...new Map(events.map(item=>[item.id,item])).values()].sort((a,b)=>(a.due||a.date).localeCompare(b.due||b.date));
  const items=sorted.map(item=>compactRow(item.name,item.amount,[
   item.kind==='transfer'?name(item.from)+' → '+name(item.to):name(item.account),
@@ -375,11 +475,10 @@ function attention(root,report){
  if(items.length>4)p.append(b(showAllAttention?'Show fewer':'View all '+items.length,()=>{showAllAttention=!showAllAttention;render()}));
  root.append(p);
 }
-function comparison(root,report){const p=card('Who Pays What?');p.append(group('Checking account comparison',report.accounts.map(a=>{const income=a.future.filter(x=>x.kind==='income'),n=tile(a.name,a.safe,['Safe to spend · next '+horizon+' days',a.billsBeforeDeposit.length+' bills before next deposit · '+dollars(a.billsBeforeDeposit.reduce((n,x)=>n+x.amount,0)),'Upcoming income '+dollars(income.reduce((n,x)=>n+x.amount,0)),'Projected available '+dollars(a.projected)],[b('See account forecast',()=>{selectOwner(owners.some(([id])=>id===a.id)?a.id:'');tab='Forecast';render()})],a.id);const d=e('details');d.append(e('summary','Bills & next deposits'));for(const x of a.billsBeforeDeposit)d.append(e('p',x.name+' · '+dollars(x.amount)+' · due '+dueLabel(x)));for(const x of income)d.append(e('p',x.name+' · '+dollars(x.amount)+' · '+dateLabel(x.date)));if(!a.billsBeforeDeposit.length&&!income.length)d.append(e('p','No scheduled items in this window.'));n.append(d);return n})));root.append(p)}
-function reconcileForm(id){form('Compare bank balance',[field('Account',select('account',activeAccounts().map(a=>[a.id,a.name]),id||activeAccounts().find(a=>a.id===selectedOwner())?.id||activeAccounts()[0]?.id)),field('Statement / bank balance date',input('date','date',today())),field('Bank cleared balance ($)',number('bank','',-1e9)),field('Notes',note('notes')),e('p','Use the cleared bank balance, not a balance that already subtracts pending transactions. This saves a comparison only; it never changes starting balances or history.')],f=>{const a=activeAccounts().find(a=>a.id===f.account.value);if(!a)throw Error('Choose an active account first.');if(f.date.value>today()||a.opening===null||a.asOf>f.date.value)throw Error('Choose a date from the account’s starting-balance date through today. Set a starting balance first.');const report=C.forecast(m,f.date.value,30),record=[...report.accounts,...report.savings].find(x=>x.id===a.id);m.reconciliations??=[];m.reconciliations.push({id:uid(),account:a.id,date:f.date.value,bank:cents(f.bank.value),recorded:record.current,difference:cents(f.bank.value)-record.current,notes:value(f,'notes'),at:new Date().toISOString(),activity:C.events(m,f.date.value).filter(x=>(x.account===a.id||x.from===a.id||x.to===a.id)&&x.date>=a.asOf).map(x=>({id:x.id,name:x.name,date:x.date,amount:x.amount,status:x.status,included:x.status==='cleared'&&(x.date>a.asOf||x.date===a.asOf&&x.afterBalances?.[a.id]===C.balanceKey(a))}))})})}
+function reconcileForm(id){form('Compare bank balance',[field('Account',select('account',activeAccounts().map(a=>[a.id,name(a.id)]),id||activeAccounts().find(a=>a.id===selectedOwner())?.id||activeAccounts()[0]?.id)),field('Statement / bank balance date',input('date','date',today())),field('Bank cleared balance ($)',number('bank','',-1e9)),field('Notes',note('notes')),e('p','Use the cleared bank balance, not a balance that already subtracts pending transactions. This saves a comparison only; it never changes starting balances or history.')],f=>{const a=activeAccounts().find(a=>a.id===f.account.value);if(!a)throw Error('Choose an active account first.');if(f.date.value>today()||a.opening===null||a.asOf>f.date.value)throw Error('Choose a date from the account’s starting-balance date through today. Set a starting balance first.');const report=C.forecast(m,f.date.value,30),record=[...report.accounts,...report.savings].find(x=>x.id===a.id);m.reconciliations??=[];m.reconciliations.push({id:uid(),account:a.id,date:f.date.value,bank:cents(f.bank.value),recorded:record.current,difference:cents(f.bank.value)-record.current,notes:value(f,'notes'),at:new Date().toISOString(),activity:C.events(m,f.date.value).filter(x=>(x.account===a.id||x.from===a.id||x.to===a.id)&&x.date>=a.asOf).map(x=>({id:x.id,name:x.name,date:x.date,amount:x.amount,status:x.status,included:x.status==='cleared'&&(x.date>a.asOf||x.date===a.asOf&&x.afterBalances?.[a.id]===C.balanceKey(a))}))})})}
 function reconciliationHistory(root){const p=card('Bank reconciliation');p.append(b('Compare bank balance',()=>reconcileForm()),e('small','Saved comparisons are listed below.'));p.append(group('Saved comparisons',[...(m.reconciliations||[])].filter(r=>!r.deleted&&matchesOwner(r.account)).reverse().map(r=>{const n=tile(name(r.account),r.difference,['Difference · '+dateLabel(r.date),'Bank '+dollars(r.bank)+' · recorded '+dollars(r.recorded),r.difference===0?'Matched':'Discrepancy · review transactions',r.notes],[b('Review transactions',()=>{tab='History';render()}),b('Delete',()=>safeAction('Delete reconciliation',()=>{r.deleted=true}),'link')],r.account);const d=e('details');d.append(e('summary','Activity used for this account'));for(const x of r.activity||[])d.append(e('p',dateLabel(x.date)+' · '+x.name+' · '+dollars(x.amount)+' · '+x.status+(x.included?' · included in cleared balance':' · excluded from cleared balance')));n.append(d);return n}),false));root.append(p)}
 
-function paint(){const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=state.cashFlow||C.init(today());m.ledger??=[];billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;content.replaceChildren(banner());if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),horizon):null;
+function paint(){const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=state.cashFlow||C.init(today());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;content.replaceChildren(banner());if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),tab==='Forecast'&&horizon?horizon:366):null;
  if(tab==='Accounts')accounts(content);else if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='History')history(content);else if(tab==='Forecast')timeline(content,report);else overview(content,report);for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
 const prior=render;render=function(){prior();if(page==='Finances')paint()};render();
 })();

@@ -47,3 +47,43 @@ body.glow-redesign main #content .cf-compact-list .cf-record-grid>.cf-record{
  .cf-compact-list .cf-record>div:first-child h3{flex-basis:100%}
  .cf-compact-list .cf-record>details[open],.cf-compact-list .cf-record>.cf-actions{grid-column:1/-1}
 }
+
+/* Monthly planner */
+body.glow-redesign main #content .cf-card {
+  background:var(--theme-finance-panel,#fff0f4)!important;
+  border-color:#cda9bf!important;
+}
+.cf-toolbar h2 { color:#4d2549!important; }
+.cf-month-nav { display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center; }
+.cf-month-nav button:first-child { justify-self:start; }
+.cf-month-nav button:last-child { justify-self:end; }
+.cf-month-nav .cf-month-title {
+  margin:0;text-align:center;font-size:clamp(21px,3.5vw,36px)!important;
+  color:#50254c!important;line-height:1.1;
+}
+.cf-totals-scope { margin:8px 0 3px;font-weight:700;color:#532b4d!important; }
+.cf-month-totals { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0; }
+.cf-month-totals > div { display:grid;gap:4px;padding:9px 12px;background:#f5e3ef;border:1px solid #dec1d4;border-radius:10px; }
+.cf-month-totals span,.cf-payday-estimate span { font-size:13px;font-weight:650; }
+.cf-month-totals strong { color:#492241;font-size:clamp(17px,2.4vw,25px);overflow-wrap:anywhere; }
+.cf-payday-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px; }
+.cf-payday-grid > .cf-record { border-color:#bacad3;background:var(--cf-owner-panel,#f7e3ef); }
+.cf-payday-grid .cf-amount { font-size:clamp(25px,4vw,38px); }
+.cf-payday-estimate { display:grid;gap:3px;margin-block:10px;padding:8px 10px;border:1px solid #17324c35;border-radius:9px;background:#ffffff8a; }
+.cf-payday-estimate strong { font-size:22px; }
+.cf-payday-note { font-size:13px;font-weight:650; }
+.cf-savings-total { font-weight:700; }
+.cf-transfer-route,.cf-payment-preview { font-weight:700;overflow-wrap:anywhere; }
+.cf-record[data-cf-owner="crystal"] { --cf-owner-panel:#e0f4eb;--cf-pastel:var(--cf-owner-panel); }
+.cf-record[data-cf-owner="rick"] { --cf-owner-panel:#e0edf9;--cf-pastel:var(--cf-owner-panel); }
+.cf-compact-list .cf-record>.cf-quick-pay { justify-self:start;padding:5px 9px; }
+.cf-compact-list .cf-record:has(.cf-quick-pay) { grid-template-columns:minmax(0,1fr) auto auto auto!important; }
+.cf-payment-saved { animation:cf-payment-glow 650ms ease-out; }
+@keyframes cf-payment-glow { from{box-shadow:0 0 16px #d875c0} to{box-shadow:0 0 0 transparent} }
+@media(prefers-reduced-motion:reduce){.cf-payment-saved{animation:none}}
+@media(max-width:750px){
+ .cf-payday-grid{grid-template-columns:minmax(0,1fr)}
+ .cf-month-totals{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .cf-compact-list .cf-record:has(.cf-quick-pay){grid-template-columns:minmax(0,1fr) auto!important}
+ .cf-month-nav button{padding-inline:5px;font-size:12px}
+}

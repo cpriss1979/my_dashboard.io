@@ -16,13 +16,13 @@ function occurrences(r,end){
  return out
 }
 function init(today){return {schema:1,accounts:[{id:'crystal',name:'Crystal',opening:null,asOf:today,cushion:0},{id:'rick',name:'Rick',opening:null,asOf:today,cushion:0}],income:[{id:'crystal-pay',name:'Crystal payday',account:'crystal',amount:242700,frequency:'monthly',rule:'last',start:today},{id:'rick-pay',name:'Rick payday',account:'rick',amount:192000,frequency:'monthly',rule:'rick',start:today}],bills:[],transfers:[],overrides:{}}}
-function events(m,end){
+function events(m,end,{byDue=false}={}){
  const rows=[];
  const deletedAccounts = new Set(m.accounts.filter(a=>a.deleted).map(a=>a.id));
  for(const r of [...m.income,...m.bills]){
   const bill=m.bills.includes(r);
   if(r.archived||r.deleted||deletedAccounts.has(r.account))continue;
-  const latest=bill&&r.offset<0?add(end,-r.offset):end;
+  const latest=!byDue&&bill&&r.offset<0?add(end,-r.offset):end;
   for(const scheduled of occurrences(r,latest)){
    if(r.stop&&scheduled>=r.stop)continue;
    const id=r.id+'|'+scheduled;if(m.overrides[id])continue;
@@ -30,12 +30,13 @@ function events(m,end){
    const date=bill?add(scheduled,r.offset||0):scheduled;
    // Reviewed monthly/one-time legacy series do not replay previously marked payments.
    if(bill&&r.legacyPaid?.[scheduled.slice(0,7)])continue;
-   if(date<=end)rows.push({id,ruleId:r.id,scheduled,date,due,amount:r.amount,account:r.account,name:r.name,kind:bill?'bill':'income',status:'planned',certainty:r.certainty,estimatedAmount:!!r.estimatedAmount,notes:r.notes||''});
+   if((byDue&&bill?scheduled:date)<=end)rows.push({id,ruleId:r.id,scheduled,date,due,amount:r.amount,account:r.account,name:r.name,kind:bill?'bill':'income',status:'planned',certainty:r.certainty,estimatedAmount:!!r.estimatedAmount,notes:r.notes||''});
   }
  }
  for(const o of Object.values(m.overrides)){
   const rule=[...m.bills,...m.income].find(r=>r.id===o.ruleId);
-  if((o.status==='planned'&&deletedAccounts.has(o.account))||o.deleted||o.skipped||o.date>end||((rule?.archived||rule?.deleted)&&o.status==='planned'))continue;
+  const cutoffDate=byDue&&o.kind==='bill'?(o.due||o.scheduled||o.date):o.date;
+  if((o.status==='planned'&&deletedAccounts.has(o.account))||o.deleted||o.skipped||cutoffDate>end||((rule?.archived||rule?.deleted)&&o.status==='planned'))continue;
   rows.push(o);
  }
  for(const a of m.ledger||[])if(!a.deleted&&a.date<=end)rows.push({...a,kind:a.direction==='in'?'money-in':'money-out',status:'cleared'});
