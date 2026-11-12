@@ -1,0 +1,20 @@
+main > .top .dashboard-greeting {
+  flex: 0 1 auto;
+  margin: 0;
+  min-width: 0;
+  max-width: 60%;
+  text-align: center;
+  font-size: clamp(1.15rem, 2.2vw, 1.9rem);
+  line-height: 1.25;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+main > .top .date-blessing, main > .top > div:last-child {
+  flex: 1 1 0;
+}
+main > .top > div:last-child { text-align: right; }
+#dashboardProfile { width: min(92vw, 28rem); }
+#dashboardProfile label, #dashboardProfile input { display: block; width: 100%; }
+@media (max-width: 700px) {
+  main > .top .dashboard-greeting { order: -1; flex: 1 0 100%; max-width: 100%; }
+}

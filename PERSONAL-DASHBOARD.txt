@@ -1,0 +1,22 @@
+MY DAY — PERSONAL ACCOUNTS AND BUDGETS
+
+Create an account with your name, email, and password, or sign in with Google.
+Use Settings → Edit display name to change how the dashboard greets you.
+Use the theme settings to choose a theme, custom colors, sparkles, and motion.
+Signed-in theme choices and dashboard data are saved to your own account.
+
+In Finances, choose Rename budget to give your planner a name. If you are
+starting fresh, choose Start my budget and enter your first checking account and
+its starting balance. Add income, bills, savings goals, and additional accounts
+using the existing planner. Returning users can rename their budget in place.
+
+Use the same HTTPS dashboard address and the same account to keep access to
+existing data. Each new account starts with a separate dashboard. Export a
+backup first if you want to move records from local-only mode to your account.
+
+For the site owner
+Extract the ZIP and upload its contents to the dashboard's publishing folder.
+Keep the existing Firebase project. Enable Email/Password and Google sign-in
+as needed, authorize the website domain, and verify that the deployed
+Firestore rules restrict each /users/{userId} path to its authenticated owner.
+The included firestore.rules is the reference for that restriction.

@@ -286,7 +286,17 @@ function savings(root){const report=C.forecast(m,today(),horizon),p=card('Saving
 }
 function goalForm(g){const choices=activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,name(a.id)]);if(!choices.length){alert('Create a savings account first.');return}form(g?'Edit savings goal':'Add savings goal',[field('Goal name',input('name','text',g?.name)),field('Savings account',select('account',choices,g?.account||choices[0][0])),field('Target ($)',number('target',g?g.target/100:'',.01)),field('Archive goal',check('archived',g?.archived))],f=>{const next={id:g?.id||uid(),name:reqName(f),account:f.account.value,target:cents(f.target.value),archived:f.archived.checked};if(next.target<=0)throw Error('Enter a positive target.');m.goals??=[];if(g)Object.assign(g,next);else m.goals.push(next)})}
 
-function banner(){const p=card('Finances');
+function budgetNameForm() {
+ form('Save budget name',[
+  field('Budget name',input('name','text',m.budgetName||'My budget'))
+ ],fields=>{m.budgetName=reqName(fields)});
+}
+function banner(){const p=card(m.budgetName||'My budget');
+ p.append(b('Rename budget',budgetNameForm));
+ if(!activeAccounts().length){
+  p.append(e('p','Add a checking account to start your budget. Then add your income, bills, and savings goals.'),
+   b('Start my budget',()=>accountForm(null,'checking','My checking'),'primary'));
+ }
  p.classList.add('cf-toolbar');
  const choices=ownerOptions();
  function changeView(id){selectOwner(id);historyLimit=24;calendarDay='';render()}

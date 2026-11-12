@@ -54,22 +54,27 @@
   }
 
   const standardTheme = id => themes.some(([value]) => value === id && id !== 'midnight' && id !== 'custom');
-  let base = 'glow';
-  let applied = { theme: demo ? 'midnight' : base, intensity: demo ? 'dreamy' : 'off', motion: true, accent: 'lavender', glitterColor: 'rainbow', custom: customPalette() };
-  try {
-    const previous = localStorage.getItem(key);
-    if (!demo && standardTheme(previous)) base = previous;
-    if (!demo) applied.theme = base;
-    const saved = JSON.parse(localStorage.getItem(studioKey) || 'null');
-    if (saved) {
-      applied.custom = customPalette(saved.custom);
-      if (themes.some(([id]) => id === saved.theme)) applied.theme = saved.theme;
-      if (intensities.some(([id]) => id === saved.intensity)) applied.intensity = saved.intensity;
-      if (accents.some(([id]) => id === saved.accent)) applied.accent = saved.accent;
-      if (glitterColors.some(([id]) => id === saved.glitterColor)) applied.glitterColor = saved.glitterColor;
-      if (typeof saved.motion === 'boolean') applied.motion = saved.motion;
-    }
-  } catch {}
+  const storage = demo ? localStorage : dashboardStorage;
+  let base, applied;
+  function readAppearance() {
+    base = 'glow';
+    applied = { theme: demo ? 'midnight' : base, intensity: demo ? 'dreamy' : 'off', motion: true, accent: 'lavender', glitterColor: 'rainbow', custom: customPalette() };
+    try {
+      const previous = storage.getItem(key);
+      if (!demo && standardTheme(previous)) base = previous;
+      if (!demo) applied.theme = base;
+      const saved = JSON.parse(storage.getItem(studioKey) || 'null');
+      if (saved) {
+        applied.custom = customPalette(saved.custom);
+        if (themes.some(([id]) => id === saved.theme)) applied.theme = saved.theme;
+        if (intensities.some(([id]) => id === saved.intensity)) applied.intensity = saved.intensity;
+        if (accents.some(([id]) => id === saved.accent)) applied.accent = saved.accent;
+        if (glitterColors.some(([id]) => id === saved.glitterColor)) applied.glitterColor = saved.glitterColor;
+        if (typeof saved.motion === 'boolean') applied.motion = saved.motion;
+      }
+    } catch {}
+  }
+  readAppearance();
 
   const sparkleLayer = document.createElement('div');
   sparkleLayer.className = 'journal-magic-layer home-journal-sparkles';
@@ -267,14 +272,19 @@
     applied = { theme: id, intensity: intensity.value, accent: accent.value, glitterColor: glitterColor.value, motion: motion.checked, custom: readColors() };
     applyAppearance();
     try {
-      localStorage.setItem(studioKey, JSON.stringify(applied));
-      if (!demo) localStorage.setItem(key, base);
+      storage.setItem(studioKey, JSON.stringify(applied));
+      if (!demo) storage.setItem(key, base);
       settings.close();
     } catch {
       status.textContent = name + ' applied for this session.';
     }
   };
 
+  if (!demo) window.addEventListener('dashboard:data-applied', () => {
+    readAppearance();
+    applyAppearance();
+    resetControls();
+  });
   settings.addEventListener('close', resetControls);
   resetControls();
   appearance.append(legend, help, grid, controls, palette, apply, status);
