@@ -15,7 +15,7 @@ function occurrences(r,end){
  for(let i=0;;i+=step){const m=month(r.start,i);if(m>end.slice(0,7))break;const d=payday(m,r.rule,Number(r.start.slice(-2)));if(d>=r.start&&d<=end)out.push(d)}
  return out
 }
-function init(today){return {schema:1,accounts:[{id:'crystal',name:'Crystal',opening:null,asOf:today,cushion:0},{id:'rick',name:'Rick',opening:null,asOf:today,cushion:0}],income:[{id:'crystal-pay',name:'Crystal payday',account:'crystal',amount:242700,frequency:'monthly',rule:'last',start:today},{id:'rick-pay',name:'Rick payday',account:'rick',amount:192000,frequency:'monthly',rule:'rick',start:today}],bills:[],transfers:[],overrides:{}}}
+function init(){return {schema:1,accounts:[],groups:[],income:[],bills:[],transfers:[],ledger:[],overrides:{}}}
 function events(m,end,{byDue=false}={}){
  const rows=[];
  const deletedAccounts = new Set(m.accounts.filter(a=>a.deleted).map(a=>a.id));
@@ -41,7 +41,19 @@ function events(m,end,{byDue=false}={}){
   if((o.status==='planned'&&deletedAccounts.has(o.account))||o.deleted||o.skipped||cutoffDate>end||((archivedFuture||rule?.deleted)&&o.status==='planned'))continue;
   rows.push(o);
  }
- for(const a of m.ledger||[])if(!a.deleted&&a.date<=end)rows.push({...a,kind:a.direction==='in'?'money-in':'money-out',status:'cleared'});
+ const deposits=new Map(rows.filter(item=>item.kind==='income').map(item=>[item.id,item]));
+ for(const entry of m.ledger||[]){
+  if(entry.deleted)continue;
+  if(entry.afterDepositId){
+   const deposit=deposits.get(entry.afterDepositId);
+   if(!deposit||deposit.account!==entry.account||deletedAccounts.has(entry.account))continue;
+   const expected=deposit.status==='pending'?deposit.expectedDate||deposit.date:deposit.date;
+   const date=add(expected,entry.daysAfterDeposit||0);
+   if(date<=end)rows.push({...entry,date,kind:'money-out',status:'planned'});
+  }else if(entry.date<=end){
+   rows.push({...entry,kind:entry.direction==='in'?'money-in':'money-out',status:'cleared'});
+  }
+ }
  for(const t of m.transfers)if(!t.deleted&&t.date<=end)rows.push({...t,kind:'transfer',status:t.status==='completed'?'cleared':t.status});
  return rows;
 }
@@ -59,7 +71,7 @@ function forecast(m,today,horizon){
   const relevant=related(rows);
   for(const r of relevant)if(configured&&r.status==='cleared'&&(r.date>a.asOf||r.date===a.asOf&&r.afterBalances?.[a.id]===balanceKey(a))&&r.date<=today)current+=r.delta;
   const upcoming=list=>{
-   const pending=list.filter(r=>r.status!=='cleared'&&!(r.kind==='income'&&r.status==='planned'&&(r.date<today||configured&&r.date<=a.asOf))).map(r=>{
+   const pending=list.filter(r=>r.status!=='cleared'&&!(r.kind==='income'&&r.status==='planned'&&r.date<today)).map(r=>{
     const expected=r.kind==='income'&&r.status==='pending'?r.expectedDate||r.date:r.date;
     return {...r,originalDate:r.date,date:expected<today?today:expected};
    });

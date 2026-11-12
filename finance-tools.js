@@ -20,7 +20,7 @@ function billTotals(rows){
 function billPayment(model,core,bill,{date,paymentDate=date,status,ledgerId}){
  const account=model.accounts.find(a=>a.id===bill.account&&!a.deleted);
  if(!account)throw Error('Choose an active paying account before recording payment.');
- const matching=ledgerId?(model.ledger||[]).find(row=>row.id===ledgerId&&!row.deleted&&row.direction==='out'&&row.account===bill.account&&row.amount===bill.amount&&row.date===date):null;
+ const matching=ledgerId?(model.ledger||[]).find(row=>row.id===ledgerId&&!row.deleted&&!row.afterDepositId&&row.direction==='out'&&row.account===bill.account&&row.amount===bill.amount&&row.date===date):null;
  if(ledgerId&&(!matching||status!=='cleared'))throw Error('Choose a cleared transaction with the same account, amount and date.');
  const afterBalances=matching?matching.afterBalances:{[account.id]:core.balanceKey(account)};
  model.overrides[bill.id]={...bill,paid:true,cleared:status==='cleared',status,posted:date,paymentDate,date,
@@ -46,6 +46,33 @@ function splitBillRule(model,core,rule,original,next,newRuleId){
  model.overrides[original.id]={...original,skipped:true};
  model.overrides[id]={...next,id,ruleId:newRuleId,scheduled:start};
 }
+function financeGroups(model){
+ if(Array.isArray(model.groups))return model.groups;
+ const legacyIds=new Set(model.accounts.flatMap(account=>[
+  account.ownerId,account.id==='crystal'||account.id==='rick'?account.id:null
+ ]).filter(Boolean));
+ return [...legacyIds].map(id=>{
+  const primary=model.accounts.find(account=>account.id===id);
+  const label=primary?.name?.replace(/(?:’s|'s)? (?:Checking|Savings)$/i,'')||id.charAt(0).toUpperCase()+id.slice(1);
+  return {id,name:label};
+ });
+}
+function financeSetup(model){
+ if(Array.isArray(model.groups))return model;
+ const groups=financeGroups(model);
+ const accounts=model.accounts.map(account=>{
+  const label=account.name?.replace(/(?:’s|'s)? (?:Checking|Savings)$/i,'');
+  const match=groups.find(group=>group.id===account.id||
+   (label!==account.name&&label?.toLowerCase()===group.name.toLowerCase()));
+  const ownerId=account.ownerId??match?.id;
+  const defaults={crystal:['Crystal','#54ab83'],rick:['Rick','#64a6da']};
+  const legacy=defaults[ownerId];
+  const name=legacy&&account.id===ownerId&&account.name===legacy[0]
+   ?account.name+(account.type==='savings'?' Savings':' Checking'):account.name;
+  return {...account,name,...(ownerId?{ownerId}:{}),...(legacy&&!account.accent?{accent:legacy[1]}:{})};
+ });
+ return {...model,groups,accounts};
+}
 function paydayPlan(account,today,fallbackEnd){
  const hasPayday=!!account.nextDeposit;
  const cutoff=account.nextDeposit?.date||fallbackEnd;
@@ -70,13 +97,14 @@ function paydayPlan(account,today,fallbackEnd){
  }
  const net=rows=>rows.reduce((sum,item)=>sum+item.delta,0);
  const preDeposit=available===null?null:available+net(knownBefore);
- const conditionalShortfall=preDeposit===null||!unknown.length?0:Math.max(0,-(preDeposit+net(unknown)));
  const after=available===null||!hasPayday?null:available+net(onDay);
+ const conditionalShortfall=preDeposit!==null&&preDeposit>=0&&after>=0&&unknown.length
+  ?Math.max(0,-(preDeposit+net(unknown))):0;
  return {cutoff,items:[...before,...orderedPayday],before,onDay,bills,unknown,available,after,
   lowest,firstShort,firstShortBalance,preDeposit,conditionalShortfall,hasPayday};
 }
-const arrays=['accounts','income','bills','transfers','ledger','goals','reconciliations'];
+const arrays=['groups','accounts','income','bills','transfers','ledger','goals','reconciliations'];
 function changes(before,after){const out=[];for(const key of [...arrays,'overrides']){const a=key==='overrides'?before[key]||{}:Object.fromEntries((before[key]||[]).map(x=>[x.id,x])),b=key==='overrides'?after[key]||{}:Object.fromEntries((after[key]||[]).map(x=>[x.id,x]));for(const id of new Set([...Object.keys(a),...Object.keys(b)])){if(JSON.stringify(a[id])===JSON.stringify(b[id]))continue;out.push({key,id,hadBefore:a[id]!==undefined,hadAfter:b[id]!==undefined,before:copy(a[id])??null,after:copy(b[id])??null})}}return out}
 function undo(model,entry){if(entry.undone)throw Error('This change has already been undone.');for(const op of entry.changes){const now=op.key==='overrides'?model.overrides?.[op.id]:(model[op.key]||[]).find(x=>x.id===op.id);if(JSON.stringify(now)!==JSON.stringify(op.hadAfter?op.after:undefined))throw Error('This record has changed since then. Use Edit to correct it safely.');}for(const op of entry.changes){if(op.key==='overrides'){if(op.hadBefore)model.overrides[op.id]=copy(op.before);else delete model.overrides[op.id]}else{model[op.key]??=[];const i=model[op.key].findIndex(x=>x.id===op.id);if(i>=0)model[op.key].splice(i,1);if(op.hadBefore)model[op.key].splice(i<0?model[op.key].length:i,0,copy(op.before))}}entry.undone=true}
-const api={splitBillRule,billMonthRows,billTotals,billPayment,paydayPlan,compareBillDue,monthEnd,groups,changes,undo,copy};root.FinanceTools=api;if(typeof module!=='undefined')module.exports=api;
+const api={financeSetup,splitBillRule,billMonthRows,billTotals,billPayment,paydayPlan,compareBillDue,monthEnd,groups,changes,undo,copy};root.FinanceTools=api;if(typeof module!=='undefined')module.exports=api;
 })(globalThis);

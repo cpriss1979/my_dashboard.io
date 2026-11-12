@@ -74,8 +74,6 @@ body.glow-redesign main #content .cf-card {
 .cf-payday-note { font-size:13px;font-weight:650; }
 .cf-savings-total { font-weight:700; }
 .cf-transfer-route,.cf-payment-preview { font-weight:700;overflow-wrap:anywhere; }
-.cf-record[data-cf-owner="crystal"] { --cf-owner-panel:#e0f4eb;--cf-pastel:var(--cf-owner-panel); }
-.cf-record[data-cf-owner="rick"] { --cf-owner-panel:#e0edf9;--cf-pastel:var(--cf-owner-panel); }
 .cf-compact-list .cf-record>.cf-quick-pay { justify-self:start;padding:5px 9px; }
 .cf-compact-list .cf-record:has(.cf-quick-pay) { grid-template-columns:minmax(0,1fr) auto auto auto!important; }
 .cf-payment-saved { animation:cf-payment-glow 650ms ease-out; }
@@ -130,8 +128,6 @@ body.glow-redesign main #content .cf-bill-cells h3 { margin:0!important;font-siz
 .cf-account-label {
   padding:3px 6px;border-radius:6px;background:#ece6ef;color:#3d2b48;overflow-wrap:anywhere;font-weight:650;
 }
-.cf-account-label[data-cf-owner="crystal"] { background:#c9eadc;color:#164e3c; }
-.cf-account-label[data-cf-owner="rick"] { background:#d3e4f8;color:#1c4674; }
 .cf-bill-row .cf-status { background:#ffffffa8;color:#3a263f; }
 .cf-bill-details { grid-column:1/-1;min-width:0;font-size:13px; }
 .cf-bill-details summary { min-height:26px!important;cursor:pointer;color:#623052;font-weight:700; }
@@ -162,3 +158,15 @@ body.glow-redesign main #content .cf-bill-cells h3 { margin:0!important;font-siz
 .cf-payday-line strong { font-variant-numeric:tabular-nums;text-align:right; }
 .cf-payday-line select,.cf-payday-line small { grid-column:1/-1;justify-self:start;max-width:100%; }
 .cf-payday-line small:empty { display:none; }
+
+.cf-record[style*="--cf-account-accent"] {
+ --cf-owner-panel: color-mix(in srgb, var(--cf-account-accent) 22%, white);
+ --cf-pastel: var(--cf-owner-panel);
+}
+.cf-account-label[style*="--cf-account-accent"] {
+ background: color-mix(in srgb, var(--cf-account-accent) 25%, white);
+ color: #23354a;
+}
+.cf-forecast-details { margin-top: 8px; }
+.cf-forecast-details summary { cursor: pointer; font-weight: 650; }
+.cf-inline-form input[type="color"] { width: 100%; min-height: 44px; }
