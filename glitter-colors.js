@@ -1,6 +1,5 @@
 (function () {
   'use strict';
-  const settings = document.getElementById('appSettings');
   const themes = [
     ['glow', 'Original Glow'],
     ['midnight', 'Midnight Glitter'],
@@ -17,6 +16,15 @@
   ];
   const key = 'glowcode-dashboard-theme';
   const demo = document.body.hasAttribute('data-midnight-demo');
+  const settings = demo ? document.getElementById('appSettings') : document.createElement('dialog');
+  if (!demo) {
+    settings.id = 'dashboardThemes';
+    settings.setAttribute('aria-labelledby', 'dashboardThemesTitle');
+    settings.innerHTML = '<div class="app-dialog-heading"><h2 id="dashboardThemesTitle">Themes</h2><button type="button" class="secondary">Close</button></div>';
+    settings.querySelector('button').onclick = () => settings.close();
+    document.body.append(settings);
+    window.DashboardThemes = { open() { if (!settings.open) settings.showModal(); } };
+  }
   const studioKey = demo ? 'midnight-glitter-preview' : 'glowcode-theme-studio';
   const intensities = [['off','Off'],['subtle','Subtle'],['dreamy','Dreamy'],['full','Full Glitter']];
   const accents = [['lavender','Lavender'],['pink','Pink'],['ice','Icy Blue'],['mint','Mint'],['peach','Soft Peach']];
@@ -288,7 +296,5 @@
   settings.addEventListener('close', resetControls);
   resetControls();
   appearance.append(legend, help, grid, controls, palette, apply, status);
-  const accountControls = document.getElementById('appSettingsContent');
-  if (accountControls) accountControls.before(appearance);
-  else settings.append(appearance);
+  settings.append(appearance);
 })();

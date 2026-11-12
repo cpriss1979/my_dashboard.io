@@ -1,20 +1,40 @@
-main > .top .dashboard-greeting {
-  flex: 0 1 auto;
+#appMobileHeader .dashboard-greeting {
   margin: 0;
   min-width: 0;
-  max-width: 60%;
   text-align: center;
-  font-size: clamp(1.15rem, 2.2vw, 1.9rem);
+  font-size: clamp(1.05rem, 1.7vw, 1.65rem);
   line-height: 1.25;
   font-weight: 700;
   overflow-wrap: anywhere;
+  color: inherit;
 }
-main > .top .date-blessing, main > .top > div:last-child {
-  flex: 1 1 0;
+.fb-account-locked #appMobileHeader .dashboard-greeting { visibility: hidden; }
+#appMobileHeader .dashboard-header-actions { display: contents; }
+@media (min-width: 1201px) {
+  body.glow-redesign #appMobileHeader {
+    grid-template-columns: minmax(360px, 1fr) minmax(0, auto) minmax(360px, 1fr);
+  }
+  #appMobileHeader .dashboard-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+  }
 }
-main > .top > div:last-child { text-align: right; }
+@media (max-width: 1200px) {
+  #appMobileHeader .dashboard-greeting { grid-column: 1 / -1; grid-row: 2; }
+}
+@media (max-width: 750px) {
+  #appMobileHeader .dashboard-greeting { grid-row: 3; }
+}
+#dashboardThemes {
+  width: min(600px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  border: 1px solid #8b77ad;
+  border-radius: 16px;
+  background: #191e36;
+  color: #f1f4ff;
+}
 #dashboardProfile { width: min(92vw, 28rem); }
 #dashboardProfile label, #dashboardProfile input { display: block; width: 100%; }
-@media (max-width: 700px) {
-  main > .top .dashboard-greeting { order: -1; flex: 1 0 100%; max-width: 100%; }
-}
