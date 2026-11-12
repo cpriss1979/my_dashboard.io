@@ -10,6 +10,18 @@
     return typeof value === 'string' ? value.trim().slice(0, 80) : '';
   }
 
+  function placeGreeting() {
+    const scripture = document.getElementById('homeBibleHero');
+    if (scripture) scripture.before(greeting);
+    else greeting.remove();
+  }
+
+  const renderDashboard = render;
+  render = function () {
+    renderDashboard();
+    placeGreeting();
+  };
+
   function updateGreeting() {
     const hour = new Date().getHours();
     const salutation = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -42,6 +54,7 @@
   });
   window.addEventListener('dashboard:data-applied', updateGreeting);
   window.addEventListener('dashboard:profile-changed', updateGreeting);
+  placeGreeting();
   updateGreeting();
   setInterval(updateGreeting, 1000 * 15);
 })();

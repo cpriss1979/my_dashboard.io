@@ -1,31 +1,12 @@
-#appMobileHeader .dashboard-greeting {
-  margin: 0;
+#content > .dashboard-greeting {
+  margin: 0 0 10px;
   min-width: 0;
-  text-align: center;
-  font-size: clamp(1.05rem, 1.7vw, 1.65rem);
-  line-height: 1.25;
+  text-align: left;
+  font-size: clamp(1.05rem, 1.7vw, 1.45rem);
+  line-height: 1.3;
   font-weight: 700;
   overflow-wrap: anywhere;
   color: inherit;
-}
-.fb-account-locked #appMobileHeader .dashboard-greeting { visibility: hidden; }
-#appMobileHeader .dashboard-header-actions { display: contents; }
-@media (min-width: 1201px) {
-  body.glow-redesign #appMobileHeader {
-    grid-template-columns: minmax(360px, 1fr) minmax(0, auto) minmax(360px, 1fr);
-  }
-  #appMobileHeader .dashboard-header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 14px;
-  }
-}
-@media (max-width: 1200px) {
-  #appMobileHeader .dashboard-greeting { grid-column: 1 / -1; grid-row: 2; }
-}
-@media (max-width: 750px) {
-  #appMobileHeader .dashboard-greeting { grid-row: 3; }
 }
 #dashboardThemes {
   width: min(600px, calc(100vw - 24px));

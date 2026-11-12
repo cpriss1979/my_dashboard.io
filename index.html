@@ -4352,10 +4352,7 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
  let financeTab='Bills',bookmarkQuery='',entriesOpen=false,gameOpen=false;
  document.body.classList.add('glow-redesign');
  const clock=document.querySelector('.date-blessing'),quickAdd=document.querySelector('main>.top .primary');clock.classList.add('glow-header-clock');quickAdd.classList.add('glow-quick-add');
- const header=$('appMobileHeader'),headerActions=document.createElement('div');
- headerActions.className='dashboard-header-actions';
- headerActions.append(clock,quickAdd,$('appSettingsButton'));
- header.append($('dashboardGreeting'),headerActions);
+ $('appMobileHeader').append(clock,quickAdd);
  const sideSettings=document.createElement('button');sideSettings.type='button';sideSettings.className='glow-side-settings';sideSettings.textContent='Themes';sideSettings.onclick=()=>window.DashboardThemes.open();sidebar.append(sideSettings);
 
  const recovery=document.createElement('details');recovery.className='glow-recovery';recovery.innerHTML='<summary>Sign-in & recovery</summary><label for="glowRecoveryEmail">Account email<input id="glowRecoveryEmail" type="email" autocomplete="email" placeholder="you@example.com"></label><button type="button" id="glowResetPassword">Forgot password</button><button type="button" id="glowForgotEmail">Forgot email</button><p id="glowRecoveryStatus" role="status"></p>';
@@ -4727,7 +4724,7 @@ body.glow-redesign main #content .tfy-card{background:#e2f0ed!important;color:#2
 <script src="./cash-flow.js?v=personal-budget"></script>
 <link rel="stylesheet" href="./glitter-colors.css?v=rose-ribbon">
 <script src="./glitter-colors.js?v=themes-panel"></script>
-<link rel="stylesheet" href="./profile.css?v=visible-header">
+<link rel="stylesheet" href="./profile.css?v=home-greeting">
 <dialog id="dashboardProfile">
   <form>
     <h2>Your profile</h2>
@@ -4738,5 +4735,5 @@ body.glow-redesign main #content .tfy-card{background:#e2f0ed!important;color:#2
     </div>
   </form>
 </dialog>
-<script src="./profile.js"></script>
+<script src="./profile.js?v=home-greeting"></script>
 </body></html>
