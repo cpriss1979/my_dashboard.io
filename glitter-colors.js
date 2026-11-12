@@ -282,7 +282,8 @@
     try {
       storage.setItem(studioKey, JSON.stringify(applied));
       if (!demo) storage.setItem(key, base);
-      settings.close();
+      if (settings.contains(appearance)) settings.close();
+      else status.textContent = name + ' saved.';
     } catch {
       status.textContent = name + ' applied for this session.';
     }

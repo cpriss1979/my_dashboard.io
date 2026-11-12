@@ -1,0 +1,44 @@
+body.widget-section #appMobileHeader,
+body.widget-section #phoneBottomNavigation,
+body.widget-section > aside,
+body.widget-section .fb-sync-bar,
+body.widget-section .footer,
+body.widget-section #appSyncError {
+  display: none !important;
+}
+body.glow-redesign.widget-section > main {
+  margin: 0 auto !important;
+  width: min(100%, 1160px) !important;
+  padding: clamp(18px, 4vw, 44px) clamp(14px, 4vw, 40px) 40px !important;
+}
+body.widget-section[data-widget-section="themes"] > main { max-width: 760px; }
+.widget-section-header {
+  position: relative;
+  margin: 0 0 20px;
+  padding: 20px clamp(16px, 4vw, 30px);
+  border: 1px solid var(--line, #aa9ac6);
+  border-radius: 16px;
+  background: var(--theme-header, #161e38);
+  color: #f6f2ff;
+}
+.widget-section-header p {
+  margin: 0 0 5px;
+  font-size: .72rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.widget-section-header h1 {
+  margin: 0;
+  color: inherit;
+  font-size: clamp(1.65rem, 4vw, 2.6rem);
+  line-height: 1.15;
+}
+.widget-section-header button { margin-top: 14px; }
+body.widget-section #content { min-width: 0; }
+body.widget-section #content > .dashboard-appearance {
+  margin: 0;
+  padding: clamp(12px, 3vw, 22px);
+  border-radius: 14px;
+  background: var(--theme-header, #161e38);
+  color: #f6f2ff;
+}
