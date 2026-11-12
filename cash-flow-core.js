@@ -21,10 +21,10 @@ function events(m,end,{byDue=false}={}){
  const deletedAccounts = new Set(m.accounts.filter(a=>a.deleted).map(a=>a.id));
  for(const r of [...m.income,...m.bills]){
   const bill=m.bills.includes(r);
-  if(r.archived||r.deleted||deletedAccounts.has(r.account))continue;
+  if(r.deleted||deletedAccounts.has(r.account)||(r.archived&&(!bill||!r.archivedOn)))continue;
   const latest=!byDue&&bill&&r.offset<0?add(end,-r.offset):end;
   for(const scheduled of occurrences(r,latest)){
-   if(r.stop&&scheduled>=r.stop)continue;
+   if(r.stop&&scheduled>=r.stop||r.archived&&scheduled>r.archivedOn)continue;
    const id=r.id+'|'+scheduled;if(m.overrides[id])continue;
    const due=bill&&r.certainty!=='unknown'?scheduled:null;
    const date=bill?add(scheduled,r.offset||0):scheduled;
@@ -36,7 +36,9 @@ function events(m,end,{byDue=false}={}){
  for(const o of Object.values(m.overrides)){
   const rule=[...m.bills,...m.income].find(r=>r.id===o.ruleId);
   const cutoffDate=byDue&&o.kind==='bill'?(o.due||o.scheduled||o.date):o.date;
-  if((o.status==='planned'&&deletedAccounts.has(o.account))||o.deleted||o.skipped||cutoffDate>end||((rule?.archived||rule?.deleted)&&o.status==='planned'))continue;
+  const archivedFuture=rule?.archived&&(!rule.archivedOn||(o.scheduled||o.due||o.date)>rule.archivedOn);
+  if(!byDue&&!o.date)continue;
+  if((o.status==='planned'&&deletedAccounts.has(o.account))||o.deleted||o.skipped||cutoffDate>end||((archivedFuture||rule?.deleted)&&o.status==='planned'))continue;
   rows.push(o);
  }
  for(const a of m.ledger||[])if(!a.deleted&&a.date<=end)rows.push({...a,kind:a.direction==='in'?'money-in':'money-out',status:'cleared'});

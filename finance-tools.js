@@ -34,7 +34,8 @@ function splitBillRule(model,core,rule,original,next,newRuleId){
  if(rule.stop&&start>=rule.stop)throw Error('This schedule already has a later replacement. Edit this bill only or adjust the later rule.');
  const later=Object.values(model.overrides).some(item=>item.ruleId===rule.id&&item.id!==original.id&&item.scheduled>=original.scheduled);
  if(later)throw Error('Later occurrences already have saved changes. Edit this bill only to preserve those records.');
- const offset=core.day(next.preferred)-core.day(start);
+ if(!start)throw Error('Enter a due or preferred date before changing the repeating schedule.');
+ const offset=core.day(next.preferred||start)-core.day(start);
  if(Math.abs(offset)>366)throw Error('Choose a preferred date within one year of the due date.');
  const replacement={...rule,id:newRuleId,start,offset,account:next.account,name:next.name,amount:next.amount,
   certainty:next.certainty,estimatedAmount:next.estimatedAmount,notes:next.notes};
