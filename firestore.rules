@@ -1,6 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // The 256-bit document ID is a revocable read capability. Anonymous
+    // clients can get that document only and cannot query the collection.
+    match /widgetPreviews/{ownerId}/connections/{capability} {
+      function owner() {
+        return request.auth != null && request.auth.uid == ownerId;
+      }
+      function validTask(task) {
+        return task is map && task.keys().hasOnly(['title', 'due'])
+          && task.title is string && task.title.size() <= 120
+          && task.due is string && (task.due == '' || task.due.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'));
+      }
+      function validPreview(data) {
+        return capability.matches('[0-9a-f]{64}')
+          && data.keys().hasOnly(['savedCents', 'clearedCheckingCents', 'tasks', 'updatedAt'])
+          && (data.savedCents == null || data.savedCents is int)
+          && (data.clearedCheckingCents == null || data.clearedCheckingCents is int)
+          && data.tasks is list && data.tasks.size() <= 3
+          && (data.tasks.size() < 1 || validTask(data.tasks[0]))
+          && (data.tasks.size() < 2 || validTask(data.tasks[1]))
+          && (data.tasks.size() < 3 || validTask(data.tasks[2]))
+          && data.updatedAt == request.time;
+      }
+      allow get: if capability.matches('[0-9a-f]{64}');
+      allow list, delete: if owner();
+      allow create, update: if owner() && validPreview(request.resource.data);
+    }
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }

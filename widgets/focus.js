@@ -3,12 +3,12 @@
     ['calendar', 'Calendar'], ['games', 'Games'], ['projects', 'Projects'],
     ['tasks', 'Daily priorities'], ['notes', 'Quick notes'], ['finances', 'Finances'],
     ['time-for-you', 'Time for You'], ['habit-tracker', 'Habit Tracker'],
-    ['journal', 'Journal'], ['themes', 'Themes']
+    ['journal', 'Journal'], ['themes', 'Themes'], ['money-tracker', 'Finances'], ['bible', 'Bible']
   ]);
   const key = new URLSearchParams(location.search).get('widget');
   if (!routes.has(key)) return;
   const target = routes.get(key);
-  const title = ({tasks: 'Tasks', notes: 'Notes'})[key] || target;
+  const title = ({tasks: 'Tasks', notes: 'Notes', 'money-tracker': 'Savings'})[key] || target;
   document.title = title + ' · My Dashboard';
 
   const header = document.createElement('header');

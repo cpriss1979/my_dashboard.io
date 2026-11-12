@@ -1,7 +1,8 @@
 (function(){
 'use strict';
 const C=window.CashFlowCore,T=window.FinanceTools,frequencies={once:'One time',weekly:'Weekly',biweekly:'Every two weeks',monthly:'Monthly',bimonthly:'Every two months',quarterly:'Quarterly',annually:'Annually'},tabs=['Overview','Accounts','Income','Bills','Savings','Activity','Forecast','Archive'];
-let tab='Overview',horizon=0,m=null,filters={frequency:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='',backupProblem='',actionNotice='',paymentJustSaved=false;
+const widgetSavings=new URLSearchParams(location.search).get('widget')==='money-tracker';
+let tab=widgetSavings?'Savings':'Overview',horizon=0,m=null,filters={frequency:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='',backupProblem='',actionNotice='',paymentJustSaved=false;
 const today=()=>localDate(new Date()), dollars=n=>n===null||n===undefined?'Not set':money(n/100), name=accountName, uid=()=>crypto.randomUUID();
 const minDate='1900-01-01',maxDate='2199-12-31';
 function e(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
@@ -724,7 +725,7 @@ let lastScope;
 function paint(){
  const scope=preferenceKey();
  if(lastScope!==undefined&&lastScope!==scope){
-  tab='Overview';horizon=0;billMonth='';billView='All bills';billSearch='';calendarDay='';
+  tab=widgetSavings?'Savings':'Overview';horizon=0;billMonth='';billView='All bills';billSearch='';calendarDay='';
   filters.frequency='';historyLimit=24;showAllAttention=false;folded.clear();
   for(const key of Object.keys(historyFilters))historyFilters[key]='';
   backupText='';backupProblem='';actionNotice='';paymentJustSaved=false;backupOwner=null;

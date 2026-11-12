@@ -3,6 +3,7 @@
  const bridge=window.DashboardSyncBridge,core=window.DashboardSyncCore;
  const el=id=>document.getElementById(id),status=message=>{el('fbSyncStatus').textContent=message},gateMessage=message=>{el('fbGateStatus').textContent=message};
  const config={apiKey:'AIzaSyChVnn7DLMzSdvtIuZ4TeMr7NGeMOqBdlc',authDomain:'my-dashboard-95981.firebaseapp.com',projectId:'my-dashboard-95981',storageBucket:'my-dashboard-95981.firebasestorage.app',messagingSenderId:'681559522594',appId:'1:681559522594:web:79f53afff5360c910b397b'};
+ let widgets;
  let firebase,user=null,ref=null,ready=false,busy=false,dirty=false,conflict=false,revision=0,seq=0,epoch=0,timer=0,unsubscribe=null,deferred=null,auth=null,db=null,retryAt=0;
  const writer=crypto.randomUUID();
  function allowDashboard(value){document.body.classList.toggle('fb-account-locked',!value);el('fbAccountGate').hidden=value;document.querySelector('main').inert=!value;document.querySelector('aside').inert=!value}
@@ -12,7 +13,7 @@
  function editing(){return Boolean(document.querySelector('dialog[open]'))||['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)||bridge.gameActive()}
  function queue(){clearTimeout(timer);if(user&&ready&&!conflict)timer=setTimeout(push,Math.max(1200,retryAt-Date.now()))}
  bridge.onChange=()=>{if(!user||!ready)return;dirty=true;seq++;remember();status('Changes saved on this device · syncing…');queue()};
- function applyCloud(record){const decoded=core.decode(record);bridge.apply(decoded.bundle);revision=decoded.revision;dirty=false;conflict=false;deferred=null;remember()}
+ function applyCloud(record){const decoded=core.decode(record);bridge.apply(decoded.bundle);widgets?.publish(user.uid,decoded.bundle.state);revision=decoded.revision;dirty=false;conflict=false;deferred=null;remember()}
  function errorText(error){const code=String(error.code||'');if(code.includes('permission-denied'))return 'Database permission denied. Check the published /users/{userId}/ rules.';if(code.includes('unauthorized-domain'))return 'Add this website’s domain to Firebase Authentication → Authorized domains.';if(code.includes('operation-not-allowed'))return 'Enable the selected provider (Google or Email/Password) in Firebase Authentication → Sign-in method.';if(code.includes('popup-blocked'))return 'The sign-in window was blocked. Open this dashboard in Chrome or Safari and try again.';if(code.includes('popup-closed'))return 'Sign-in window closed. You can try again.';if(code.includes('network')||code.includes('unavailable'))return 'Connection unavailable. Your changes remain saved on this device.';if(/invalid-credential|wrong-password|user-not-found/.test(code))return 'Email or password was not accepted. Try Google sign-in if that is how you registered, or reset your password.';if(code.includes('email-already-in-use'))return 'This email already has an account. Sign in or use Forgot password. Google users can sign in with Google and add a password from Account access.';if(code.includes('invalid-email'))return 'Enter a valid email address.';if(code.includes('weak-password')||code.includes('password-does-not-meet-requirements'))return 'Choose a stronger password that meets the project password policy.';if(code.includes('too-many-requests'))return 'Too many attempts. Please wait before trying again.';if(code.includes('requires-recent-login'))return 'Sign out and sign in again, then retry this change.';return 'Unable to complete the request. Please try again.'}
  async function push(){
   if(!user||!ref||!ready||busy||conflict||!dirty||Date.now()<retryAt)return;
@@ -21,7 +22,7 @@
   busy=true;status('Saving to your account…');
   try{
    const result=await firebase.runTransaction(db,async tx=>{const snap=await tx.get(ownRef),current=snap.exists()?snap.data():null;const record=core.nextRecord(current,expected,json,writer);tx.set(ownRef,{...record,updatedAt:firebase.serverTimestamp()});return record.revision});
-   if(ownEpoch!==epoch)return;revision=result;retryAt=0;dirty=seq!==ownSeq;remember();status(dirty?'More changes waiting to sync…':'Saved to your account · synced');
+   if(ownEpoch!==epoch)return;widgets?.publish(user.uid,JSON.parse(json).state);revision=result;retryAt=0;dirty=seq!==ownSeq;remember();status(dirty?'More changes waiting to sync…':'Saved to your account · synced');
   }catch(error){if(ownEpoch!==epoch)return;if(error.message==='SYNC_CONFLICT'){conflict=true;status('Another device changed this dashboard. Export your local backup, then use Load latest. Your edits are kept locally.')}else{retryAt=Date.now()+30000;status(errorText(error))}remember()}
   finally{if(ownEpoch===epoch){busy=false;if(dirty&&!conflict)queue()}}
  }
@@ -45,7 +46,7 @@
     if(dirty){if(decoded.revision!==revision){conflict=true;status('This device has unsynced edits and newer cloud data. Export backup before loading latest.')}else status('Resuming changes saved on this device…')}
     else{applyCloud(snap.data());status('Cloud connected · changes sync automatically')}
    }else if(revision!==0&&dirty){conflict=true;status('The cloud copy is missing. Export your backup before choosing Import this device.')}else{revision=0;status('Cloud account is empty. Add an entry or use Import this device to bring over your existing dashboard.')}
-   ready=true;remember();allowDashboard(true);watch(ownEpoch);if(dirty&&!conflict)queue();
+   ready=true;remember();allowDashboard(true);widgets?.ready(current.uid);if(snap.exists())widgets?.publish(current.uid,core.decode(snap.data()).bundle.state);watch(ownEpoch);if(dirty&&!conflict)queue();
   }catch(error){if(ownEpoch!==epoch)return;status(errorText(error));gateMessage(errorText(error)+' Retry connection below, or sign out to use your local-only copy.');el('fbGateRetry').hidden=false;el('fbGateSignOut').hidden=false}
  }
  async function signIn(){
@@ -103,6 +104,6 @@
  setInterval(()=>{if(user&&ready){if(dirty&&!busy&&!conflict)push();else if(deferred&&!busy&&!editing()){if(deferred.revision>revision){try{applyCloud(deferred);status('Updated from your other device')}catch(e){status(errorText(e))}}else deferred=null}}},15000);
  try{
   const version='13.0.0',base='https://www.gstatic.com/firebasejs/'+version+'/';
-  const [app,authSDK,storeSDK]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js'),import(base+'firebase-firestore.js')]);firebase={...app,...authSDK,...storeSDK};const instance=firebase.initializeApp(config);auth=firebase.getAuth(instance);db=firebase.getFirestore(instance);await firebase.setPersistence(auth,firebase.browserLocalPersistence);el('fbSignIn').disabled=false;el('fbGateSignIn').disabled=false;firebase.onAuthStateChanged(auth,current=>loadAccount(current));
+  const [app,authSDK,storeSDK]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js'),import(base+'firebase-firestore.js')]);firebase={...app,...authSDK,...storeSDK};const instance=firebase.initializeApp(config);auth=firebase.getAuth(instance);db=firebase.getFirestore(instance);if(document.readyState==='loading')await new Promise(resolve=>document.addEventListener('DOMContentLoaded',resolve,{once:true}));widgets=window.DashboardWidgetConnection?.attach({firebase,db,auth,projectId:config.projectId});await firebase.setPersistence(auth,firebase.browserLocalPersistence);el('fbSignIn').disabled=false;el('fbGateSignIn').disabled=false;firebase.onAuthStateChanged(auth,current=>loadAccount(current));
  }catch(error){gateMessage('Sign-in could not start: '+errorText(error)+' You can still use local-only storage.');status('Google connection unavailable · local-only option remains available')}
 })();

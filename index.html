@@ -452,7 +452,7 @@ html,body{max-width:100%;overflow-x:clip;overscroll-behavior-x:none}button,a,inp
 </style><link rel="stylesheet" href="./mobile-app.css?v=20261025"><link rel="stylesheet" href="./redesign.css?v=full-height-sidebar"><link rel="stylesheet" href="./calendar-dates.css?v=selected-agenda"><link rel="stylesheet" href="./activities.css?v=20261027-framed"><body class="fb-account-locked"><script>
 {
  const section=new URLSearchParams(location.search).get('widget');
- if(['calendar','games','projects','tasks','notes','finances','time-for-you','habit-tracker','journal','themes'].includes(section)){
+ if(['calendar','games','projects','tasks','notes','finances','time-for-you','habit-tracker','journal','themes','money-tracker','bible'].includes(section)){
   document.body.classList.add('widget-section');
   document.body.dataset.widgetSection=section;
  }
@@ -4312,7 +4312,7 @@ const renderBeforeJournalMagic=render;render=function(){renderBeforeJournalMagic
  document.getElementById('fbLocalOnly').onclick=()=>{window.DashboardSyncBridge.setScope('');window.DashboardSyncBridge.apply(window.DashboardSyncBridge.readGuest());document.body.classList.remove('fb-account-locked');gate.hidden=true;document.getElementById('fbSyncStatus').textContent='Local-only mode · Google connection has not started'};
  document.getElementById('fbExportLocal').onclick=()=>window.DashboardSyncBridge.exportGuestBackup();
 })();
-</script><script src="sync-core.js"></script><script src="firebase-sync.js?v=personal-profiles"></script><script>
+</script><script src="sync-core.js"></script><script src="./widgets/connection.js"></script><script src="firebase-sync.js?v=widget-connection"></script><script>
 function showOriginalDeviceBackupPanel(data){
  document.getElementById('originalDeviceBackupPanel')?.remove();
  const text=JSON.stringify(data,null,2),filename='dashboard-local-backup-'+localDate(new Date())+'.json';
@@ -4758,7 +4758,7 @@ body.glow-redesign main #content .tfy-card{background:#e2f0ed!important;color:#2
 <link rel="stylesheet" href="./cash-flow.css?v=personal-finance-1">
 <script src="./cash-flow-core.js?v=personal-finance-1"></script>
 <script src="./finance-tools.js?v=personal-finance-1"></script>
-<script src="./cash-flow.js?v=personal-budget"></script>
+<script src="./cash-flow.js?v=savings-widget"></script>
 <link rel="stylesheet" href="./glitter-colors.css?v=rose-ribbon">
 <script src="./glitter-colors.js?v=widget-themes"></script>
 <link rel="stylesheet" href="./profile.css?v=home-greeting">
@@ -4774,5 +4774,5 @@ body.glow-redesign main #content .tfy-card{background:#e2f0ed!important;color:#2
 </dialog>
 <script src="./profile.js?v=home-greeting"></script>
 <link rel="stylesheet" href="./widgets/focus.css">
-<script src="./widgets/focus.js"></script>
+<script src="./widgets/focus.js?v=savings-bible"></script>
 </body></html>
