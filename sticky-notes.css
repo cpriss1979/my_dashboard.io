@@ -1,0 +1,62 @@
+.sticky-layer {
+  position: fixed;
+  inset: 90px 0 72px max(0px, 19vw);
+  pointer-events: none;
+  z-index: 40;
+}
+.sticky-card {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  width: 230px;
+  max-width: 100%;
+  padding: 12px;
+  background: #fff0ac;
+  color: #3a2c37;
+  border: 1px solid #cdb66a;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px #25113835;
+}
+.sticky-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: .8rem;
+}
+.sticky-handle { cursor: grab; touch-action: none; user-select: none; }
+.sticky-card .sticky-copy {
+  display: block;
+  width: 100%;
+  max-height: 95px;
+  overflow: auto;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: transparent;
+  color: inherit;
+  border: 0;
+}
+.sticky-launcher {
+  position: fixed;
+  z-index: 41;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+}
+.sticky-dialog {
+  width: min(420px, calc(100% - 32px));
+  box-sizing: border-box;
+  padding: 20px;
+  border: 1px solid #cdb66a;
+  border-radius: 16px;
+  background: #fff6d0;
+  color: #3a2c37;
+}
+.sticky-dialog h2 { margin-top: 0; }
+.sticky-dialog textarea, .sticky-dialog select { width: 100%; box-sizing: border-box; }
+.sticky-dialog button { margin: 4px; }
+.sticky-tray-row p { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .sticky-layer { display: none; }
+  .sticky-launcher { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}

@@ -170,3 +170,35 @@ body.glow-redesign main #content .cf-bill-cells h3 { margin:0!important;font-siz
 .cf-forecast-details { margin-top: 8px; }
 .cf-forecast-details summary { cursor: pointer; font-weight: 650; }
 .cf-inline-form input[type="color"] { width: 100%; min-height: 44px; }
+
+#content .cf-payday-overview { margin-top: 0; }
+#content .cf-payday-focus {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  padding: clamp(14px, 3vw, 24px);
+  color: #301e3b;
+  background: #fff8fc;
+  border: 1px solid #dcc5dc;
+  border-radius: 14px;
+}
+.cf-payday-focus :is(h3,p) { margin: 0; }
+.cf-payday-amount { font-size: clamp(2rem, 4vw, 3rem); line-height: 1; }
+.cf-payday-math { display: grid; gap: 4px; padding-block: 8px; }
+.cf-payday-focus .cf-payday-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+#content .cf-payday-edit {
+  padding: 6px 0;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: #603378;
+  text-decoration: underline;
+}
+#content .cf-payday-edit.cf-shortfall { color: #8f1740; }
+.cf-payday-other { border-top: 1px solid #dcc5dc; padding-block: 8px; }
+.cf-payday-other summary { cursor: pointer; }

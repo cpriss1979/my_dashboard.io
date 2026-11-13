@@ -293,7 +293,6 @@ function budgetNameForm() {
  ],fields=>{m.budgetName=reqName(fields)});
 }
 function banner(){const p=card(m.budgetName||'My budget');
- p.append(b('Rename budget',budgetNameForm));
  if(!activeAccounts().length){
   p.append(e('p','Add a checking account to start your budget. Then add your income, bills, and savings goals.'),
    b('Start my budget',()=>accountForm(null,'checking','My checking'),'primary'));
@@ -313,21 +312,17 @@ function banner(){const p=card(m.budgetName||'My budget');
    control.setAttribute('aria-pressed',String(selectedOwner()===id));owner.append(control);
   }
  }
- const chosen=scopedChecking();
  if(owner.children.length)p.append(owner);
- if(activeAccounts().length)p.append(row(b('Record a purchase',()=>moneyForm('out',null,chosen)),
-  b('Record a deposit',()=>moneyForm('in',null,chosen)),b('Plan a purchase',()=>plannedPurchaseForm()),
-  ...(activeAccounts().length>1?[b('Transfer money',()=>transferForm(null,chosen?{from:chosen}:null))]:[])));
  const householdEvents=C.events(m,C.add(today(),90));
  const actionable=householdEvents.filter(matchesTransaction);const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{
-  if(x==='Bills'&&tab!=='Bills'){selectOwner('');billView='All bills';billMonth=today().slice(0,7);billSearch='';filters.frequency='';calendarDay='';}
+  if(x==='Bills'&&tab!=='Bills'){billView='All bills';billMonth=today().slice(0,7);billSearch='';filters.frequency='';calendarDay='';}
   if(x==='Forecast'&&tab!=='Forecast')horizon=0;
   tab=x;render();
  }); 
  const count=x==='Bills'?actionable.filter(item=>item.kind==='bill'&&needsBill(item)).length:
   x==='Income'?actionable.filter(item=>item.kind==='income'&&item.status==='pending').length:
   x==='Overview'?householdEvents.filter(item=>item.status==='pending'||item.kind==='bill'&&needsBill(item)).length:0;
- if(count)btn.append(e('span',' · '+count,'cf-tab-count'));btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);const tools=e('details');tools.append(e('summary','Backup & help'),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Every change has a conflict-checked undo in Activity.'));p.append(tools);return p}
+ if(count)btn.append(e('span',' · '+count,'cf-tab-count'));btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);const tools=e('details');tools.append(e('summary','Budget settings & help'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Every change has a conflict-checked undo in Activity.'));p.append(tools);return p}
 function visiblePlans(report){
  return report.accounts.filter(account=>matchesOwner(account.id)).map(account=>({
   account,plan:T.paydayPlan(account,today(),C.add(today(),30))
@@ -407,46 +402,68 @@ function overview(root,report){
   root.append(setup);
   if(!m.bills.length&&!Object.keys(m.overrides).length)return;
  }
- const p=card('Money available'), grid=e('div',undefined,'cf-payday-grid');
+ const p=card('Before payday'),grid=e('div',undefined,'cf-payday-grid');
  const plans=visiblePlans(report);
- const upcoming=[];
- const originalBills=new Map(C.events(m,report.end,{byDue:true}).filter(x=>x.kind==='bill').map(x=>[x.id,x]));
+ const events=new Map([...C.events(m,report.end,{byDue:true}),...C.events(m,report.end)].map(item=>[item.id,item]));
  for(const {account,plan} of plans){
-  const item=tile(name(account.id),account.current,[
-   'Cleared balance',account.pending?'Pending activity '+dollars(account.pending):'',
-   account.nextDeposit?'Next expected deposit '+dateLabel(account.nextDeposit.date)+' · '+dollars(account.nextDeposit.amount):'No upcoming deposit entered'
-  ],[b('Record a purchase',()=>moneyForm('out',null,account.id)),b('Record a deposit',()=>moneyForm('in',null,account.id)),b('Edit balance',()=>accountForm(m.accounts.find(x=>x.id===account.id)))],account.id);
-  const details=e('details',undefined,'cf-forecast-details');
-  details.append(e('summary','View forecast details'));
-  if(plan.hasPayday){
-   item.children[0].append(beforePaydayEstimate(plan));
-   details.append(paydayBreakdown(account,plan));
-  }else{
-   item.children[0].append(row(b('Add expected deposit',()=>incomeForm(null,'once',account.id)),b('View date-range forecast',()=>{tab='Forecast';horizon=30;render()})));
-   details.append(beforePaydayEstimate(plan));
+  const item=e('article',undefined,'cf-payday-focus');
+  const billRows=[...plan.before.filter(entry=>entry.kind==='bill'),
+   ...plan.bills.filter(entry=>entry.paydayTiming==='before')];
+  const billBalance=account.current===null?null:billRows.reduce((balance,entry)=>balance+entry.delta,account.current);
+  const otherRows=[...plan.before.filter(entry=>entry.kind!=='bill')];
+  const fullBalance=plan.preDeposit;
+  const title=e('h3',name(account.id));
+  const headline=e('strong',dollars(billBalance),'cf-payday-amount');
+  if(billBalance<0)headline.classList.add('cf-shortfall');
+  item.append(title,e('p',plan.hasPayday?'Left after bills, before payday':'Left after bills over the next 30 days'),headline);
+  const math=e('div',undefined,'cf-payday-math');
+  function mathLine(label,amount,entry){
+   const line=e('div',undefined,'cf-payday-line');
+   const source=entry&&events.get(entry.id);
+   line.append(source?b(label,()=>editEvent(source),'cf-payday-edit'):e('span',label),e('strong',dollars(amount)));
+   return line;
   }
-  const math=e('div');
-  math.append(e('p','Cleared balance '+dollars(account.current)));
-  for(const entry of plan.before)math.append(e('p',dateLabel(entry.date)+' · '+entry.name+' · '+dollars(entry.delta)));
-  math.append(e('p','Estimate '+dollars(plan.available)));
-  details.append(math);item.append(details);grid.append(item);
-  upcoming.push(...plan.before.filter(entry=>entry.kind==='bill').map(entry=>originalBills.get(entry.id)||entry));
+  math.append(mathLine('Cleared balance in dashboard',account.current));
+  for(const entry of billRows)math.append(mathLine(dateLabel(entry.date)+' · '+entry.name,entry.delta,entry));
+  if(!billRows.length)math.append(e('p',plan.hasPayday?'No bills scheduled before the deposit.':'No bills scheduled in this period.'));
+  item.append(math);
+  if(otherRows.length){
+   const moves=e('details',undefined,'cf-payday-other');
+   moves.append(e('summary','With other planned activity · '+dollars(fullBalance)));
+   const movement=e('div',undefined,'cf-payday-math');
+   for(const entry of otherRows){
+    const label=dateLabel(entry.date)+' · '+(entry.kind==='transfer'?name(entry.from)+' → '+name(entry.to):entry.name);
+    movement.append(mathLine(label,entry.delta,entry));
+   }
+   moves.open=fullBalance<0;
+   moves.append(movement);
+   item.append(moves);
+  }
+  if(plan.firstShort||fullBalance<0){
+   let balance=account.current;
+   const beforeDeposit=[...plan.before,...plan.bills.filter(entry=>entry.paydayTiming==='before')];
+   const trigger=balance>=0?beforeDeposit.find(entry=>(balance+=entry.delta)<0):null;
+   const source=trigger&&events.get(trigger.id);
+   const message=dollars(-balance)+' short on '+dateLabel(trigger?.date||today())+(trigger?' after '+trigger.name:' · cleared balance');
+   item.append(source?b(message,()=>editEvent(source),'cf-payday-edit cf-shortfall'):e('p',message,'cf-shortfall'));
+  }
+  item.append(e('p',account.nextDeposit?'Next deposit · '+dateLabel(account.nextDeposit.date)+' · '+dollars(account.nextDeposit.amount):'No expected deposit entered'));
+  const details=e('details',undefined,'cf-forecast-details');
+  details.append(e('summary','Payday details'),paydayBreakdown(account,plan));
+  item.append(details);
+  grid.append(item);
  }
  if(!plans.length&&activeAccounts().length)p.append(e('p','No checking accounts in this view.'));
- p.append(grid,b('Add a bill',()=>addBill()));
+ p.append(grid);
  const savings=report.savings.filter(a=>matchesOwner(a.id));
- p.append(e('p','Savings total · '+dollars(savings.every(a=>a.configured)?savings.reduce((sum,a)=>sum+a.current,0):null),'cf-savings-total'));
+ if(savings.length)p.append(e('p','Savings total · '+dollars(savings.every(a=>a.configured)?savings.reduce((sum,a)=>sum+a.current,0):null),'cf-savings-total'));
+ p.classList.add('cf-payday-overview');
  root.append(p);
- const before=card('Before payday');
- upcoming.sort(T.compareBillDue);
- before.append(compactList('Bills by due date',upcoming.slice(0,5).map(billCard)));
- if(upcoming.length>5)before.append(compactList('More before payday',upcoming.slice(5).map(billCard),false));
- root.append(before);
  const recent=card('Recent activity');
  const entries=C.events(m,today()).filter(x=>x.status!=='planned'&&matchesTransaction(x))
   .sort((a,b)=>historyDate(b).localeCompare(historyDate(a))).slice(0,4);
  recent.append(compactList('Latest transactions',entries.map(x=>compactRow(
-  x.name,x.amount,[dateLabel(historyDate(x)),x.kind==='transfer'?name(x.from)+' → '+name(x.to):name(x.account),x.kind==='bill'?statusLabel(x):x.status],[],x.account||x.from
+  x.name,x.amount,[dateLabel(historyDate(x)),x.kind==='transfer'?name(x.from)+' → '+name(x.to):name(x.account),x.kind==='bill'?statusLabel(x):x.status],[b('Edit',()=>editEvent(x))],x.account||x.from
  ))),b('View Activity',()=>{tab='Activity';render()}));
  root.append(recent);
  attention(root,{...report,accounts:plans.map(({account,plan})=>({...account,min:plan.lowest,firstShort:plan.firstShort}))});
@@ -673,7 +690,7 @@ function timeline(root,report){
   const entries=windowEnd?account.future.filter(item=>item.date<=windowEnd):plan.items;
   const rows=entries.map(x=>{
    if(running!==null){running+=x.delta;minimum=Math.min(minimum,running);if(running<0&&!firstShort)firstShort=x.date}
-   return compactRow(x.name,x.delta,[dateLabel(x.date),name(account.id),x.kind==='transfer'?name(x.from)+' → '+name(x.to):x.kind,running===null?'Balance not set':'Balance after '+dollars(running)],[],account.id);
+   return compactRow(x.name,x.delta,[dateLabel(x.date),name(account.id),x.kind==='transfer'?name(x.from)+' → '+name(x.to):x.kind,running===null?'Balance not set':'Balance after '+dollars(running)],[b('Edit',()=>editEvent(x))],account.id);
   });
   const lines=[dateLabel(today())+' through '+dateLabel(cutoff),'Cleared today',plan.hasPayday?'':'No upcoming deposit entered'];
   if(horizon)lines.push('Projected at end '+dollars(running),'Lowest projected balance '+dollars(minimum));
@@ -731,7 +748,18 @@ function paint(){
   backupText='';backupProblem='';actionNotice='';paymentJustSaved=false;backupOwner=null;
  }
  lastScope=scope;
- const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;content.replaceChildren(banner());if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
- if(tab==='Accounts')accounts(content);else if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else overview(content,report);for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
+ const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
+ if(tab==='Accounts')accounts(content);else if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);const payday=content.querySelector('.cf-payday-overview');if(payday)payday.after(toolbar)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
+window.dashboardFinanceView=selectedOwner;
+window.dashboardFinanceActions=()=>{
+ const chosen=scopedChecking();
+ return [
+  ['Record a purchase',()=>moneyForm('out',null,chosen)],
+  ['Record a deposit',()=>moneyForm('in',null,chosen)],
+  ['Plan a purchase',()=>plannedPurchaseForm()],
+  ['Add a bill',()=>addBill()],
+  ...(activeAccounts().length>1?[['Transfer money',()=>transferForm(null,chosen?{from:chosen}:null)]]:[]),
+ ];
+};
 const prior=render;render=function(){prior();if(page==='Finances')paint()};render();
 })();
