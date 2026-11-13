@@ -315,7 +315,7 @@ function banner(){const p=card(m.budgetName||'My budget');
  if(owner.children.length)p.append(owner);
  const householdEvents=C.events(m,C.add(today(),90));
  const actionable=householdEvents.filter(matchesTransaction);const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{
-  if(x==='Bills'&&tab!=='Bills'){billView='All bills';billMonth=today().slice(0,7);billSearch='';filters.frequency='';calendarDay='';}
+  if(x==='Bills'&&tab!=='Bills'){billView='All bills';billSearch='';filters.frequency='';calendarDay='';}
   if(x==='Forecast'&&tab!=='Forecast')horizon=0;
   tab=x;render();
  }); 
@@ -459,6 +459,7 @@ function overview(root,report){
  if(savings.length)p.append(e('p','Savings total · '+dollars(savings.every(a=>a.configured)?savings.reduce((sum,a)=>sum+a.current,0):null),'cf-savings-total'));
  p.classList.add('cf-payday-overview');
  root.append(p);
+ overviewMonth(root);
  const recent=card('Recent activity');
  const entries=C.events(m,today()).filter(x=>x.status!=='planned'&&matchesTransaction(x))
   .sort((a,b)=>historyDate(b).localeCompare(historyDate(a))).slice(0,4);
@@ -608,24 +609,53 @@ function oneTimeBill(){
    status:'planned',paid:false,cleared:false};
  });
 }
-function bills(root){
- const p=card('Bills & expenses'), month=input('billMonth','month',billMonth);
- const monthName=(value,withYear=false)=>new Intl.DateTimeFormat('en-US',{month:'long',...(withYear?{year:'numeric'}:{}),timeZone:'UTC'}).format(new Date(value+'-01T00:00:00Z'));
- function changeMonth(value){
-  if(/^\d{4}-(0[1-9]|1[0-2])$/.test(value)&&value>='1900-01'&&value<='2199-12'){
-   billMonth=value;calendarDay='';render();
-  }
+const monthName=(value,withYear=false)=>new Intl.DateTimeFormat('en-US',{month:'long',...(withYear?{year:'numeric'}:{}),timeZone:'UTC'}).format(new Date(value+'-01T00:00:00Z'));
+function changeMonth(value){
+ if(/^\d{4}-(0[1-9]|1[0-2])$/.test(value)&&value>='1900-01'&&value<='2199-12'){
+  billMonth=value;calendarDay='';render();
  }
+}
+function monthPicker(){
+ const month=input('billMonth','month',billMonth);
  month.min='1900-01';month.max='2199-12';
  month.onchange=()=>changeMonth(month.value);
+ return field('Bill month',month);
+}
+function billsForMonth(){
+ return C.events(m,T.monthEnd(billMonth),{byDue:true}).filter(item=>item.kind==='bill'&&matchesOwner(item.account));
+}
+function overviewMonth(root){
+ const panel=card('Monthly bills');
+ const totals=T.billTotals(T.billMonthRows(billsForMonth(),billMonth));
+ const grid=e('div',undefined,'cf-month-totals');
+ for(const [label,amount] of [['Total scheduled',totals.total],['Paid',totals.cleared],['Payment pending',totals.pending],['Still to pay',totals.planned]]){
+  const metric=e('div');
+  metric.append(e('span',label),e('strong',dollars(amount)));
+  grid.append(metric);
+ }
+ panel.append(row(monthPicker(),b('This month',()=>changeMonth(today().slice(0,7))),b('View '+monthName(billMonth)+' bills',()=>{tab='Bills';billView='All bills';billSearch='';filters.frequency='';render()})),grid);
+ root.append(panel);
+}
+function bills(root){
+ const p=card('Bills & expenses');
+ const balances=C.forecast(m,today(),0).accounts.filter(account=>matchesOwner(account.id));
+ if(balances.length){
+  const available=e('div',undefined,'cf-month-totals');
+  for(const account of balances){
+   const balance=e('div');
+   balance.append(e('span',account.name),e('strong',dollars(account.current)));
+   available.append(balance);
+  }
+  p.append(e('h3','Available now'),e('p','Cleared balances in your dashboard.'),available);
+ }
  const previous=C.add(billMonth+'-01',-1).slice(0,7), next=C.add(T.monthEnd(billMonth),1).slice(0,7);
  const monthNav=row(b('‹ '+monthName(previous),()=>changeMonth(previous)),e('h3',monthName(billMonth,true),'cf-month-title'),b(monthName(next)+' ›',()=>changeMonth(next)));
  monthNav.classList.add('cf-month-nav');
- p.append(monthNav,row(field('Month picker',month),b('This month',()=>changeMonth(today().slice(0,7))),b('Add bill',addBill,'primary'),b('Recurring schedules',()=>{
+ p.append(monthNav,row(monthPicker(),b('This month',()=>changeMonth(today().slice(0,7))),b('Add bill',addBill,'primary'),b('Recurring schedules',()=>{
   const schedules=document.getElementById('cfRecurringSchedules');
   if(schedules){schedules.open=true;schedules.scrollIntoView?.({block:'start'});schedules.querySelector('summary')?.focus()}
  })));
- const all=C.events(m,T.monthEnd(billMonth),{byDue:true}).filter(x=>x.kind==='bill'&&matchesOwner(x.account));
+ const all=billsForMonth();
  const monthly=T.billMonthRows(all,billMonth), totals=T.billTotals(monthly);
  const ownerLabel=ownerOptions().find(([id])=>id===selectedOwner())?.[1]||'All accounts';
  const totalGrid=e('div',undefined,'cf-month-totals');
