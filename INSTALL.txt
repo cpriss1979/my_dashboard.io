@@ -1,0 +1,37 @@
+LITTLE JOYS + STICKY NOTE STYLES
+
+This update uses the current main branch of cpriss1979/my_dashboard.io.
+Open the ZIP and replace these five files at the root of that repository:
+
+  index.html
+  time-for-you.js
+  navigation-sparkles.js
+  sticky-notes.js
+  sticky-notes.css
+
+In GitHub, open the repository's Code page, choose Add file > Upload files,
+and drag the five individual files into the upload area. Commit them together.
+Keep the existing assets and other dashboard files in place.
+After GitHub Pages updates, reload the dashboard.
+
+COPY/PASTE MAP
+The complete replacement files are included. For a manual merge, open
+index.html and find <style id="time-for-you-style">. Replace that entire
+style block using the supplied index.html. Also copy the supplied script
+and stylesheet tags for time-for-you, navigation-sparkles, and sticky-notes,
+including their new version values. Replace the contents of the four
+matching .js and .css files with the complete files in this ZIP.
+The Little Joys page markup is built inside time-for-you.js.
+
+USING THE UPDATE
+Open Personal Time > Little Joys. Start with Surprise me, or use the filters
+above Browse ideas. Use a heart to favorite an idea. To restore a paused idea,
+choose Paused ideas under Collection. Choose an activity to get started, then
+use I did this if you want to record it. Mood check-ins are optional.
+
+Open Sticky notes, then choose New note or Edit. Change Color, Shape, and
+Design and use the live preview. Changes autosave on existing notes or once
+a new note has text. Each note keeps its own look. On your phone, open the
+Sticky notes tray to view or edit your notes.
+
+The existing time-for-you route and dashboard data keys are used by this update.

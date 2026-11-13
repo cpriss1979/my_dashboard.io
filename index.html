@@ -4744,11 +4744,130 @@ body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>butto
 body.glow-redesign main #content .glow-overview>.glow-tasks>button:last-child{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:44px!important;width:auto!important;padding:8px 14px!important;margin-top:4px!important;border-radius:8px!important;background:#ffffff90!important;color:#24578a!important;font-size:14px!important}
 </style>
 <style id="time-for-you-style">
-body.glow-redesign main #content .tfy-card{background:#e2f0ed!important;color:#20384a!important;margin-bottom:18px!important}.tfy-card p,.tfy-dialog p{line-height:1.6;overflow-wrap:anywhere}.tfy-card h2{font-size:21px!important}.tfy-card h3{font-size:17px!important}.tfy-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px;margin:16px 0}.tfy-form-grid[hidden]{display:none!important}.tfy-form-grid label{display:grid;gap:7px;min-width:0}.tfy-card input,.tfy-card select,.tfy-dialog select,.tfy-dialog textarea{font-size:16px!important;box-sizing:border-box;max-width:100%;min-height:44px}.tfy-form-grid input,.tfy-form-grid select{width:100%;min-width:0}.tfy-card input[type=checkbox],.tfy-dialog input[type=checkbox],.tfy-dialog input[type=radio]{min-height:20px;min-width:20px;accent-color:#287a78}.tfy-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px}.tfy-actions>span{width:100%;font-size:14px}.tfy-actions button,.tfy-card button{min-height:44px;white-space:normal}.tfy-dialog{box-sizing:border-box;width:min(680px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow-y:auto!important}.tfy-dialog fieldset{border:1px solid #8a92ac;border-radius:10px;padding:12px;min-width:0}.tfy-faces,.tfy-words{display:flex;flex-wrap:wrap;gap:10px}.tfy-faces label,.tfy-words label,.tfy-activities label{display:flex;gap:9px;align-items:center;min-height:44px;line-height:1.5}.tfy-faces label{flex:1 1 100px;padding:8px;background:#ffffff12;border-radius:8px}.tfy-words label{padding:4px 8px;border:1px solid #78869b;border-radius:8px}.tfy-dialog textarea{display:block;width:100%;margin-top:7px}.tfy-suggestion{font-size:23px;font-weight:700;padding:18px;border-radius:12px;background:#ffffff15}.tfy-activities{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:8px}.tfy-help{font-size:13px;color:#455c6d!important}.tfy-error{color:#9e2544!important}.tfy-history{background:#ffffff9c;padding:14px;border-radius:10px;margin:12px 0;overflow-wrap:anywhere}.tfy-history h3{margin:0 0 8px}.tfy-history small{font-size:12px;color:#4d6273}.tfy-card summary{min-height:44px;cursor:pointer;padding:10px 0}
+.little-joys {
+  --joy-ink: #312140;
+  --joy-muted: #675473;
+  --joy-edge: #e3d6ec;
+  --joy-accent: #70408f;
+  display: grid;
+  gap: 18px;
+  color: var(--joy-ink);
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+.little-joys [hidden] { display: none !important; }
+.little-joys :is(h2,h3,h4,p) { margin: 0; color: var(--joy-ink) !important; }
+.little-joys :is(p,small) { line-height: 1.5; }
+.little-joys .joy-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: clamp(18px,4vw,48px);
+  align-items: center;
+  padding: clamp(22px,4vw,48px);
+  border: 1px solid #e2c9eb;
+  border-radius: 24px;
+  background: radial-gradient(ellipse at top left,#ffd9e9,transparent 65%),
+    linear-gradient(120deg,#faf0fd,#e6daf8 64%,#e2ebfb);
+}
+.little-joys .joy-intro h2 {
+  font: 500 clamp(46px,7vw,90px)/.95 "Instrument Serif", Georgia, serif !important;
+  letter-spacing: -.045em;
+  margin-bottom: 14px;
+}
+.joy-intro > p { font-size: 17px; }
+.joy-feature {
+  display: grid;
+  gap: 9px;
+  padding: clamp(16px,3vw,26px);
+  border-radius: 18px;
+  border: 1px solid #fff;
+  background: #fffbffe0;
+  box-shadow: 0 12px 34px #47295b14;
+  min-width: 0;
+}
+.joy-feature small,.little-joys p.joy-meta { color: var(--joy-muted) !important; }
+.little-joys .joy-feature h3 { font: 500 clamp(24px,3vw,35px)/1.12 Georgia,serif !important; }
+.little-joys .joy-feature button { justify-self: start; margin-top: 5px; }
+.joy-library,.joy-archive {
+  background: #fbf6ff;
+  border: 1px solid var(--joy-edge);
+  border-radius: 20px;
+  padding: clamp(15px,2.5vw,27px);
+}
+.joy-heading,.joy-tile-top,.joy-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.joy-heading,.joy-tile-top { justify-content: space-between; }
+.joy-intro .joy-actions { margin-top: 20px; }
+.joy-heading h3 { font-size: 24px !important; }
+.joy-filters { display: grid; grid-template-columns: minmax(0,2fr) repeat(3,minmax(0,1fr)); gap: 10px; margin: 14px 0 12px; }
+.little-joys .joy-filters label { margin: 0; color: var(--joy-muted) !important; font-size: 13px; font-weight: 650; }
+.little-joys .joy-filters :is(input,select) {
+  display: block; width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box;
+  font-size: 16px !important; background: #fff !important; color: var(--joy-ink) !important;
+  border: 1px solid #997fa7 !important; border-radius: 10px !important; color-scheme: light;
+}
+.little-joys p.joy-meta { margin: 8px 0; font-size: 14px; }
+.joy-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,230px),1fr)); gap: 12px; }
+.joy-tile {
+  --joy-tint: #f1e5fc;
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-width: 0;
+  padding: 15px; border: 1px solid var(--joy-edge); border-radius: 15px;
+  background: linear-gradient(160deg,var(--joy-tint),#fff 85%);
+}
+.joy-tile[data-category="beauty"],.joy-tile[data-category="social"] { --joy-tint: #ffe7ef; }
+.joy-tile[data-category="outdoors"] { --joy-tint: #e3f4f0; }
+.joy-tile[data-category="faith"],.joy-tile[data-category="music"] { --joy-tint: #fff0de; }
+.joy-tile[data-category="play"] { --joy-tint: #e7ecff; }
+.joy-tile-top { flex-wrap: nowrap; gap: 4px; }
+.joy-tile-top small { color: var(--joy-muted) !important; font-weight: 650; }
+.little-joys .joy-tile h4 { font-size: 17px; line-height: 1.25; }
+.little-joys .joy-tile p { font-size: 14px; color: var(--joy-muted) !important; }
+.joy-tile .joy-actions { margin-top: auto; padding-top: 4px; }
+.joy-grid + .joy-actions:not(:empty) { margin-top: 16px; }
+.little-joys button:is(.joy-button,.joy-primary,.joy-text,.joy-icon) {
+  font: 650 14px/1.25 system-ui;
+  min-height: 44px;
+  width: auto !important;
+  border: 1px solid #b29ac2 !important;
+  border-radius: 10px !important;
+  padding: 8px 13px;
+  background: #fff9ff !important;
+  color: #49265e !important;
+  white-space: normal;
+}
+.little-joys button.joy-primary { color: white !important; background: #653885 !important; border-color: #653885 !important; }
+.little-joys button.joy-text { background: transparent !important; border-color: transparent !important; }
+.little-joys button.joy-icon { min-width: 44px; font-size: 20px; padding: 3px; }
+.little-joys button.joy-icon[aria-pressed="true"] { color: #923763 !important; background: #ffe0ef !important; }
+.little-joys button:hover { box-shadow: 0 2px 10px #4a236229; }
+.little-joys :focus-visible { outline: 2px solid #78429e !important; outline-offset: 2px; }
+.joy-archive summary { cursor: pointer; font-weight: 650; min-height: 28px; }
+.little-joys .joy-archive .tfy-card { margin-top: 12px; padding: 16px; }
+.tfy-history { background: #fff; border: 1px solid #e3d6ec; padding: 12px; border-radius: 10px; margin: 12px 0; }
+dialog.tfy-dialog.app-action-dialog {
+  width: min(580px,calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto;
+  background: #faf2ff !important; color: #312140 !important; border: 1px solid #cfb5df !important;
+}
+.tfy-dialog :is(h2,h3,p,label,legend) { color: #312140 !important; }
+.tfy-dialog p { line-height: 1.5; }
+.tfy-dialog :is(input,select,textarea) {
+  font-size: 16px !important; color: #312140 !important; background: white !important; color-scheme: light;
+}
+.tfy-dialog textarea { display: block; width: 100%; }
+.tfy-dialog fieldset { min-width: 0; }
+.tfy-dialog .tfy-faces,.tfy-dialog .tfy-words,.tfy-dialog .tfy-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tfy-dialog :is(.tfy-faces,.tfy-words) label { display: flex; flex-direction: row-reverse; align-items: center; gap: 6px; margin: 0; padding: 8px; }
+.tfy-dialog :is(input[type=radio],input[type=checkbox]) { width: 17px; height: 17px; margin: 0; accent-color: #70408f; }
+.tfy-dialog .tfy-actions { margin-top: 15px; }
+.tfy-dialog button,.tfy-form-grid :is(input,select) { min-height: 44px; }
+.tfy-form-grid { display: grid; gap: 10px; }
+.tfy-form-grid label { margin: 0; }
+@media (max-width: 800px) {
+  .little-joys .joy-hero { grid-template-columns: 1fr; }
+  .joy-filters { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
 </style>
-<script src="./time-for-you.js?noPopups=1&v=20261104"></script>
+<script src="./time-for-you.js?v=little-joys-1"></script>
 <link rel="stylesheet" href="./navigation-sparkles.css?v=midnight-home-1">
-<script src="./navigation-sparkles.js?v=midnight-home-1"></script>
+<script src="./navigation-sparkles.js?v=little-joys-1"></script>
 <link rel="stylesheet" href="./peaceful-polish.css?v=20261104">
 <script src="./welcome-verse.js?noPopups=1&v=20261104"></script>
 <link rel="stylesheet" href="./chess-themes.css?v=20261104">
@@ -4775,6 +4894,6 @@ body.glow-redesign main #content .tfy-card{background:#e2f0ed!important;color:#2
 <script src="./profile.js?v=home-greeting"></script>
 <link rel="stylesheet" href="./widgets/focus.css">
 <script src="./widgets/focus.js?v=savings-bible"></script>
-<link rel="stylesheet" href="./sticky-notes.css?v=1">
-<script src="./sticky-notes.js?v=1"></script>
+<link rel="stylesheet" href="./sticky-notes.css?v=2">
+<script src="./sticky-notes.js?v=2"></script>
 </body></html>

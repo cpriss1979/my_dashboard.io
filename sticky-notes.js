@@ -17,6 +17,20 @@
     return node;
   }
 
+  const appearance = {
+    color: [['butter','Butter'],['rose','Rose'],['lavender','Lavender'],['mint','Mint'],
+      ['sky','Sky'],['peach','Peach'],['cream','Cream'],['lilac','Lilac']],
+    shape: [['rounded','Rounded'],['square','Square corners'],['wide','Wide memo'],['oval','Soft oval']],
+    design: [['plain','Plain'],['lined','Ruled'],['dotted','Polka dots'],['grid','Graph paper'],['taped','Washi tape']]
+  };
+
+  function applyAppearance(card, note) {
+    for (const [setting, options] of Object.entries(appearance)) {
+      card.dataset[setting] = options.some(([value]) => value === note[setting])
+        ? note[setting] : options[0][0];
+    }
+  }
+
   const layer = element('div', undefined, 'sticky-layer');
   const tray = element('dialog', undefined, 'sticky-dialog');
   const editor = element('dialog', undefined, 'sticky-dialog');
@@ -49,6 +63,8 @@
     const originPage = note.pin === 'page' ? note.page : page;
     const originView = originPage === 'Finances' && page === 'Finances' ? financeView() : note.financeView;
     const title = element('h2', 'Sticky note');
+    title.id = 'sticky-editor-title';
+    editor.setAttribute('aria-labelledby', title.id);
     const text = element('textarea');
     text.value = note.text;
     text.rows = 5;
@@ -71,8 +87,17 @@
       save();
     }
 
+    const preview = element('div', undefined, 'sticky-card sticky-preview');
+    const previewText = element('p');
+    preview.append(previewText);
+    function updatePreview() {
+      applyAppearance(preview, note);
+      previewText.textContent = note.text || 'Your note goes here';
+    }
+
     text.oninput = () => {
       note.text = text.value;
+      updatePreview();
       store();
     };
     pin.onchange = () => {
@@ -84,7 +109,24 @@
 
     const label = element('label', 'Show note');
     label.append(pin);
-    editor.replaceChildren(title, text, label, button('Close', () => editor.close()));
+    const styling = element('div', undefined, 'sticky-styling');
+    const labels = {color: 'Color', shape: 'Shape', design: 'Design'};
+    updatePreview();
+    for (const [setting, options] of Object.entries(appearance)) {
+      const control = element('select');
+      for (const [value, name] of options) control.add(new Option(name, value));
+      control.value = preview.dataset[setting];
+      const field = element('label', labels[setting]);
+      field.append(control);
+      styling.append(field);
+      control.onchange = () => {
+        note[setting] = control.value;
+        updatePreview();
+        store();
+      };
+    }
+    const close = button('Done editing', () => editor.close());
+    editor.replaceChildren(title, text, label, styling, element('p', 'Preview', 'sticky-preview-label'), preview, close);
     if (tray.open) tray.close();
     editor.showModal();
     text.focus();
@@ -113,7 +155,10 @@
       group.append(element('summary', heading));
       for (const note of list) {
         const row = element('div', undefined, 'sticky-tray-row');
-        row.append(element('p', note.text || 'Empty note'),
+        const sample = element('div', undefined, 'sticky-card sticky-preview');
+        applyAppearance(sample, note);
+        sample.append(element('p', note.text || 'Empty note'));
+        row.append(sample,
           ...(note.done ? [button('Restore', () => setDone(note, false))]
             : [button('Edit', () => editNote(note)), button('Done', () => setDone(note, true))]));
         group.append(row);
@@ -156,6 +201,7 @@
     if (mobile.matches) return;
     for (const [index, note] of notes().filter(note => !note.done && visible(note)).entries()) {
       const card = element('article', undefined, 'sticky-card');
+      applyAppearance(card, note);
       const controls = element('div', undefined, 'sticky-controls');
       if (note.pin === 'page') {
         const handle = element('span', 'Drag to move', 'sticky-handle');
@@ -177,7 +223,10 @@
     }
   }
 
-  editor.addEventListener('close', paintNotes);
+  editor.addEventListener('close', () => {
+    paintNotes();
+    launcher.focus();
+  });
   mobile.addEventListener('change', paintNotes);
   window.addEventListener('resize', paintNotes);
   window.addEventListener('dashboard:account-changing', () => {
