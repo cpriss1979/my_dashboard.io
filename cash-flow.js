@@ -288,9 +288,41 @@ function savings(root){const report=C.forecast(m,today(),horizon),p=card('Saving
 function goalForm(g){const choices=activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,name(a.id)]);if(!choices.length){alert('Create a savings account first.');return}form(g?'Edit savings goal':'Add savings goal',[field('Goal name',input('name','text',g?.name)),field('Savings account',select('account',choices,g?.account||choices[0][0])),field('Target ($)',number('target',g?g.target/100:'',.01)),field('Archive goal',check('archived',g?.archived))],f=>{const next={id:g?.id||uid(),name:reqName(f),account:f.account.value,target:cents(f.target.value),archived:f.archived.checked};if(next.target<=0)throw Error('Enter a positive target.');m.goals??=[];if(g)Object.assign(g,next);else m.goals.push(next)})}
 
 function budgetNameForm() {
- form('Save budget name',[
-  field('Budget name',input('name','text',m.budgetName||'My budget'))
- ],fields=>{m.budgetName=reqName(fields)});
+ const owner=state,originalName=m.budgetName;
+ const dialog=e('dialog',undefined,'cf-dialog');
+ const title=e('h2','Rename budget');
+ title.id='cf-budget-name-title';
+ dialog.setAttribute('aria-labelledby',title.id);
+ const editor=e('form');
+ const budgetName=input('budgetName','text',originalName||'My budget');
+ budgetName.autofocus=true;
+ const error=e('p',undefined,'cf-error');
+ error.setAttribute('role','alert');
+ const submit=e('button','Save name','primary');
+ submit.type='submit';
+ editor.append(field('Budget name',budgetName),error,row(submit,b('Cancel',()=>dialog.close())));
+ editor.onsubmit=event=>{
+  event.preventDefault();
+  const nextName=budgetName.value.trim();
+  if(!nextName){error.textContent='Enter a budget name.';return}
+  if(owner!==state||m.budgetName!==originalName){
+   error.textContent='The budget changed while you were editing. Close this window and reopen Rename budget.';
+   return;
+  }
+  try{
+   safetyBackup();
+   m.budgetName=nextName;
+   commit('Budget name');
+   dialog.close();
+  }catch(err){
+   error.textContent=err.message;
+  }
+ };
+ dialog.append(title,editor);
+ dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+ document.body.append(dialog);
+ dialog.showModal();
+ budgetName.select();
 }
 function banner(){const p=card(m.budgetName||'My budget');
  if(!activeAccounts().length){
