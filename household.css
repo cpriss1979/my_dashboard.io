@@ -1,0 +1,48 @@
+#content .household-chores { max-width: 58rem; margin-inline: auto; }
+.household-hero { background: linear-gradient(115deg,#284750,#355e59); border: 1px solid #67847c; border-radius: 1rem; color: white; padding: clamp(1rem,3vw,2rem); margin-bottom: .85rem; }
+#content .household-hero :is(h2,p) {color: white !important;}
+.household-hero h2 {font-family: "DM Serif Text",Georgia,serif; font-size: clamp(2rem,5vw,3rem); margin:0;}
+.household-actions,.household-task-actions { display:flex;align-items:center;flex-wrap:wrap;gap:.5rem; }
+.household-actions [aria-pressed=true] { outline:2px solid #f5e2ac;outline-offset:2px; }
+.household-checklist input:not([type=checkbox]) { flex:1 1 10rem; width:auto;min-width:0; margin:0; }
+.household-chore-row { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:.65rem;border-bottom:1px solid #61857150;padding:.55rem 0; }
+.household-chore-row label,.household-toggle {display:flex;align-items:center;gap:.6rem;margin:0;}
+.household-chore-row input[type=checkbox],.household-toggle input[type=checkbox] {width:1.2rem;height:1.2rem;flex:none;appearance:auto;accent-color:#30775e;}
+.household-chore-row summary {cursor:pointer;}
+.household-settings-grid {display:grid;gap:.6rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));margin-bottom:.75rem;}
+.household-settings-grid fieldset {min-width:0;}
+.household-project-category {grid-column:1/-1;}
+body[data-glow-page="Daily priorities"] #content .glow-task-row {grid-template-columns:1.6rem minmax(0,1fr) auto;}
+#content .household-task-actions {justify-content:flex-end;gap:.35rem;margin:0;}
+#content .household-task-actions button {min-height:2rem;margin:0; padding:.3rem .55rem;}
+.nav-customize { margin-block:.75rem; }
+body aside [data-page][hidden],body aside .app-nav-group[hidden],[data-mobile-route][hidden] {display:none!important;}
+.household-photo {width:100%;max-height:20rem;object-fit:contain;border-radius:.8rem;}
+.home-widget-actions {display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;}
+.home-widget-actions button {cursor:grab;}
+.home-widget-dragged {outline:2px dashed #9469bb;outline-offset:3px;}
+@media(max-width:600px){
+ body[data-glow-page="Daily priorities"] #content .glow-task-row {grid-template-columns:1.6rem minmax(0,1fr);}
+ #content .household-task-actions {grid-column:2;justify-content:flex-start;}
+}
+.profile-crop {display:grid;grid-template-columns:minmax(5rem,8rem) minmax(0,1fr);gap:.4rem .7rem;align-items:center;}
+.profile-crop[hidden] {display:none;}
+.profile-crop canvas {grid-row:1/4;width:100%;border-radius:50%;}
+.profile-crop input[type=range] {padding:0;}
+.joy-library-drawer {margin-block:.8rem;}
+.joy-library-drawer > summary {cursor:pointer;padding:.85rem;border-radius:.75rem;background:#eee0f7;color:#39244c;font-weight:700;}
+.journal-custom-paper {display:flex;align-items:center;flex-wrap:wrap;gap:.65rem;}
+.journal-custom-paper label {display:flex;align-items:center;gap:.3rem;}
+.journal-custom-paper input {width:2.75rem!important;padding:.1rem!important;}
+body #content .journal-layout[style*="--journal-custom-paper"] :is(.journal-editor,.journal-editor input,.journal-editor textarea,.journal-editor select) {background:var(--journal-custom-paper)!important;}
+body #content .journal-layout[style*="--journal-custom-ink"] .journal-editor :is(h2,p,input,textarea,label,select) {color:var(--journal-custom-ink)!important;}
+.household-account-total {font-weight:750;padding:.6rem 0;}
+#content .household-collection .inventory-list[data-view=gallery] {grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));}
+#content .household-collection .inventory-list[data-view=list] {grid-template-columns:1fr;}
+#content .collection-cover {position:relative;display:grid;place-items:center;min-height:6.75rem;background:linear-gradient(145deg,#eee0fa,#dceefe);color:#412756;border-radius:.6rem;overflow:hidden;font-size:1.7rem;}
+.collection-cover img {position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
+#content .shopping-item-menu summary {cursor:pointer;min-width:2rem;text-align:center;border-radius:.45rem;background:var(--list-tint);color:var(--list-ink);}
+.shopping-item-menu .list-record-controls {margin-top:.3rem;}
+#modal #form > label[hidden],#habitFormDialog label[hidden] {display:none!important;}
+.household-chore-row input[type=checkbox],.household-toggle input[type=checkbox] {color-scheme:light;}
+#content .household-chore-row label {font-size:.94rem;min-height:1.75rem;}

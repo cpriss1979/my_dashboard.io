@@ -1,47 +1,62 @@
-MY DASHBOARD — BRE'S PLANNER UPDATE
+MY DASHBOARD — CHORES AND BRE'S UPDATES
 
-GitHub Pages files
-1. Open cpriss1979/my_dashboard.io on GitHub and use the branch that
-   publishes your dashboard.
-2. Choose Add file > Upload files. Select the .html, .js, and .css files
-   from this ZIP, keeping them in the repository root. Commit the upload.
-   These are complete replacement files. Leave the other repo files in place.
-3. When GitHub Pages finishes building, reopen My Dashboard and refresh.
+1. Unzip this package.
+2. In the GitHub repository cpriss1979/my_dashboard.io, upload the HTML,
+   CSS, and JavaScript files to the root of the branch that publishes
+   your dashboard. Replace the matching files and keep the other repo files.
+3. Once GitHub Pages finishes building, refresh My Dashboard.
 
-Find the new features
-- Tasks has the four-quadrant priority board. Use the dropdown on a task
-  to move it. The checkbox completes the task in your existing Tasks list.
-- Open Focus timer from the sidebar or More on a phone. Start with 25
-  minutes of focus, a 5-minute break, or a 15-minute long break. You can
-  change those durations under Timer settings.
-- Open Quick links in the sidebar or More. Add a label, website URL, and
-  an optional emoji, then choose Pin link.
-- Under Finances > Savings, choose Add fund. Funds assign money you
-  already have in a savings account. Release returns the assigned amount
-  to the account's unassigned total. Older savings goals keep their names
-  and targets. Enter an amount to set aside if you want to fund them.
-- The Shopping and Wish lists have independent paper colors. Set a list
-  emoji by the color picker or an item emoji in its editor. Check a finished
-  item to move it to the archive. Open the archive to restore or delete it.
-- Add an Emoji sticker in the Journal or Calendar entry editor.
+This is a combined update with the earlier Planner and Shopping/Wish List
+changes. The updated pages use your existing dashboard data.
 
-Enable sharing in Firebase
-1. Open Firebase Console > Firestore Database > Rules for the
-   my-dashboard-95981 project. Keep a copy of the current published rules.
-2. If the live rules match the rules from your repository, paste the
-   complete included firestore.rules and choose Publish. If your live
-   rules contain extra sections you added, retain those sections and add
-   the new signedInOwner, verifiedRecipient and shareScope functions and
-   the two new sharing match blocks. Keep your existing user and widget
-   rules. Sharing needs the published rules in addition to the GitHub files.
-3. Sign in, let your dashboard finish syncing, then open Sharing. Enter
-   the guest's sign-in email and select Calendar only, Finances + Calendar,
-   or Whole dashboard. Save the invitation and send them the copied link.
-4. The guest opens the link and signs in with that verified email. They
-   get a view-only dashboard. You can change their scope or revoke the
-   invitation from Sharing. Whole dashboard access includes journal entries
-   and drafts. Calendar-only access cannot read your finance records.
+WHERE TO FIND THE CHANGES
 
-Setup order
-You can use the planner features as soon as GitHub Pages publishes the
-files. Enable the Firestore rules when you are ready to use invitations.
+Chores: In Plan & organize on desktop and More on a phone. Weekly
+checklists start over on Mondays. Monthly and yearly checklists follow
+the calendar. Use Add chore or the Options menu for each item.
+
+Home: Arrange cards enables drag handles. Earlier and Later work with
+touch and keyboard controls. Edit Home cards lets you show or hide cards
+and add up to four photos. Photos are resized for dashboard sync.
+
+Navigation: Open Settings > Navigation > Choose visible sections &
+rename groups. Changes apply to sidebar links and the matching phone
+navigation links. Home remains available for access to settings.
+
+Profile: Click your sidebar profile or Settings > Edit profile. Upload
+the original photo to get the full image area for positioning. The visible
+preview is what will be saved.
+
+Projects: Add or edit a project and enter a category such as Crafts,
+Work, or Home. Existing uncategorized projects appear together.
+
+Finances: Accounts shows separate totals just below Checking and Savings.
+Open Loan amortization from Accounts or Amortization from the sidebar.
+
+Collections: Use Gallery or Compact list, filter by collection, and
+optionally add a cover image URL to an item.
+
+Journal and colors: Writing paper and Writing text change the writing area
+directly. Use theme colors restores the Journal theme. General page and
+entry color settings are under Settings > Appearance.
+
+Habit Tracker: Choose Build a good habit for daily check-ins. Type your
+own type or select a suggestion. Stop a habit retains the time-and-savings
+tracker.
+
+Little Joys and Badges: Browse ideas collapses. Delete unwanted ideas from
+the library. Reset all badges clears earned badges and keeps the saved
+entries and history used by future milestones.
+
+Bible: Choose NKJV, NLT, or NIV under Reading translation. Full NLT and
+NIV passages open in Bible Gateway.
+
+SHARING FROM THE EARLIER PLANNER UPDATE
+
+If you already published the dashboard's sharing rules, the Chores update
+requires no Firestore rule changes. The ZIP includes those same rules for
+anyone who still needs to enable Sharing. In Firebase Console, open
+Firestore Database > Rules for my-dashboard-95981. Keep your existing
+user and widget rules and merge the dashboard sharing rules if your live
+rules contain changes beyond the GitHub copy. Invitees sign in with a
+verified email and can view the sections you grant.

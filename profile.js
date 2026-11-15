@@ -37,7 +37,31 @@
   photoStatus.setAttribute('role','status');
   form.querySelector('.actions').before(photoField,removePhoto,photoStatus);
   const photoPattern=/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/;
-  let draftPhoto='', uploadGeneration=0, reading=false;
+  let draftPhoto='', uploadGeneration=0, reading=false, cropImage=null;
+  const crop=document.createElement('fieldset');
+  crop.className='profile-crop';
+  const preview=document.createElement('canvas');preview.width=preview.height=160;
+  preview.setAttribute('aria-label','Profile photo preview');
+  const cropInputs={};
+  for(const [key,text,min,max,value] of [['zoom','Zoom',1,3,1],['x','Horizontal position',0,100,50],['y','Vertical position',0,100,50]]){
+    const label=document.createElement('label');label.textContent=text;
+    const control=document.createElement('input');control.type='range';control.min=min;control.max=max;control.step=key==='zoom'?'.01':'1';control.value=value;
+    cropInputs[key]=control;control.oninput=paintCrop;label.append(control);crop.append(label);
+  }
+  crop.prepend(preview);crop.hidden=true;
+  photoField.after(crop);
+  function resetCrop(){cropInputs.zoom.value=1;cropInputs.x.value=50;cropInputs.y.value=50}
+  function paintCrop(){
+    if(!cropImage)return;
+    const {naturalWidth:w,naturalHeight:h}=cropImage;
+    const size=Math.min(w,h)/Number(cropInputs.zoom.value);
+    const context=preview.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,160,160);
+    context.drawImage(cropImage,(w-size)*cropInputs.x.value/100,(h-size)*cropInputs.y.value/100,size,size,0,0,160,160);
+    draftPhoto=preview.toDataURL('image/jpeg',.8);
+  }
+  async function loadCrop(source){
+    const image=new Image();image.src=source;await image.decode();return image;
+  }
 
   function avatarPhoto() {
     const photo=state.profile?.photo;
@@ -56,6 +80,15 @@
     uploadGeneration++;
     reading=false;
     draftPhoto=avatarPhoto();
+    cropImage=null;crop.hidden=true;resetCrop();
+    if(draftPhoto){
+      const generation=uploadGeneration;
+      loadCrop(draftPhoto).then(image=>{
+        if(generation!==uploadGeneration)return;
+        cropImage=image;crop.hidden=false;
+        preview.getContext('2d').drawImage(image,0,0,160,160);
+      }).catch(()=>{});
+    }
     file.value='';
     removePhoto.disabled=!draftPhoto;
     photoStatus.textContent='';
@@ -64,27 +97,8 @@
     if(!dialog.open)dialog.showModal();
   }
   avatar.onclick=openProfile;
+  window.DashboardProfile={open:openProfile};
 
-  async function resizePhoto(source){
-    const url=URL.createObjectURL(source);
-    try{
-      const image=new Image();
-      await new Promise((resolve,reject)=>{
-        image.onload=resolve;image.onerror=()=>reject(new Error('Choose a photo your browser can open.'));
-        image.src=url;
-      });
-      const size=Math.min(image.naturalWidth,image.naturalHeight);
-      if(!size)throw new Error('This photo could not be opened.');
-      const canvas=document.createElement('canvas');
-      canvas.width=canvas.height=160;
-      const context=canvas.getContext('2d');
-      context.fillStyle='#fff';context.fillRect(0,0,160,160);
-      context.drawImage(image,(image.naturalWidth-size)/2,(image.naturalHeight-size)/2,size,size,0,0,160,160);
-      const data=canvas.toDataURL('image/jpeg',.8);
-      if(!photoPattern.test(data)||data.length>45000)throw new Error('Choose a smaller photo.');
-      return data;
-    }finally{URL.revokeObjectURL(url)}
-  }
   file.onchange=async()=>{
     const photo=file.files[0];
     if(!photo)return;
@@ -93,13 +107,16 @@
     photoStatus.textContent='Preparing photo…';
     try{
       if(photo.size>20*1024*1024)throw new Error('Choose a photo under 20 MB.');
-      const prepared=await resizePhoto(photo);
-      if(generation!==uploadGeneration)return;
-      draftPhoto=prepared;
+      const url=URL.createObjectURL(photo);
+      try{
+        const image=await loadCrop(url);
+        if(generation!==uploadGeneration)return;
+        cropImage=image;resetCrop();crop.hidden=false;paintCrop();
+      }finally{URL.revokeObjectURL(url)}
       removePhoto.disabled=false;
       photoStatus.textContent='Photo ready. Select Save profile to apply it.';
     }catch(error){
-      if(generation===uploadGeneration)photoStatus.textContent=error.message;
+      if(generation===uploadGeneration)photoStatus.textContent='Choose a photo your browser can open.';
     }finally{
       if(generation===uploadGeneration)reading=false;
     }
@@ -107,7 +124,7 @@
   removePhoto.onclick=()=>{
     uploadGeneration++;
     reading=false;
-    draftPhoto='';
+    draftPhoto='';cropImage=null;crop.hidden=true;
     file.value='';
     removePhoto.disabled=true;
     photoStatus.textContent='Photo will be removed when you save.';

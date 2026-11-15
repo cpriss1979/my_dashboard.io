@@ -82,6 +82,7 @@
  const words=['Tense','Tired','Busy','Restless','Calm','Happy','Relaxed','Encouraged','Refreshed'];const faces=['😞','🙁','😐','🙂','😄'];let historyLimit=30,dialog=null,quietClose=false;
  function model(){if(!state.timeForYou)state.timeForYou={settings:{enabled:true,interval:60,from:'09:00',to:'21:00'},activities:seeds.map(([name,kind,category],i)=>({id:'t'+i,name,kind,category,enabled:true})),history:[],completed:[],awards:{},pending:null,nextAt:null};const m=state.timeForYou;m.activities??=[];m.settings??={enabled:false,interval:60,from:'09:00',to:'21:00'};m.history??=[];m.completed??=[];m.awards??={};if(!m.defaultRemindersV2){const chosen=m.history.some(h=>['settings_changed','reminders_off'].includes(h.type));if(!chosen){m.settings.enabled=true;m.settings.interval=60}m.defaultRemindersV2=true}if(m.activityIdeasVersion!==3){const builtIns=[...seeds.map(([name,kind,category],i)=>({id:'t'+i,name,kind,category,enabled:true})),...extraActivities,...newIdeas];
   for(const idea of builtIns){
+   if(m.removedIdeas?.includes(idea.id))continue;
    const existing=m.activities.find(activity=>activity.id===idea.id);
    if(existing){existing.name=idea.name;if(idea.description)existing.description=idea.description;}
    else m.activities.push({...idea});
@@ -132,7 +133,8 @@
  }
  function rules(){const c=model().completed,n=c.length,short=c.filter(x=>x.kind==='short').length,long=c.filter(x=>x.kind==='long').length,cat=k=>c.filter(x=>(badgeCategory[x.category]||x.category)===k).length,unique=new Set(c.map(x=>x.activityId)).size,days=new Set(c.map(x=>localDate(new Date(x.completedAt)))).size;return [
  ['First Little Pause','🌸','Confirm your first activity.',n>=1],['Three Moments','💗','Confirm 3 activities.',n>=3],['Five for You','⭐','Confirm 5 activities.',n>=5],['Ten Bright Breaks','☀️','Confirm 10 activities.',n>=10],['Twenty Kind Moments','💐','Confirm 20 activities.',n>=20],['Fifty Little Joys','🦋','Confirm 50 activities.',n>=50],['A Hundred Smiles','💝','Confirm 100 activities.',n>=100],['A Small Breather','🍃','Confirm one short break.',short>=1],['Pocket of Peace','🌼','Confirm 5 short breaks.',short>=5],['Time to Explore','🧭','Confirm one longer activity.',long>=1],['Lovely Adventures','🌈','Confirm 5 longer activities.',long>=5],['Creative Spark','🎨','Confirm a creative activity.',cat('creative')>=1],['Colorful Moments','🌺','Confirm 5 creative activities.',cat('creative')>=5],['Together Time','♟️','Confirm a companion activity.',cat('social')>=1],['Fresh Air','🌳','Confirm an outdoor activity.',cat('outdoors')>=1],['Gentle Comfort','🪷','Confirm a restful activity.',cat('rest')>=1],['Just for Fun','🎮','Confirm a play activity.',cat('play')>=1],['Curious Heart','✨','Confirm 3 different activities.',unique>=3],['Joyful Variety','🍬','Confirm 6 different activities.',unique>=6],['Seven Days of You','🌷','Confirm activities on 7 different dates. No streak needed.',days>=7]]}
- function earn(){let change=false;const m=model();rules().forEach((r,i)=>{if(r[3]&&!m.awards[i]){m.awards[i]=new Date().toISOString();change=true}});return change}
+ function earn(){let change=false;const m=model();rules().forEach((r,i)=>{if(r[3]&&!m.awards[i]&&!m.resetBadges?.includes(i)){m.awards[i]=new Date().toISOString();change=true}});return change}
+ window.resetJoyBadges=()=>{const m=model();m.resetBadges=rules().flatMap((rule,i)=>rule[3]?[i]:[]);m.awards={}};
  function badges(){if(page!=='Badges')return;const m=model(),rs=rules(),key=JSON.stringify(m.awards),old=document.getElementById('timeForYouBadges');if(old?.dataset.status===key)return;const s=card('Time for You badges · '+Object.keys(m.awards).length+'/20');s.classList.add('achievement-collection');s.id='timeForYouBadges';s.dataset.status=key;s.append(el('p','Earned from activities you confirm. Snoozes, moods and missed reminders never count against you.'));const g=el('div',undefined,'achievement-grid');rs.forEach(([name,icon,desc],i)=>{const a=el('article',undefined,'achievement-tile '+(m.awards[i]?'earned':'locked')),medal=el('div',icon,'achievement-medal');medal.style.setProperty('--medal',['#e9ad38','#e686b1','#8cb8eb','#b59be2','#7bbda0','#e8a477'][i%6]);a.append(medal,el('h3',name),el('p',desc),el('small',m.awards[i]?'Earned':'🔒 Locked'));g.append(a)});s.append(g);if(old)old.replaceWith(s);else document.getElementById('content').append(s)}
  const categories={
   rest:['Get cozy','☾'],beauty:['Beauty & style','✧'],faith:['Faith','♡'],
@@ -211,14 +213,15 @@
    if(a.description)card.append(el('p',a.description));
    const actions=el('div',undefined,'joy-actions');
    if(a.enabled)actions.append(btn('Choose',()=>model().pending?completePending():choose(a),'joy-button'));
-   if(!/^(t\d+|idea-|joy-)/.test(a.id))actions.append(btn('Delete',()=>{
+   actions.append(btn('Delete',()=>{
     if(!confirm('Delete this idea?'))return;
     const data=model();
+    (data.removedIdeas??=[]).push(a.id);
     data.activities=data.activities.filter(item=>item.id!==a.id);
     if(data.pending?.activityId===a.id)data.pending=null;
     persist();draw();title.focus();
    },'joy-text'));
-   else if(!a.enabled)actions.append(btn('Restore',()=>{a.enabled=true;persist();draw();title.focus()},'joy-text'));
+   if(!a.enabled)actions.append(btn('Restore',()=>{a.enabled=true;persist();draw();title.focus()},'joy-text'));
    card.append(actions);
    return card;
   }
@@ -267,7 +270,10 @@
   const actions=el('div',undefined,'joy-actions');
   const feature=el('div',undefined,'joy-feature');
   feature.setAttribute('aria-live','polite');
+  const drawer=el('details',undefined,'joy-library-drawer');
+  drawer.append(el('summary','Browse ideas'));
   const browse=el('section',undefined,'joy-library');
+  drawer.append(browse);
   browse.setAttribute('aria-labelledby','joy-library-heading');
   const collection=library(browse);
   const pending=model().pending;
@@ -289,10 +295,10 @@
    showIdea(featured);collection.remember(featured);
    actions.append(btn('✦ Surprise me',()=>showIdea(collection.suggest()),'joy-primary'));
   }
-  actions.append(btn('♡ Favorites',()=>collection.browse('favorites'),'joy-button'),btn('Browse ideas',()=>collection.browse(''),'joy-button'));
+  actions.append(btn('♡ Favorites',()=>{drawer.open=true;collection.browse('favorites')},'joy-button'),btn('Browse ideas',()=>{drawer.open=true;collection.browse('')},'joy-button'));
   copy.append(actions);
   hero.append(copy,feature);
-  root.append(hero,browse);
+  root.append(hero,drawer);
   const archive=el('details',undefined,'joy-archive');
   archive.append(el('summary','Activity history · '+model().completed.length+' recorded'));
   history(archive);

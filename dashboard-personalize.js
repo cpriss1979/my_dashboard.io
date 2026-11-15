@@ -70,7 +70,7 @@
     return roots.flatMap(root => {
       const nodes = [root,...root.querySelectorAll(containerSelector+','+textSelector)];
       const counts = new Map();
-      return nodes.filter(node=>!node.matches('.bre-paper')&&!node.closest('.priss-page-tools,.priss-settings-tabs')).map(node=>{
+      return nodes.filter(node=>!node.closest('.list-planner,.priss-page-tools,.priss-settings-tabs')).map(node=>{
         const container = node===root||node.matches(containerSelector);
         const ownHeading = container ? node.querySelector('h1,h2,h3,h4,summary')?.textContent : node.textContent;
         const label = (node.getAttribute('aria-label')||ownHeading||node.name||node.placeholder||node.tagName).trim().replace(/\s+/g,' ').slice(0,85);
@@ -166,9 +166,11 @@
     const date=localDate(new Date());
     const report=core.forecast(finance.financeSetup(state.cashFlow||core.init()),date,30);
     const accounts=[...report.accounts,...report.savings];
+    for(const [title,group] of [['Checking',report.accounts],['Savings',report.savings]]) {
+    if(!group.length)continue;
     const amounts=[];
     const list=el('dl');
-    for(const account of accounts) {
+    for(const account of group) {
       const name=account.name;
       const row=el('div');
       const checking=account.type!=='savings';
@@ -181,11 +183,10 @@
       row.append(el('small',checking?'After planned activity '+(plan.hasPayday?'before payday':'over 30 days')+' and cushion':'Cleared savings above cushion'));
       list.append(row);
     }
-    if(accounts.length){
       const total=amounts.every(Number.isFinite)?amounts.reduce((sum,amount)=>sum+amount,0):null;
-      panel.append(el('p',total===null?'Some balances are still missing':'Total available · '+money(total/100)),list);
+      panel.append(el('h3',title),list,el('p',total===null?'Some balances are still missing':'Total '+title.toLowerCase()+' available · '+money(total/100)));
     }
-    else panel.append(el('p','Add an account in Finances to see its balance.'));
+    if(!accounts.length)panel.append(el('p','Add an account in Finances to see its balance.'));
     panel.append(button('Open Finances',()=>openPage('Finances')));
     return panel;
   }
@@ -203,7 +204,39 @@
       list.append(row);
       return [key,box];
     });
-    dialog.append(el('h2','Choose Home cards'),list,button('Save Home',()=>{
+    const photos=el('div',undefined,'home-photo-settings');
+    const caption=el('input');caption.placeholder='Photo caption';caption.maxLength=80;caption.setAttribute('aria-label','Photo caption');
+    const upload=el('input');upload.type='file';upload.accept='image/*';upload.setAttribute('aria-label','Upload a Home photo');
+    const photoStatus=el('p');photoStatus.setAttribute('role','status');
+    function showPhotos(){
+      photos.replaceChildren(el('h3','Photo widgets'));
+      for(const photo of prefs().homePhotos||[])photos.append(button('Remove '+(photo.caption||'photo'),()=>{
+        write().homePhotos=prefs().homePhotos.filter(entry=>entry.id!==photo.id);save();render();showPhotos();
+      }));
+      photos.append(caption,upload,photoStatus);
+    }
+    upload.onchange=async()=>{
+      const photo=upload.files[0];if(!photo)return;
+      if((prefs().homePhotos||[]).length>=4){photoStatus.textContent='Remove a photo widget before adding another. You can add up to four.';return}
+      if(photo.size>20*1024*1024){photoStatus.textContent='Choose a photo under 20 MB.';return}
+      upload.disabled=true;
+      const image=new Image(),url=URL.createObjectURL(photo);
+      try{
+        image.src=url;await image.decode();
+        const scale=Math.min(1,480/Math.max(image.naturalWidth,image.naturalHeight));
+        const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+        const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);
+        let src=canvas.toDataURL('image/jpeg',.7);
+        if(src.length>75000)src=canvas.toDataURL('image/jpeg',.45);
+        if(src.length>75000)throw Error('Choose a smaller photo.');
+        if(owner!==state||!dialog.open)return;
+        (write().homePhotos??=[]).push({id:crypto.randomUUID(),caption:caption.value.trim(),src});save();render();caption.value='';showPhotos();
+        photoStatus.textContent='Photo added to Home.';
+      }catch(error){photoStatus.textContent=error.message}
+      finally{URL.revokeObjectURL(url);upload.disabled=false;upload.value=''}
+    };
+    showPhotos();
+    dialog.append(el('h2','Choose Home cards'),list,photos,button('Save Home',()=>{
       if(owner===state){write().homeCards=inputs.filter(([,box])=>box.checked).map(([key])=>key);save();render()}
       dialog.close();
     }),button('Cancel',()=>dialog.close()));
@@ -226,6 +259,8 @@
       if(!node)continue;
       node.dataset.homeWidget=key;
       node.hidden=!shown.includes(key);
+      if(node.hidden)node.style.setProperty('display','none','important');
+      else node.style.removeProperty('display');
       if(key==='Daily priorities'){
         const rows=[...node.querySelectorAll('.glow-task-row')];
         rows.slice(3).forEach(row=>row.remove());
@@ -254,6 +289,37 @@
       }
       layout.append(panel);
     }
+    for(const photo of prefs().homePhotos||[]){
+      if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(photo.src||''))continue;
+      const panel=widget('photo:'+photo.id,photo.caption||'Photo');
+      const image=el('img',undefined,'household-photo');image.src=photo.src;image.alt=photo.caption||'Home photo';
+      panel.append(image);layout.append(panel);
+    }
+    const cards=[...layout.children].filter(node=>node.dataset.homeWidget&&!node.hidden);
+    const order=prefs().homeOrder||[];
+    cards.sort((a,b)=>{const n=node=>{const i=order.indexOf(node.dataset.homeWidget);return i<0?order.length:i};return n(a)-n(b)});
+    layout.append(...cards);
+    const editing=Boolean(prefs().arrangingHome);
+    if(!editing)return;
+    function move(key,target){
+      const order=cards.map(node=>node.dataset.homeWidget);
+      const from=order.indexOf(key),to=order.indexOf(target);
+      if(from<0||to<0||from===to)return;
+      order.splice(from,1);order.splice(to,0,key);
+      write().homeOrder=order;save();render();
+    }
+    cards.forEach((card,i)=>{
+      const key=card.dataset.homeWidget;
+      const actions=el('div',undefined,'home-widget-actions');
+      const grip=button('↕ Drag',()=>{});grip.draggable=true;grip.setAttribute('aria-label','Drag '+key);
+      grip.ondragstart=event=>{event.dataTransfer.setData('text/plain',key);event.dataTransfer.effectAllowed='move';card.classList.add('home-widget-dragged')};
+      grip.ondragend=()=>card.classList.remove('home-widget-dragged');
+      card.ondragover=event=>event.preventDefault();
+      card.ondrop=event=>{event.preventDefault();move(event.dataTransfer.getData('text/plain'),key)};
+      const earlier=button('Earlier',()=>move(key,cards[i-1]?.dataset.homeWidget));earlier.disabled=i===0;
+      const later=button('Later',()=>move(key,cards[i+1]?.dataset.homeWidget));later.disabled=i===cards.length-1;
+      actions.append(grip,earlier,later);card.append(actions);
+    });
   }
 
   function setupSettings() {
@@ -265,7 +331,7 @@
     const themeDialog=document.getElementById('dashboardThemes');
     if(themeDialog) {
       const colors=el('details');
-      colors.append(el('summary','More color controls'),button('Customize the current page',()=>{
+      colors.append(el('summary','Page & entry colors'),button('Customize the current page',()=>{
         settings.close();customize();
       }));
       const controls=[...themeDialog.querySelectorAll('.dashboard-color-settings')];
@@ -279,8 +345,10 @@
     const homePanel=el('section');
     homePanel.append(el('h3','Home cards'),button('Choose Home cards',()=>{settings.close();editHome()}));
     sectionsPanel.append(homePanel);
-    settingsContent.before(tabs,appearance,sectionsPanel);
-    const options=[['Appearance',appearance],['Home',sectionsPanel],['Account & data',settingsContent]];
+    const navigation=el('section');
+    navigation.append(el('h3','Manage navigation'),button('Choose visible sections & rename groups',()=>window.DashboardNavigation.options()));
+    settingsContent.before(tabs,appearance,sectionsPanel,navigation);
+    const options=[['Appearance',appearance],['Home',sectionsPanel],['Navigation',navigation],['Account & data',settingsContent]];
     const tabButtons=options.map(([label,panel])=>button(label,()=>settingsPage(panel)));
     settingsPage=panel=>{
       options.forEach(([,section],i)=>{
@@ -310,13 +378,15 @@
   render=function(){
     previousRender();
     const tools=el('div',undefined,'priss-page-tools');
-    tools.append(button('Customize colors',customize));
+
     if(page==='Overview') {
       home();
-      tools.append(button('Edit Home cards',editHome));
+      tools.append(button('Edit Home cards',editHome),button(prefs().arrangingHome?'Done arranging':'Arrange cards',()=>{
+        write().arrangingHome=!prefs().arrangingHome;save();render();
+      }));
     }
     const toolbar=page==='Finances'?content.querySelector('.cf-toolbar'):null;
-    if(toolbar)toolbar.after(tools);else content.prepend(tools);
+    if(tools.childElementCount){if(toolbar)toolbar.after(tools);else content.prepend(tools);}
     paintColors();
   };
   addEventListener('dashboard:account-changing',()=>{

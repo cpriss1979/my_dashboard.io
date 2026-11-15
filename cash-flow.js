@@ -795,12 +795,13 @@ function deleteAccount(id){
 }
 function accounts(root){
  const report=C.forecast(m,today(),horizon),p=card('Accounts');
- p.append(b('Add account',()=>accountForm(),'primary'));
+ p.append(row(b('Add account',()=>accountForm(),'primary'),b('Loan amortization',()=>go('Amortization'))));
  const help=e('details');
  help.append(e('summary','Account help'),e('p','Deleting an account pauses its scheduled activity and removes its balance from forecasts. Restore it through Activity → Undo.'));
  p.append(help);
- for(const [title,rows] of [['Checking',report.accounts],['Savings · separate',report.savings]]){
-  p.append(compactList(title,rows.filter(a=>matchesOwner(a.id)).map(a=>{const item=compactRow(
+ for(const [title,rows] of [['Checking',report.accounts],['Savings',report.savings]]){
+  const visible=rows.filter(a=>matchesOwner(a.id));
+  p.append(compactList(title,visible.map(a=>{const item=compactRow(
    name(a.id),a.current,['Cleared balance','Pending '+dollars(a.pending),'Projected '+dollars(a.projected),'Cushion '+dollars(a.cushion)],
    [b('Delete',()=>deleteAccount(a.id),'link')],
    a.id,['Starting '+dollars(a.opening)+' · as of '+dateLabel(a.asOf)]
@@ -808,6 +809,7 @@ function accounts(root){
   item.append(row(b('Edit account',()=>accountForm(m.accounts.find(x=>x.id===a.id))),b('Reconcile',()=>reconcileForm(a.id))));
   return item;
   })));
+  if(visible.length)p.append(e('p','Total '+title.toLowerCase()+' · '+(visible.every(a=>a.configured)?dollars(visible.reduce((sum,a)=>sum+a.current,0)):'Set all starting balances'),'household-account-total'));
  }
  root.append(p);reconciliationHistory(root);
 }
