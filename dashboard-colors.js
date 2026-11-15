@@ -37,6 +37,11 @@
     return event.title.replace(/ \(observed\)$/i, '');
   }
   function paint(node, event) {
+    if(event.emoji&&!node.querySelector('.bre-calendar-sticker')){
+      const sticker=el('span',event.emoji+' ');
+      sticker.className='bre-calendar-sticker';
+      (node.querySelector('b')||node).prepend(sticker);
+    }
     const color = colorFor(event.id ? event.calendarColor : prefs().holidays?.[holidayKey(event)]);
     node.classList.toggle('calendar-colored-entry', Boolean(color));
     if (color) {

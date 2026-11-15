@@ -1,0 +1,275 @@
+(function () {
+  'use strict';
+  const quadrants = [
+    ['do', 'Do', 'Urgent and important'],
+    ['schedule', 'Schedule', 'Important · can wait'],
+    ['delegate', 'Delegate', 'Urgent · can hand off'],
+    ['delete', 'Let go', 'Neither urgent nor important']
+  ];
+  function node(tag, text, className) {
+    const element = document.createElement(tag);
+    if (text !== undefined) element.textContent = text;
+    if (className) element.className = className;
+    return element;
+  }
+  function button(text, action, className = 'secondary') {
+    const element = node('button', text, className);
+    element.type = 'button';
+    element.onclick = action;
+    return element;
+  }
+  function picker(label, name, value = '') {
+    const wrap = node('label', label);
+    const field = node('input');
+    field.name = name;
+    field.value = value;
+    field.maxLength = 24;
+    field.placeholder = '🌸';
+    wrap.append(field);
+    return wrap;
+  }
+
+  const previousFields = fieldsFor;
+  fieldsFor = function () {
+    previousFields();
+    if (kind.value === 'events') fields.append(picker('Emoji sticker', 'emoji'));
+    if (kind.value !== 'priorities') return;
+    const label = node('label', 'Priority board');
+    const select = node('select');
+    select.name = 'quadrant';
+    select.add(new Option('Unsorted', ''));
+    for (const [key, title, description] of quadrants) select.add(new Option(title+' · '+description,key));
+    label.append(select);
+    fields.append(label);
+  };
+  kind.onchange = fieldsFor;
+
+  function board() {
+    const panel = node('section', undefined, 'card bre-board');
+    panel.append(node('h2', 'Priority board'));
+    const grid = node('div', undefined, 'bre-board-grid');
+    const active = state.priorities.filter(task => !task.done);
+    for (const [key, name, description] of [...quadrants, ['', 'Unsorted', 'Choose a quadrant for these tasks']]) {
+      const column = node('section', undefined, 'bre-quadrant');
+      column.dataset.quadrant = key;
+      column.append(node('h3', name), node('p', description));
+      for (const task of active.filter(task => (task.quadrant || '') === key)) {
+        const row = node('div', undefined, 'bre-task');
+        const check = node('input');
+        check.type = 'checkbox';
+        check.setAttribute('aria-label', 'Complete '+task.title);
+        check.onchange = () => toggle('priorities', task.id);
+        const move = node('select');
+        move.setAttribute('aria-label', 'Move '+task.title+' to');
+        for (const [target, label] of [['', 'Unsorted'], ...quadrants]) move.add(new Option(label, target));
+        move.value = key;
+        move.onchange = () => {task.quadrant = move.value;save();render()};
+        row.append(check, button(task.title, () => editEntry('priorities', task.id), 'link'), move);
+        column.append(row);
+      }
+      if (key) column.append(button('＋ Add task', () => {
+        openAdd('priorities');
+        form.elements.quadrant.value = key;
+      }));
+      grid.append(column);
+    }
+    panel.append(grid);
+    content.prepend(panel);
+  }
+
+  const durations = {focus:25, short:5, long:15};
+  function timerData() {
+    return state.pomodoro ??= {mode:'focus',minutes:{...durations},remaining:25*60000,end:0,sessions:0};
+  }
+  function timerPanel() {
+    const data = timerData();
+    const panel = node('section', undefined, 'card bre-timer');
+    const modes = node('div', undefined, 'bre-controls');
+    for (const [mode,label] of [['focus','Focus'],['short','Short break'],['long','Long break']]) {
+      const control = button(label, () => {
+        data.mode=mode;
+        data.end=0;
+        data.remaining=data.minutes[mode]*60000;
+        save();render();
+      });
+      control.setAttribute('aria-pressed',String(data.mode===mode));
+      modes.append(control);
+    }
+    const clock = node('output', '', 'bre-clock');
+    clock.id='bre-clock';
+    clock.setAttribute('aria-live','off');
+    const task = node('select');
+    task.setAttribute('aria-label','Task to focus on');
+    task.add(new Option('Pick a task (optional)',''));
+    for(const entry of state.priorities.filter(entry=>!entry.done))task.add(new Option(entry.title,entry.id));
+    task.value=data.task||'';
+    task.onchange=()=>{data.task=task.value;save()};
+    const controls=node('div',undefined,'bre-controls');
+    const finished=data.remaining===0&&!data.end;
+    controls.append(button(data.end?'Pause':finished?'Start again':data.remaining===data.minutes[data.mode]*60000?'Start':'Resume',()=>{
+      if(data.end){
+        if(data.end<=Date.now()){tick();return}
+        data.remaining=data.end-Date.now();data.end=0;
+      }else{
+        data.remaining ||= data.minutes[data.mode]*60000;
+        data.end=Date.now()+data.remaining;
+      }
+      save();render();
+    },'primary'),button('Reset',()=>{
+      data.end=0;data.remaining=data.minutes[data.mode]*60000;save();render();
+    }));
+    if(finished)controls.append(button(data.mode==='focus'?'Start break':'Start focus',()=>{
+      data.mode=data.mode==='focus'?(data.sessions%4===0?'long':'short'):'focus';
+      data.remaining=data.minutes[data.mode]*60000;
+      data.end=Date.now()+data.remaining;
+      save();render();
+    }));
+    const options=node('details');
+    options.append(node('summary','Timer settings'));
+    for(const [key,label] of [['focus','Focus minutes'],['short','Short break minutes'],['long','Long break minutes']]){
+      const wrap=node('label',label);
+      const field=node('input');field.type='number';field.min='1';field.max='180';field.value=data.minutes[key];
+      field.onchange=()=>{
+        if(!field.checkValidity()||!field.value){field.value=data.minutes[key];return}
+        data.minutes[key]=Number(field.value);
+        if(!data.end&&data.mode===key)data.remaining=data.minutes[key]*60000;
+        save();tick();
+      };
+      wrap.append(field);options.append(wrap);
+    }
+    panel.append(node('h2','🍅 Pomodoro timer'),modes,clock,task,controls,node('p',data.sessions+' focus sessions completed'),options);
+    content.append(panel);
+  }
+  function tick(){
+    if(document.body.classList.contains('fb-account-locked'))return;
+    const data=state.pomodoro;
+    if(!data)return;
+    if(data.end&&data.end<=Date.now()){
+      data.end=0;data.remaining=0;
+      if(data.mode==='focus')data.sessions++;
+      save();
+      const message=data.mode==='focus'?'Focus session finished. Time for a break.':'Break finished.';
+      if(page==='Focus timer')render();
+      notify(message);
+    }
+    const clock=document.getElementById('bre-clock');
+    if(!clock)return;
+    const seconds=Math.ceil(Math.max(0,data.end?data.end-Date.now():data.remaining)/1000);
+    clock.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
+  }
+  setInterval(tick,250);
+
+  function favorites() {
+    const nav = document.querySelector('aside nav');
+    const detail = node('details', undefined, 'app-nav-group bre-favorites');
+    detail.open = state.favoriteLinksOpen !== false;
+    detail.ontoggle=()=>{
+      if(detail.open===(state.favoriteLinksOpen!==false))return;
+      state.favoriteLinksOpen=detail.open;
+      save();
+    };
+    detail.append(node('summary', 'Quick links'));
+    const pinned = state.favoriteLinks || [];
+    for (const pin of pinned) {
+      const url = website(pin.url);
+      if (!url) continue;
+      const link = node('a', [pin.emoji,pin.label].filter(Boolean).join(' '), 'app-nav-link');
+      link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+      detail.append(link);
+    }
+    detail.append(button('Manage quick links', manageLinks,'app-nav-link'));
+    nav.append(detail);
+  }
+  function website(value){
+    try{
+      const url=new URL(value);
+      return ['https:','http:'].includes(url.protocol)?url.href:'';
+    }catch{return ''}
+  }
+  function manageLinks() {
+    const dialog=node('dialog',undefined,'priss-options-dialog bre-dialog');
+    dialog.setAttribute('aria-label','Quick links');
+    const owner=state;
+    const form=node('form');
+    const label=node('input');label.name='label';label.required=true;label.maxLength=60;
+    const url=node('input');url.name='url';url.type='url';url.required=true;url.placeholder='https://www.youtube.com';
+    const nameWrap=node('label','Label');nameWrap.append(label);
+    const urlWrap=node('label','Website URL');urlWrap.append(url);
+    const emoji=picker('Icon emoji','emoji');
+    const submit=node('button','Pin link','primary');
+    const entries=node('div');
+    const status=node('p');status.setAttribute('role','status');
+    let editing='';
+    const redraw=()=>{
+      entries.replaceChildren();
+      for(const pin of state.favoriteLinks||[]){
+        const row=node('div',undefined,'bre-controls');
+        const link=node('a',[pin.emoji,pin.label].filter(Boolean).join(' '));
+        const safe=website(pin.url);
+        if(safe){link.href=safe;link.target='_blank';link.rel='noopener noreferrer'}
+        row.append(link,button('Edit',()=>{
+          editing=pin.id;
+          label.value=pin.label;
+          url.value=pin.url;
+          form.elements.emoji.value=pin.emoji||'';
+          submit.textContent='Save link';
+          label.focus();
+        }),button('Remove',()=>{
+          state.favoriteLinks=state.favoriteLinks.filter(entry=>entry.id!==pin.id);
+          if(editing===pin.id){editing='';form.reset();submit.textContent='Pin link'}
+          save();render();redraw();
+        }));
+        entries.append(row);
+      }
+    };
+    form.append(nameWrap,urlWrap,emoji,submit);
+    form.onsubmit=event=>{
+      event.preventDefault();
+      const address=website(url.value);
+      if(state!==owner)return;
+      if(!label.value.trim()||!address){status.textContent='Enter a label and an HTTP or HTTPS link.';return}
+      const pin={id:editing||crypto.randomUUID(),label:label.value.trim(),url:address,emoji:form.elements.emoji.value.trim()};
+      const links=state.favoriteLinks||[];
+      state.favoriteLinks=editing?links.map(entry=>entry.id===editing?pin:entry):[...links,pin];
+      editing='';form.reset();submit.textContent='Pin link';
+      save();render();redraw();status.textContent='Link saved.';
+    };
+    dialog.append(node('h2','Quick links'),entries,form,status,button('Close',()=>dialog.close()));
+    redraw();
+    const controller=new AbortController();
+    addEventListener('dashboard:account-changing',()=>dialog.close(),{signal:controller.signal});
+    dialog.onclose=()=>{controller.abort();dialog.remove()};
+    document.body.append(dialog);dialog.showModal();
+  }
+
+  window.DashboardQuickLinks={open:manageLinks};
+  const priorRender=render;
+  render=function(){
+    const custom=page==='Focus timer';
+    // Run the normal navigation and theme updates for the timer route.
+    if(custom)page='Quick notes';
+    try{priorRender()}finally{if(custom)page='Focus timer'}
+    if(custom){
+      for(const id of ['title','appPageTitle','mobileCurrentPage']){
+        const heading=document.getElementById(id);
+        if(heading)heading.textContent='Focus timer';
+      }
+      document.querySelectorAll('[data-page="Quick notes"]').forEach(link=>{
+        link.classList.remove('active');link.removeAttribute('aria-current');
+      });
+      content.replaceChildren();timerPanel();tick();
+    }
+    if(page==='Daily priorities')board();
+    const nav=document.querySelector('aside nav');
+    nav.querySelector('.bre-favorites')?.remove();
+    nav.querySelector('[data-bre-focus]')?.remove();
+    const focus=button('🍅 Focus timer',()=>go('Focus timer'),'app-nav-link');
+    focus.dataset.breFocus='';
+    if(custom){focus.classList.add('active');focus.setAttribute('aria-current','page')}
+    const tasks=nav.querySelector('[data-page="Daily priorities"]');
+    if(tasks)tasks.after(focus);else nav.append(focus);
+    favorites();
+    if(page==='Daily priorities')content.querySelector('.bre-board h2')?.after(button('🍅 Focus timer',()=>go('Focus timer')));
+  };
+  render();
+})();

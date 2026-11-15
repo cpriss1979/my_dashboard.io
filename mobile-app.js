@@ -67,11 +67,11 @@
  }
  function eventDetails(id){
   const event=state.events.find(e=>e.id===id);if(!event)return;
-  const d=simpleDialog('appEventDetails',event.title);const body=d.lastElementChild;
+  const d=simpleDialog('appEventDetails',[event.emoji,event.title].filter(Boolean).join(' '));const body=d.lastElementChild;
   const dates=document.createElement('p');dates.textContent=calendarDateRange(event);body.append(dates);
   const time=document.createElement('p');time.textContent=calendarTimeRange(event)||'All day';body.append(time);
   const repeat=document.createElement('p');repeat.textContent=event.repeatYearly?'Repeats yearly from the saved start date.':'Does not repeat.';body.append(repeat);
-  for(const [key,value] of Object.entries(event))if(!['id','title','date','endDate','time','endTime','repeatYearly','calendarColor'].includes(key)&&typeof value==='string'&&value){const field=document.createElement('p');field.textContent=key+': '+value;body.append(field)}
+  for(const [key,value] of Object.entries(event))if(!['id','title','date','endDate','time','endTime','repeatYearly','calendarColor','emoji'].includes(key)&&typeof value==='string'&&value){const field=document.createElement('p');field.textContent=key+': '+value;body.append(field)}
   body.append(actionButton('Edit entry',()=>{d.close();editEntry('events',id)}),actionButton('Delete',()=>{if(confirm('Delete this calendar entry and its repeating occurrences?')){d.close();remove('events',id)}}));d.showModal();
  }
  function allEvents(){

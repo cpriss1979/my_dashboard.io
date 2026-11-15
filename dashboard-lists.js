@@ -15,7 +15,7 @@
     'Shopping List': {
       key:'shoppingList', singular:'shopping item', flag:'Purchased',
       fields:[
-        ['title','Item name','text',true], ['category','Category','text'], ['store','Store','text'],
+        ['title','Item name','text',true], ['emoji','Emoji sticker','text'], ['category','Category','text'], ['store','Store','text'],
         ['quantity','Quantity','count',true,'1'], ['price','Estimated price per item ($)','money'],
         ['notes','Notes','textarea']
       ]
@@ -23,7 +23,7 @@
     'Wish List': {
       key:'wishList', singular:'wish list item', flag:'Acquired',
       fields:[
-        ['title','Item name','text',true], ['category','Category','text'], ['recipient','For whom','text'],
+        ['title','Item name','text',true], ['emoji','Emoji sticker','text'], ['category','Category','text'], ['recipient','For whom','text'],
         ['priority','Priority','priority',false,'Normal'], ['price','Target price ($)','money'],
         ['url','Product link','url'], ['notes','Notes','textarea']
       ]
@@ -68,6 +68,7 @@
         field.type='number';field.min=type==='count'?'1':'0';field.step=type==='count'?'1':'.01';
         field.max=type==='count'?'1000000':'1000000000';
       }else{field.type=type;field.maxLength=type==='url'?1200:200}
+      if(key==='emoji')field.maxLength=24;
       field.value=existing?.[key]??fallback;
       wrapper.append(field);
       form.append(wrapper);
@@ -103,20 +104,45 @@
 
   function paint(pageName) {
     const definition=definitions[pageName];
-    const panel=el('section',undefined,'card dashboard-inventory');
+    const paper=pageName!=='Collections';
+    const panel=el('section',undefined,'card dashboard-inventory'+(paper?' bre-paper':''));
+    const style=state.listPaper?.[definition.key]||{};
+    if(paper)panel.style.setProperty('--paper-color',/^#[a-f0-9]{6}$/i.test(style.color)?style.color:'#ffe4f1');
     const header=el('div',undefined,'cardhead');
-    header.append(el('h2',pageName),button('＋ Add '+definition.singular,()=>editor(definition,null,draw),'primary'));
+    header.append(el('h2',(paper&&style.emoji?style.emoji+' ':'')+pageName),button('＋ Add '+definition.singular,()=>editor(definition,null,draw),'primary'));
     const filter=el('div',undefined,'inventory-actions');
     const search=el('input');
     search.type='search';search.placeholder='Search this list';search.setAttribute('aria-label','Search '+pageName);
     const scope=el('select');
     scope.setAttribute('aria-label','Filter '+pageName);
     for(const [value,label] of [['all','All items'],['open',pageName==='Collections'?'Keeping':'Still on list'],['done',definition.flag]])scope.add(new Option(label,value));
-    filter.append(search,scope);
+    filter.append(search);
+    if(!paper)filter.append(scope);
+    if(paper){
+      const color=el('input');color.type='color';color.value=panel.style.getPropertyValue('--paper-color');
+      const sticker=el('input');sticker.placeholder='🌸';sticker.maxLength=24;sticker.value=style.emoji||'';
+      const colorLabel=el('label','Paper color');colorLabel.append(color);
+      const stickerLabel=el('label','List emoji');stickerLabel.append(sticker);
+      const commit=()=>{
+        (state.listPaper??={})[definition.key]={color:color.value,emoji:sticker.value.trim()};
+        panel.style.setProperty('--paper-color',color.value);
+        header.querySelector('h2').textContent=[sticker.value.trim(),pageName].filter(Boolean).join(' ');
+        save();
+      };
+      color.oninput=()=>panel.style.setProperty('--paper-color',color.value);
+      color.onchange=commit;
+      sticker.onchange=commit;
+      filter.append(colorLabel,stickerLabel);
+    }
     const total=el('p',undefined,'inventory-total');
     total.setAttribute('aria-live','polite');
     const list=el('div',undefined,'inventory-list');
+    const archive=el('details',undefined,'bre-list-archive');
+    const summary=el('summary');
+    const archivedList=el('div',undefined,'inventory-list');
+    archive.append(summary,archivedList);
     panel.append(header,filter,total,list);
+    if(paper)panel.append(archive);
 
     function draw(){
       const query=search.value.trim().toLowerCase();
@@ -124,25 +150,31 @@
       const shown=records.filter(item=>(scope.value==='all'||Boolean(item.flagged)===(scope.value==='done'))&&
         [item.title,item.category,item.edition,item.itemNumber,item.store,item.recipient,item.notes].join(' ').toLowerCase().includes(query));
       const priceKey=pageName==='Collections'?'value':'price';
-      const priced=shown.filter(item=>item[priceKey]!==''&&item[priceKey]!=null);
+      const active=paper?shown.filter(item=>!item.flagged):shown;
+      const priced=active.filter(item=>item[priceKey]!==''&&item[priceKey]!=null);
       const sum=priced.reduce((balance,item)=>balance+amount(item[priceKey])*Number(item.quantity||1),0);
       const label={Collections:'Estimated collection value','Shopping List':'Estimated list cost','Wish List':'Total target price'}[pageName];
-      total.textContent=shown.length+(shown.length===1?' item':' items')+(priced.length?' · '+label+' '+money(sum/100):'');
+      total.textContent=active.length+(active.length===1?' item':' items')+(priced.length?' · '+label+' '+money(sum/100):'');
       list.replaceChildren();
+      archivedList.replaceChildren();
+      summary.textContent=definition.flag+' archive ('+shown.filter(item=>item.flagged).length+')';
       for(const item of shown){
         const tile=el('article',undefined,'inventory-item');
         tile.dataset.inventoryId=item.id;
         const heading=el('div',undefined,'inventory-title');
-        heading.append(el('h3',item.title));
+        heading.append(el('h3',[item.emoji,item.title].filter(Boolean).join(' ')));
         const tags=[item.category,item.edition,item.condition,item.store,item.recipient,item.priority].filter(Boolean);
         if(tags.length)heading.append(el('p',tags.join(' · ')));
         const checkLabel=el('label',undefined,'inventory-check');
         const check=el('input');
         check.type='checkbox';check.checked=Boolean(item.flagged);
-        check.onchange=()=>{item.flagged=check.checked;save();draw()};
+        check.onchange=()=>{
+          item.flagged=check.checked;save();draw();
+          if(paper)summary.focus();
+        };
         checkLabel.append(check,document.createTextNode(definition.flag));
         const detail=el('dl');
-        const hidden=new Set(['title','category','edition','condition','store','recipient','priority','url','notes']);
+        const hidden=new Set(['title','category','edition','condition','store','recipient','priority','url','notes','emoji']);
         for(const [key,label,type] of definition.fields){
           if(hidden.has(key)||item[key]==null||item[key]==='')continue;
           const formatted=type==='money'?money(Number(item[key])):type==='date'?displayUSDate(item[key]):item[key];
@@ -159,13 +191,18 @@
           state[definition.key]=items(definition).filter(record=>record.id!==item.id);
           save();draw();
         }));
-        tile.append(heading,checkLabel);
+        if(paper&&item.flagged){
+          actions.prepend(button('Restore',()=>{item.flagged=false;save();draw();summary.focus()}));
+          tile.append(heading);
+        }else if(paper)tile.append(checkLabel,heading);
+        else tile.append(heading,checkLabel);
         if(detail.children.length)tile.append(detail);
         if(item.notes)tile.append(el('p',item.notes,'inventory-notes'));
         tile.append(actions);
-        list.append(tile);
+        (paper&&item.flagged?archivedList:list).append(tile);
       }
-      if(!shown.length)list.append(el('p',records.length?'No matching items.':'Nothing on this list yet.'));
+      if(!active.length)list.append(el('p',query?'No matching active items.':'Nothing on this list yet.'));
+      if(!archivedList.children.length)archivedList.append(el('p','No archived items.'));
     }
     search.oninput=draw;
     scope.onchange=draw;

@@ -418,10 +418,76 @@ function savings(root){
   grid.append(accountCard);
  }
  p.append(grid,b('Create savings account',()=>accountForm(null,'savings')));root.append(p);
- const goals=card('Optional savings goals');goals.append(b('Add goal',()=>goalForm()));const goalCards=(m.goals||[]).filter(g=>!g.archived&&!g.deleted&&matchesOwner(g.account)).map(g=>{const a=report.savings.find(a=>a.id===g.account),n=tile(g.name,a?.current??null,['Target '+dollars(g.target),name(g.account),'Progress uses this account’s balance; goals do not reserve or move money.'],[b('Edit goal',()=>goalForm(g)),b('Delete',()=>safeAction('Delete savings goal',()=>{g.deleted=true}),'link')],g.id),progress=e('progress');progress.max=g.target;progress.value=Math.max(0,Math.min(g.target,a?.current||0));progress.setAttribute('aria-label',g.name+' savings progress');n.append(progress,e('p',Math.round(Math.max(0,Math.min(1,(a?.current||0)/g.target))*100)+'%'));return n});goals.append(group('Goals',goalCards));root.append(goals);
+ const goals=card('Savings funds');
+ goals.append(e('p','Set aside parts of a savings account for different purchases.'),b('＋ Add fund',()=>goalForm()));
+ for(const account of selected){
+  const unassigned=account.current-reservedFor(account.id);
+  goals.append(e('p',name(account.id)+' · '+(account.configured?(unassigned<0?dollars(-unassigned)+' overallocated':dollars(unassigned)+' unassigned'):'Set a starting balance to assign money')));
+ }
+ const fundList=e('div',undefined,'bre-fund-grid');
+ const funds=(m.goals||[]).filter(g=>!g.archived&&!g.deleted&&matchesOwner(g.account));
+ for(const g of funds){
+  const allocated=g.reserved||0;
+  const n=e('article',undefined,'bre-fund');
+  n.style.setProperty('--paper-color',/^#[a-f0-9]{6}$/i.test(g.color)?g.color:'#ffe9f2');
+  n.append(e('h3',[g.emoji,g.name].filter(Boolean).join(' ')),e('p',name(g.account)),
+   e('strong',dollars(allocated)+' set aside · '+dollars(g.target)+' goal'));
+  const progress=e('progress');progress.max=g.target;progress.value=Math.min(g.target,allocated);
+  progress.setAttribute('aria-label',g.name+' savings progress');
+  n.append(progress,row(b('＋ Add',()=>fundAmount(g,false)),b('Release',()=>fundAmount(g,true)),b('Edit',()=>goalForm(g))));
+  fundList.append(n);
+ }
+ if(!funds.length)fundList.append(e('p','Create a fund for Christmas, the car, or anything you’re saving for.'));
+ goals.append(fundList);
+ const archive=e('details');const archived=(m.goals||[]).filter(g=>g.archived&&!g.deleted&&matchesOwner(g.account));
+ archive.append(e('summary','Archived funds ('+archived.length+')'));
+ for(const g of archived)archive.append(row(e('span',g.name),b('Edit or restore',()=>goalForm(g)),
+  b('Delete',()=>{if(confirm('Delete '+g.name+'?'))safeAction('Delete savings fund',()=>{g.deleted=true})},'link')));
+ if(archived.length)goals.append(archive);
+ root.append(goals);
  if(!selectedOwner()&&state.savingsEntries?.length){const old=e('details',undefined,'cf-old-savings');old.append(e('summary','Earlier savings records · '+state.savingsEntries.length),e('p','Preserved separately; not replayed into current balances.'));for(const x of [...state.savingsEntries].filter(x=>!m.overrides['legacy-savings|'+x.id]?.skipped).sort((a,b)=>(b.date||'').localeCompare(a.date||'')))old.append(record(dateLabel(x.date)+' · '+x.kind,(state.people?.find(p=>p.id===x.person)?.name||'')+' · '+money(Number(x.amount))+(x.note?' · '+x.note:''),b('Delete',()=>safeAction('Delete earlier savings entry',()=>{m.overrides['legacy-savings|'+x.id]={id:'legacy-savings|'+x.id,skipped:true,legacyId:x.id}}),'link')));root.append(old)}
 }
-function goalForm(g){const choices=activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,name(a.id)]);if(!choices.length){alert('Create a savings account first.');return}form(g?'Edit savings goal':'Add savings goal',[field('Goal name',input('name','text',g?.name)),field('Savings account',select('account',choices,g?.account||choices[0][0])),field('Target ($)',number('target',g?g.target/100:'',.01)),field('Archive goal',check('archived',g?.archived))],f=>{const next={id:g?.id||uid(),name:reqName(f),account:f.account.value,target:cents(f.target.value),archived:f.archived.checked};if(next.target<=0)throw Error('Enter a positive target.');m.goals??=[];if(g)Object.assign(g,next);else m.goals.push(next)})}
+function reservedFor(account,except){
+ return (m.goals||[]).filter(g=>!g.archived&&!g.deleted&&g.account===account&&g.id!==except)
+  .reduce((total,g)=>total+(g.reserved||0),0);
+}
+function assertFundBalance(account,amount,except){
+ const balance=C.forecast(m,today(),0).savings.find(a=>a.id===account);
+ if(!balance?.configured)throw Error('Set a starting balance for this savings account first.');
+ const available=Math.max(0,balance.current-reservedFor(account,except));
+ if(amount>available)throw Error('This account has '+dollars(available)+' available for this fund.');
+}
+function fundAmount(goal,release){
+ form(release?'Release from '+goal.name:'Set aside for '+goal.name,[field('Amount ($)',number('amount','',.01))],f=>{
+  const amount=cents(f.amount.value),prior=goal.reserved||0;
+  if(!Number.isSafeInteger(amount)||amount<=0)throw Error('Enter a positive amount.');
+  if(release&&amount>prior)throw Error('This fund only has '+dollars(prior)+' set aside.');
+  if(!release)assertFundBalance(goal.account,prior+amount,goal.id);
+  goal.reserved=prior+(release?-amount:amount);
+ });
+}
+function goalForm(g){
+ const choices=activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,name(a.id)]);
+ if(!choices.length){alert('Create a savings account first.');return}
+ form(g?'Edit savings fund':'Add savings fund',[
+  field('Fund name',input('name','text',g?.name)),
+  field('Savings account',select('account',choices,g?.account||choices[0][0])),
+  field('Target ($)',number('target',g?g.target/100:'',.01)),
+  field('Starting amount set aside ($)',number('reserved',(g?.reserved||0)/100)),
+  field('Card color',input('color','color',g?.color||'#ffe9f2')),
+  field('Emoji sticker',input('emoji','text',g?.emoji||'',false)),
+  field('Archive fund and release its money',check('archived',g?.archived))
+ ],f=>{
+  const archived=f.archived.checked;
+  const next={id:g?.id||uid(),name:reqName(f),account:f.account.value,target:cents(f.target.value),
+   reserved:archived?0:cents(f.reserved.value),color:f.color.value,emoji:f.emoji.value.trim().slice(0,24),archived};
+  if(next.target<=0)throw Error('Enter a positive target.');
+  if(!Number.isSafeInteger(next.reserved)||next.reserved<0)throw Error('Enter a valid amount to set aside.');
+  if(next.reserved&&(next.account!==g?.account||next.reserved>(g?.reserved||0)))assertFundBalance(next.account,next.reserved,next.id);
+  m.goals??=[];
+  if(g)Object.assign(g,next);else m.goals.push(next);
+ });
+}
 
 function budgetNameForm() {
  const owner=state,originalName=m.budgetName;

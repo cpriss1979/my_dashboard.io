@@ -1,0 +1,80 @@
+body.glow-redesign main #content section.card.dashboard-inventory.bre-paper {
+  --paper-line: #71517029;
+  width: min(100%, 58rem);
+  margin: 1.3rem auto 2rem;
+  position: relative;
+  border: 0 !important;
+  border-radius: .3rem .5rem .9rem .3rem;
+  padding: clamp(1rem, 4vw, 2.3rem);
+  padding-inline-start: clamp(1.4rem, 5vw, 3.2rem);
+  background: linear-gradient(90deg, transparent 1.12rem, #da679773 1.12rem 1.19rem, transparent 1.19rem),
+    repeating-linear-gradient(transparent 0 1.85rem, var(--paper-line) 1.85rem calc(1.85rem + 1px)),
+    color-mix(in srgb, var(--paper-color) 68%, white) !important;
+  color: #34203b !important;
+  box-shadow: 0 16px 28px #11091c4d, 4px 6px 0 #ffffff30;
+}
+.bre-paper::before {
+  content: "";
+  position: absolute;
+  top: -.5rem;
+  left: 42%;
+  width: 5.5rem;
+  height: 1rem;
+  transform: rotate(-5deg);
+  background: #f1c77eb8;
+  pointer-events: none;
+}
+#content .bre-paper :is(h2,h3,p,dt,dd,label,summary) { color: #34203b !important; }
+#content .bre-paper .inventory-item {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr);
+  align-items: start;
+  gap: .5rem .85rem;
+  background: #ffffff36 !important;
+  border: 0;
+  border-bottom: 1px solid #8b628641;
+  border-radius: .25rem;
+}
+.bre-paper .inventory-item > :is(dl,p,.inventory-actions) { grid-column: 1/-1; }
+.bre-paper .inventory-check { display: grid; justify-items: center; font-size: .75rem; }
+.bre-paper .inventory-check input { color-scheme: light; width: 1.25rem; height: 1.25rem; accent-color: #863966; }
+.bre-paper .inventory-actions { align-items: end; flex-wrap: wrap; }
+#content :is(.bre-paper,.bre-timer,.bre-board) select,
+#content .bre-paper input:not([type=checkbox]) {
+  color: #34203b !important;
+  background: #fffafc !important;
+  color-scheme: light;
+}
+.bre-paper .inventory-actions > label { display: grid; gap: .3rem; }
+.bre-paper input[type=color] { width: 3.5rem; min-height: 2.2rem; padding: .15rem; }
+.bre-list-archive { margin-top: 1.4rem; padding: .75rem 0; border-top: 1px solid var(--paper-line); }
+:is(.bre-list-archive,.bre-timer) summary { cursor: pointer; font-weight: 700; }
+.bre-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.bre-board { margin-bottom: 1rem; }
+.bre-board-grid,.bre-fund-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .85rem; margin-block: .85rem; }
+.bre-quadrant,.bre-fund { padding: 1rem; border-radius: .9rem; min-width: 0; }
+#content :is(.bre-quadrant,.bre-fund) { background: color-mix(in srgb,var(--paper-color,#f3e9ff) 68%,white) !important; color: #34203b !important; }
+#content :is(.bre-quadrant,.bre-fund) :is(h3,p,strong,.link) { color: #34203b !important; overflow-wrap: anywhere; }
+.bre-quadrant[data-quadrant=do] { --paper-color: #a5eacb; }
+.bre-quadrant[data-quadrant=schedule] { --paper-color: #ffd3aa; }
+.bre-quadrant[data-quadrant=delegate] { --paper-color: #bfdaff; }
+.bre-quadrant[data-quadrant=delete] { --paper-color: #ffbfd7; }
+.bre-quadrant[data-quadrant=""] { grid-column: 1/-1; }
+.bre-task { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: .4rem 0; }
+.bre-task button { max-width: 100%; text-align: left; }
+.bre-task input { color-scheme: light; width: 1.15rem; height: 1.15rem; }
+.bre-task select { width: auto; margin: 0; }
+.bre-timer { max-width: 44rem; margin-inline: auto; }
+.bre-clock { display: block; margin: .65rem 0; font-size: clamp(3.5rem,12vw,7rem); line-height: 1.1; font-variant-numeric: tabular-nums; font-weight: 750; }
+.bre-timer :is(select,.bre-controls,details) { margin-block: .6rem; }
+.bre-timer [aria-pressed=true] { outline: 2px solid #ce82b7; outline-offset: 1px; }
+.bre-timer details input { max-width: 8rem; margin-inline: .5rem; }
+.bre-fund progress { display: block; width: 100%; margin-block: .55rem; accent-color: #8c487a; }
+.bre-favorites a { text-decoration: none; overflow-wrap: anywhere; }
+.bre-dialog .bre-controls { margin-block: .45rem; }
+.bre-shared-record { overflow-wrap: anywhere; }
+.bre-shared-record p { white-space: pre-wrap; }
+@media(max-width: 600px) {
+  .bre-board-grid,.bre-fund-grid { grid-template-columns: 1fr; }
+  .bre-paper .inventory-item h3 { overflow-wrap: anywhere; }
+}

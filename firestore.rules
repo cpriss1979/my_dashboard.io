@@ -27,6 +27,38 @@ service cloud.firestore {
       allow list, delete: if owner();
       allow create, update: if owner() && validPreview(request.resource.data);
     }
+    function signedInOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    function verifiedRecipient() {
+      return request.auth != null && request.auth.token.email_verified == true
+        && request.auth.token.email is string;
+    }
+    function shareScope(uid) {
+      let address = request.auth.token.email.lower();
+      return get(/databases/$(database)/documents/dashboardShares/$(uid)/invites/$(address)).data.scope;
+    }
+    match /users/{userId}/dashboard/state {
+      allow get: if verifiedRecipient() && shareScope(userId) == 'all';
+    }
+    match /dashboardShares/{ownerId} {
+      allow get, create: if signedInOwner(ownerId);
+      match /invites/{email} {
+        allow get: if signedInOwner(ownerId)
+          || (verifiedRecipient() && request.auth.token.email.lower() == email);
+        allow list, delete: if signedInOwner(ownerId);
+        allow create, update: if signedInOwner(ownerId)
+          && request.resource.data.keys().hasOnly(['scope'])
+          && request.resource.data.scope in ['calendar', 'finance-calendar', 'all'];
+      }
+      match /views/{section} {
+        allow get: if signedInOwner(ownerId) || (verifiedRecipient() && (
+          (section == 'calendar' && shareScope(ownerId) in ['calendar', 'finance-calendar', 'all'])
+          || (section == 'finance' && shareScope(ownerId) in ['finance-calendar', 'all'])
+        ));
+        allow create, update, delete: if signedInOwner(ownerId) && section in ['calendar', 'finance'];
+      }
+    }
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }

@@ -1,37 +1,47 @@
-LITTLE JOYS + STICKY NOTE STYLES
+MY DASHBOARD — BRE'S PLANNER UPDATE
 
-This update uses the current main branch of cpriss1979/my_dashboard.io.
-Open the ZIP and replace these five files at the root of that repository:
+GitHub Pages files
+1. Open cpriss1979/my_dashboard.io on GitHub and use the branch that
+   publishes your dashboard.
+2. Choose Add file > Upload files. Select the .html, .js, and .css files
+   from this ZIP, keeping them in the repository root. Commit the upload.
+   These are complete replacement files. Leave the other repo files in place.
+3. When GitHub Pages finishes building, reopen My Dashboard and refresh.
 
-  index.html
-  time-for-you.js
-  navigation-sparkles.js
-  sticky-notes.js
-  sticky-notes.css
+Find the new features
+- Tasks has the four-quadrant priority board. Use the dropdown on a task
+  to move it. The checkbox completes the task in your existing Tasks list.
+- Open Focus timer from the sidebar or More on a phone. Start with 25
+  minutes of focus, a 5-minute break, or a 15-minute long break. You can
+  change those durations under Timer settings.
+- Open Quick links in the sidebar or More. Add a label, website URL, and
+  an optional emoji, then choose Pin link.
+- Under Finances > Savings, choose Add fund. Funds assign money you
+  already have in a savings account. Release returns the assigned amount
+  to the account's unassigned total. Older savings goals keep their names
+  and targets. Enter an amount to set aside if you want to fund them.
+- The Shopping and Wish lists have independent paper colors. Set a list
+  emoji by the color picker or an item emoji in its editor. Check a finished
+  item to move it to the archive. Open the archive to restore or delete it.
+- Add an Emoji sticker in the Journal or Calendar entry editor.
 
-In GitHub, open the repository's Code page, choose Add file > Upload files,
-and drag the five individual files into the upload area. Commit them together.
-Keep the existing assets and other dashboard files in place.
-After GitHub Pages updates, reload the dashboard.
+Enable sharing in Firebase
+1. Open Firebase Console > Firestore Database > Rules for the
+   my-dashboard-95981 project. Keep a copy of the current published rules.
+2. If the live rules match the rules from your repository, paste the
+   complete included firestore.rules and choose Publish. If your live
+   rules contain extra sections you added, retain those sections and add
+   the new signedInOwner, verifiedRecipient and shareScope functions and
+   the two new sharing match blocks. Keep your existing user and widget
+   rules. Sharing needs the published rules in addition to the GitHub files.
+3. Sign in, let your dashboard finish syncing, then open Sharing. Enter
+   the guest's sign-in email and select Calendar only, Finances + Calendar,
+   or Whole dashboard. Save the invitation and send them the copied link.
+4. The guest opens the link and signs in with that verified email. They
+   get a view-only dashboard. You can change their scope or revoke the
+   invitation from Sharing. Whole dashboard access includes journal entries
+   and drafts. Calendar-only access cannot read your finance records.
 
-COPY/PASTE MAP
-The complete replacement files are included. For a manual merge, open
-index.html and find <style id="time-for-you-style">. Replace that entire
-style block using the supplied index.html. Also copy the supplied script
-and stylesheet tags for time-for-you, navigation-sparkles, and sticky-notes,
-including their new version values. Replace the contents of the four
-matching .js and .css files with the complete files in this ZIP.
-The Little Joys page markup is built inside time-for-you.js.
-
-USING THE UPDATE
-Open Personal Time > Little Joys. Start with Surprise me, or use the filters
-above Browse ideas. Use a heart to favorite an idea. To restore a paused idea,
-choose Paused ideas under Collection. Choose an activity to get started, then
-use I did this if you want to record it. Mood check-ins are optional.
-
-Open Sticky notes, then choose New note or Edit. Change Color, Shape, and
-Design and use the live preview. Changes autosave on existing notes or once
-a new note has text. Each note keeps its own look. On your phone, open the
-Sticky notes tray to view or edit your notes.
-
-The existing time-for-you route and dashboard data keys are used by this update.
+Setup order
+You can use the planner features as soon as GitHub Pages publishes the
+files. Enable the Firestore rules when you are ready to use invitations.

@@ -70,7 +70,7 @@
     return roots.flatMap(root => {
       const nodes = [root,...root.querySelectorAll(containerSelector+','+textSelector)];
       const counts = new Map();
-      return nodes.filter(node=>!node.closest('.priss-page-tools,.priss-settings-tabs')).map(node=>{
+      return nodes.filter(node=>!node.matches('.bre-paper')&&!node.closest('.priss-page-tools,.priss-settings-tabs')).map(node=>{
         const container = node===root||node.matches(containerSelector);
         const ownHeading = container ? node.querySelector('h1,h2,h3,h4,summary')?.textContent : node.textContent;
         const label = (node.getAttribute('aria-label')||ownHeading||node.name||node.placeholder||node.tagName).trim().replace(/\s+/g,' ').slice(0,85);

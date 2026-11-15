@@ -21,7 +21,22 @@
   let json;try{json=core.encode(bridge.snapshot())}catch(e){status(e.message);return}
   busy=true;status('Saving to your account…');
   try{
-   const result=await firebase.runTransaction(db,async tx=>{const snap=await tx.get(ownRef),current=snap.exists()?snap.data():null;const record=core.nextRecord(current,expected,json,writer);tx.set(ownRef,{...record,updatedAt:firebase.serverTimestamp()});return record.revision});
+   const sharing=window.DashboardSharing;
+   const ownerId=user.uid;
+   const transact=withSharing=>firebase.runTransaction(db,async tx=>{
+    const snap=await tx.get(ownRef),current=snap.exists()?snap.data():null;
+    const record=core.nextRecord(current,expected,json,writer);
+    if(withSharing)await sharing.stageSync(tx,ownerId,JSON.parse(json).state,record.revision);
+    tx.set(ownRef,{...record,updatedAt:firebase.serverTimestamp()});
+    return record.revision;
+   });
+   let result;
+   try{result=await transact(Boolean(sharing))}
+   catch(error){
+    // Existing deployments can continue private sync before the sharing rules are published.
+    if(error.message!=='SHARING_RULES_MISSING'||!sharing||ownEpoch!==epoch)throw error;
+    result=await transact(false);
+   }
    if(ownEpoch!==epoch)return;widgets?.publish(user.uid,JSON.parse(json).state);revision=result;retryAt=0;dirty=seq!==ownSeq;remember();status(dirty?'More changes waiting to sync…':'Saved to your account · synced');
   }catch(error){if(ownEpoch!==epoch)return;if(error.message==='SYNC_CONFLICT'){conflict=true;status('Another device changed this dashboard. Export your local backup, then use Load latest. Your edits are kept locally.')}else{retryAt=Date.now()+30000;status(errorText(error))}remember()}
   finally{if(ownEpoch===epoch){busy=false;if(dirty&&!conflict)queue()}}
@@ -104,6 +119,6 @@
  setInterval(()=>{if(user&&ready){if(dirty&&!busy&&!conflict)push();else if(deferred&&!busy&&!editing()){if(deferred.revision>revision){try{applyCloud(deferred);status('Updated from your other device')}catch(e){status(errorText(e))}}else deferred=null}}},15000);
  try{
   const version='13.0.0',base='https://www.gstatic.com/firebasejs/'+version+'/';
-  const [app,authSDK,storeSDK]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js'),import(base+'firebase-firestore.js')]);firebase={...app,...authSDK,...storeSDK};const instance=firebase.initializeApp(config);auth=firebase.getAuth(instance);db=firebase.getFirestore(instance);if(document.readyState==='loading')await new Promise(resolve=>document.addEventListener('DOMContentLoaded',resolve,{once:true}));widgets=window.DashboardWidgetConnection?.attach({firebase,db,auth,projectId:config.projectId});await firebase.setPersistence(auth,firebase.browserLocalPersistence);el('fbSignIn').disabled=false;el('fbGateSignIn').disabled=false;firebase.onAuthStateChanged(auth,current=>loadAccount(current));
+  const [app,authSDK,storeSDK]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js'),import(base+'firebase-firestore.js')]);firebase={...app,...authSDK,...storeSDK};const instance=firebase.initializeApp(config);auth=firebase.getAuth(instance);db=firebase.getFirestore(instance);if(document.readyState==='loading')await new Promise(resolve=>document.addEventListener('DOMContentLoaded',resolve,{once:true}));window.DashboardSharing?.connect(firebase,db,auth);widgets=window.DashboardWidgetConnection?.attach({firebase,db,auth,projectId:config.projectId});await firebase.setPersistence(auth,firebase.browserLocalPersistence);el('fbSignIn').disabled=false;el('fbGateSignIn').disabled=false;firebase.onAuthStateChanged(auth,current=>loadAccount(current));
  }catch(error){gateMessage('Sign-in could not start: '+errorText(error)+' You can still use local-only storage.');status('Google connection unavailable · local-only option remains available')}
 })();
