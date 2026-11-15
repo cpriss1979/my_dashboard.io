@@ -719,10 +719,25 @@ function changeMonth(value){
  }
 }
 function monthPicker(){
- const month=input('billMonth','month',billMonth);
- month.min='1900-01';month.max='2199-12';
- month.onchange=()=>changeMonth(month.value);
- return field('Bill month',month);
+ const [year,currentMonth]=billMonth.split('-');
+ const months=Array.from({length:12},(_,index)=>{
+  const number=String(index+1).padStart(2,'0');
+  return [number,monthName(year+'-'+number)];
+ });
+ const years=Array.from({length:300},(_,index)=>{
+  const value=String(1900+index);
+  return [value,value];
+ });
+ const month=select('billMonth',months,currentMonth);
+ const yearSelect=select('billYear',years,year);
+ function pick(event){
+  const name=event.currentTarget.name;
+  changeMonth(yearSelect.value+'-'+month.value);
+  document.querySelector('#content select[name="'+name+'"]')?.focus({preventScroll:true});
+ }
+ month.onchange=pick;
+ yearSelect.onchange=pick;
+ return row(field('Bill month',month),field('Bill year',yearSelect));
 }
 function billsForMonth(){
  return C.events(m,T.monthEnd(billMonth),{byDue:true}).filter(item=>item.kind==='bill'&&matchesOwner(item.account));
@@ -925,15 +940,33 @@ function timeline(root,report){
  }
  root.append(p);
 }
+function archiveMonth(rule){
+ const date=rule.archivedOn||rule.start||'';
+ const month=date.slice(0,7);
+ return /^\d{4}-(0[1-9]|1[0-2])$/.test(month)?month:'';
+}
 function archive(root){
  const panel=card('Archive');
  const rules=m.bills.filter(rule=>rule.archived&&!rule.deleted&&matchesOwner(rule.account));
- panel.append(compactList('Archived bill schedules',rules.map(rule=>{
-  const item=compactRow(rule.name,rule.amount,[name(rule.account),frequencies[rule.frequency],rule.archivedOn?'Archived '+dateLabel(rule.archivedOn):'Archived'],
-   [b('Restore',()=>toggleArchive(rule))],rule.account);
-  item.classList.add('cf-archived-row');
-  return item;
- })));
+ panel.append(e('p','Archived bill schedules · '+rules.length));
+ if(!rules.length){panel.append(e('p','No archived bill schedules.'));root.append(panel);return}
+ const months=new Map();
+ for(const rule of rules){
+  const month=archiveMonth(rule);
+  if(!months.has(month))months.set(month,[]);
+  months.get(month).push(rule);
+ }
+ for(const [month,items] of [...months].sort(([a],[b])=>b.localeCompare(a))){
+  const cards=items.map(rule=>{
+   const item=compactRow(rule.name,rule.amount,[name(rule.account),frequencies[rule.frequency],rule.archivedOn?'Archived '+dateLabel(rule.archivedOn):'Archived'],
+    [b('Restore',()=>toggleArchive(rule)),b('Delete schedule',()=>{
+     if(confirm('Delete the archived schedule for '+rule.name+'? Recorded payments will stay in your history. You can undo this in Activity.'))removeRule(rule);
+    },'link')],rule.account);
+   item.classList.add('cf-archived-row');
+   return item;
+  });
+  panel.append(compactList(month?monthName(month,true):'Undated schedules',cards,false));
+ }
  root.append(panel);
 }
 function showSafetyCopy(){if(backupOwner!==state||!backupText){alert('No safety copy is available yet. Export a dashboard backup first.');return}const d=e('dialog',undefined,'cf-dialog'),area=note('backup',backupText),message=e('p');area.readOnly=true;d.append(e('h2','Pre-update safety copy'),e('p','Save this JSON file to use with the existing dashboard Restore backup control. Restoring replaces the dashboard data; export your current copy first.'),area,row(b('Download',()=>{const url=URL.createObjectURL(new Blob([backupText],{type:'application/json'})),a=e('a');a.href=url;a.download='dashboard-before-pastel-'+today()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}),b('Copy',async()=>{try{await navigator.clipboard.writeText(backupText);message.textContent='Copied.'}catch{area.focus();area.select();message.textContent='Selected. Use your device’s Copy command.'}}),b('Select all',()=>{area.focus();area.select()}),b('Close',()=>d.close())),message);document.body.append(d);d.addEventListener('close',()=>d.remove(),{once:true});d.showModal()}
