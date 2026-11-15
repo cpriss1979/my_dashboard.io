@@ -274,12 +274,6 @@
     clearInterval(stopRefresh);
     if(custom)page='Quick notes';
     try{previous()}finally{if(custom)page='Sharing'}
-    const nav=document.querySelector('aside nav');
-    nav.querySelector('[data-dashboard-sharing]')?.remove();
-    const link=button('👥 Sharing',()=>go('Sharing'));
-    link.className='app-nav-link'+(custom?' active':'');
-    link.dataset.dashboardSharing='';
-    nav.append(link);
     if(!custom)return;
     for(const id of ['title','appPageTitle','mobileCurrentPage']){
       const title=document.getElementById(id);
@@ -288,7 +282,6 @@
     document.querySelectorAll('[data-page="Quick notes"]').forEach(note=>{
       note.classList.remove('active');note.removeAttribute('aria-current');
     });
-    link.setAttribute('aria-current','page');
     root().replaceChildren();
     const account=auth?.currentUser;
     if(!account){root().append(panel('Sign in to share or open an invite'));return}

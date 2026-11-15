@@ -1,28 +1,29 @@
-NOTEBOOK, SIDEBAR & COLLECTION PHOTOS
+MY DASHBOARD — SIDEBAR ORGANIZATION
 
-If the Daily Chores update is already installed, upload only these seven
-files to the root of your GitHub Pages repository:
+If the Notebook and Collection Photos update is already installed, upload
+these six files to the dashboard GitHub repository root:
 
   index.html
   navigation-sparkles.js
-  bre-planner.js
+  navigation-sparkles.css
   household.js
-  dashboard-lists.js
-  notes-studio.js
-  notes-studio.css
+  bre-planner.js
+  dashboard-sharing.js
 
-This ZIP also contains the earlier dashboard update files. If you have
-not installed the earlier updates, follow the combined instructions below.
+After GitHub Pages publishes, refresh My Dashboard. Home sits directly
+below the profile. Planner, Household, Money, Personal, and Links fold
+away on Home, and the current page's category opens when you visit it.
 
-In Notes, select New note or a colored template. Click a saved note to
-edit it. Use Pin and the Pinned filter to keep key notes handy. Notes and
-Home share the Quick capture scratchpad.
+Settings > Navigation lets you rename categories, hide pages, or pin up
+to three pages below Home. Open Sharing directly from Settings. Manage
+Quick Links from Links or Bookmarks. On phones, use More to see the
+grouped menu. This update needs no new Firebase rules.
 
-In Collections, choose Add collectible or Edit, then Upload item photos.
-Save up to three photos per item. The first photo is the gallery cover.
-Click the photo count on an item to see its uploaded photos.
+The ZIP also includes the earlier update files for a combined upload.
+If you need those, follow the combined upload instructions below.
 
-MY DASHBOARD — CHORES AND BRE'S UPDATES
+
+MY DASHBOARD — COMBINED INSTALL
 
 1. Unzip this package.
 2. In the GitHub repository cpriss1979/my_dashboard.io, upload the HTML,

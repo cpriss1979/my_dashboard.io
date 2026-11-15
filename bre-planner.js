@@ -159,29 +159,20 @@
   }
   setInterval(tick,250);
 
-  function favorites() {
-    const nav = document.querySelector('aside nav');
-    const detail = node('details', undefined, 'app-nav-group bre-favorites');
-    detail.open = state.favoriteLinksOpen !== false;
-    detail.ontoggle=()=>{
-      if(detail.open===(state.favoriteLinksOpen!==false))return;
-      state.favoriteLinksOpen=detail.open;
-      save();
-    };
-    detail.append(node('summary', 'Quick links'));
-    const pinned = state.favoriteLinks || [];
-    for (const pin of pinned) {
-      const url = website(pin.url);
-      if (!url) continue;
-      const link = node('a', pin.label, 'app-nav-link');
+  function quickLinkRows(){
+    const rows=[];
+    for(const pin of state.favoriteLinks||[]){
+      const url=website(pin.url);
+      if(!url)continue;
+      const link=node('a',pin.label,'app-nav-link sidebar-quick-link');
       window.DashboardNavIcon?.(link,pin.label,'link');
       link.href=url;link.target='_blank';link.rel='noopener noreferrer';
-      detail.append(link);
+      rows.push(link);
     }
     const manage=button('Manage quick links',manageLinks,'app-nav-link');
     window.DashboardNavIcon?.(manage,'Manage quick links','link');
-    detail.append(manage);
-    nav.append(detail);
+    rows.push(manage);
+    return rows;
   }
   function website(value){
     try{
@@ -245,7 +236,7 @@
     document.body.append(dialog);dialog.showModal();
   }
 
-  window.DashboardQuickLinks={open:manageLinks};
+  window.DashboardQuickLinks={open:manageLinks,rows:quickLinkRows};
   const priorRender=render;
   render=function(){
     const custom=page==='Focus timer';
@@ -263,16 +254,6 @@
       content.replaceChildren();timerPanel();tick();
     }
     if(page==='Daily priorities')board();
-    const nav=document.querySelector('aside nav');
-    nav.querySelector('.bre-favorites')?.remove();
-    nav.querySelector('[data-bre-focus]')?.remove();
-    const focus=button('Focus timer',()=>go('Focus timer'),'app-nav-link');
-    window.DashboardNavIcon?.(focus,'Focus timer','timer');
-    focus.dataset.breFocus='';
-    if(custom){focus.classList.add('active');focus.setAttribute('aria-current','page')}
-    const tasks=nav.querySelector('[data-page="Daily priorities"]');
-    if(tasks)tasks.after(focus);else nav.append(focus);
-    favorites();
     if(page==='Daily priorities')content.querySelector('.bre-board h2')?.after(button('🍅 Focus timer',()=>go('Focus timer')));
   };
   render();

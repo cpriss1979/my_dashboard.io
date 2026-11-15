@@ -4407,7 +4407,25 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
  function headingAction(s,label,fn){s.firstElementChild.append(button(label,fn,'link'))}
  function navTo(target){go(target);window.scrollTo(0,0)}
  function dialog(id,title){$(id)?.remove();const d=document.createElement('dialog');d.id=id;d.className='app-action-dialog';const h=document.createElement('div');h.className='app-dialog-heading';const t=document.createElement('h2');t.textContent=title;h.append(t,button('Close',()=>d.close()));d.append(h,document.createElement('div'));d.onclose=()=>d.remove();document.body.append(d);return d}
- function more(){const d=dialog('glowMore','More');d.lastElementChild.className='glow-more-menu';for(const [label,target] of [['Notes','Quick notes'],['Projects','Projects'],['Bookmarks','Bookmarks'],['Amortization','Amortization'],['Collections','Collections'],['Shopping List','Shopping List'],['Wish List','Wish List'],['Chores','Chores'],['Focus timer','Focus timer'],['Sharing','Sharing'],['Journal','Journal'],['Bible','Bible'],['Habit Tracker','Habit Tracker'],['Time for You','Time for You'],['Badges','Badges'],['Games','Games']])if(!window.DashboardNavigation?.isHidden(target))d.lastElementChild.append(button(label,()=>{d.close();navTo(target)}));if(!window.DashboardNavigation?.isHidden('Quick links'))d.lastElementChild.append(button('Quick links',()=>{d.close();window.DashboardQuickLinks?.open()}));d.lastElementChild.append(button('Settings',()=>{d.close();window.DashboardMobileUI.openSettings()}));d.showModal()}
+ function more(){
+  const d=dialog('glowMore','More'), menu=d.lastElementChild;
+  menu.className='glow-more-menu grouped-mobile-menu';
+  for(const [group,links] of window.DashboardSidebar?.groups||[]){
+   const section=document.createElement('section');
+   const heading=document.createElement('h3');heading.textContent=window.DashboardSidebar.groupLabel(group);
+   const items=document.createElement('div');
+   for(const [target,label] of links){
+    if(window.DashboardNavigation?.isHidden(target)||['Calendar','Daily priorities','Finances'].includes(target))continue;
+    items.append(button(label,()=>{d.close();navTo(target)}));
+   }
+   if(group==='Links'&&!window.DashboardNavigation?.isHidden('Quick links'))
+    items.append(button('Quick links',()=>{d.close();window.DashboardQuickLinks?.open()}));
+   if(items.children.length){section.append(heading,items);menu.append(section)}
+  }
+  menu.append(button('Settings',()=>{d.close();window.DashboardMobileUI.openSettings()}));
+  d.showModal();
+ }
+
  function shell(){
   document.body.classList.remove('phone-is-home');$('phoneHomePages')?.remove();
   document.body.dataset.glowPage=page;
@@ -4469,6 +4487,7 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
  function bookmarks(){
   const panelNode=panel('Bookmarks','bookmarks');
   headingAction(panelNode,'＋ Add bookmark',()=>openAdd('bookmarks'));
+  if(window.DashboardQuickLinks)headingAction(panelNode,'Manage quick links',()=>window.DashboardQuickLinks.open());
   const label=document.createElement('label');label.textContent='Find a bookmark';
   const search=document.createElement('input');search.type='search';search.value=bookmarkQuery;search.placeholder='Search titles or websites';
   label.append(search);
@@ -4948,8 +4967,8 @@ dialog.tfy-dialog.app-action-dialog {
 }
 </style>
 <script src="./time-for-you.js?v=compact-ideas"></script>
-<link rel="stylesheet" href="./navigation-sparkles.css?v=midnight-home-1">
-<script src="./navigation-sparkles.js?v=outline-icons"></script>
+<link rel="stylesheet" href="./navigation-sparkles.css?v=sidebar-groups">
+<script src="./navigation-sparkles.js?v=sidebar-groups"></script>
 <link rel="stylesheet" href="./peaceful-polish.css?v=20261104">
 <script src="./welcome-verse.js?noPopups=1&v=20261104"></script>
 <link rel="stylesheet" href="./chess-themes.css?v=20261104">
@@ -4986,10 +5005,10 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./dashboard-personalize.js?v=home-widgets"></script>
 <link rel="stylesheet" href="./bre-planner.css?v=2">
 <link rel="stylesheet" href="./dashboard-lists.css?v=stationery-2">
-<script src="./bre-planner.js?v=outline-icons"></script>
-<script src="./dashboard-sharing.js?v=1"></script>
+<script src="./bre-planner.js?v=sidebar-groups"></script>
+<script src="./dashboard-sharing.js?v=sidebar-groups"></script>
 <link rel="stylesheet" href="./household.css?v=1">
-<script src="./household.js?v=outline-icons"></script>
+<script src="./household.js?v=sidebar-groups"></script>
 <link rel="stylesheet" href="./notes-studio.css?v=1">
 <script src="./notes-studio.js?v=1"></script>
 <script>render()</script>

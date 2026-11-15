@@ -88,15 +88,16 @@
     const dialog=el('dialog',undefined,'priss-options-dialog household-settings');
     const form=el('form');
     const fields=el('div',undefined,'household-settings-grid');
+    const owner=state;
     const hidden=state.sidebarPreferences?.hidden||[];
     const renamed=state.sidebarPreferences?.groups||{};
     const inputs=[];
     for(const group of nav().querySelectorAll('.app-nav-group[data-household-group]')){
       const key=group.dataset.householdGroup;
       const block=el('fieldset');block.append(el('legend',key));
-      const title=el('input');title.value=renamed[key]||key;title.maxLength=40;title.required=true;
+      const title=el('input');title.value=renamed[key]||window.DashboardSidebar.groupLabel(key);title.maxLength=40;title.required=true;
       block.append(label('Group name',title));inputs.push([key,title]);
-      if(group.classList.contains('bre-favorites')){
+      if(key==='Links'){
         const check=el('input');check.type='checkbox';check.checked=!hidden.includes('Quick links');
         const row=label('Show Quick links',check);row.className='household-toggle';row.prepend(check);block.append(row);
         inputs.push(['Quick links',check]);
@@ -110,12 +111,26 @@
       }
       fields.append(block);
     }
+    const pinned=el('fieldset');
+    pinned.append(el('legend','Pin up to three pages below Home'));
+    const pins=[];
+    for(const [key,name] of window.DashboardSidebar.groups.flatMap(([,links])=>links)){
+      const check=el('input');check.type='checkbox';check.checked=(state.sidebarPreferences?.pins||[]).includes(key);
+      const row=label(name,check);row.prepend(check);row.className='household-toggle';pinned.append(row);
+      pins.push([key,check]);
+    }
+    const status=el('p');status.setAttribute('role','alert');
     const submit=el('button','Save navigation','primary');submit.type='submit';
-    form.append(fields,submit,button('Cancel',()=>dialog.close()));
+    form.append(fields,pinned,status,submit,button('Cancel',()=>dialog.close()));
     dialog.append(el('h2','Sidebar & navigation'),form);
     form.onsubmit=event=>{
       event.preventDefault();
+      if(state!==owner){dialog.close();return}
+      const selected=pins.filter(([,field])=>field.checked).map(([key])=>key);
+      if(selected.length>3){status.textContent='Choose up to three pages to pin.';return}
       state.sidebarPreferences={
+        ...state.sidebarPreferences,
+        pins:selected,
         hidden:inputs.filter(([,field])=>field.type==='checkbox'&&!field.checked).map(([key])=>key),
         groups:Object.fromEntries(inputs.filter(([,field])=>field.type==='text').map(([key,field])=>[key,field.value.trim()||key]))
       };
@@ -133,35 +148,10 @@
     const settings=document.getElementById('appSettings');
     if(settings&&!settings.querySelector('.nav-customize')){
       const actions=el('div',undefined,'household-actions nav-customize');
-      actions.append(button('Edit profile',()=>{settings.close();window.DashboardProfile.open()}));
+      actions.append(button('Edit profile',()=>{settings.close();window.DashboardProfile.open()}),button('Sharing',()=>{settings.close();go('Sharing')}));
       settings.querySelector('.app-dialog-heading')?.after(actions);
     }
-    const sidebar=nav();
-    sidebar.querySelector('[data-household-chores]')?.remove();
-    const item=button('Chores',()=>{go('Chores');window.scrollTo(0,0)},'app-nav-link');
-    window.DashboardNavIcon?.(item,'Chores','chores');
-    item.dataset.householdChores='';item.dataset.page='Chores';
-    if(page==='Chores'){item.classList.add('active');item.setAttribute('aria-current','page')}
-    const projects=sidebar.querySelector('[data-page="Projects"]');
-    if(projects)projects.before(item);else sidebar.append(item);
-    const focus=sidebar.querySelector('[data-bre-focus]');
-    if(focus)focus.dataset.page='Focus timer';
-    const share=sidebar.querySelector('[data-dashboard-sharing]');
-    if(share){
-      window.DashboardNavIcon?.(share,'Sharing','sharing');
-      share.dataset.page='Sharing';
-      const keep=sidebar.querySelector('[data-page="Finances"]')?.parentElement;
-      if(keep)keep.append(share);
-    }
-    for(const group of sidebar.querySelectorAll('.app-nav-group')){
-      const heading=group.querySelector('summary');
-      const key=group.dataset.householdGroup||heading.textContent;
-      group.dataset.householdGroup=key;
-      heading.textContent=state.sidebarPreferences?.groups?.[key]||key;
-      const links=[...group.querySelectorAll('[data-page]')];
-      for(const link of links)hide(link,window.DashboardNavigation.isHidden(link.dataset.page));
-      hide(group,(group.classList.contains('bre-favorites')&&window.DashboardNavigation.isHidden('Quick links'))||(links.length>0&&links.every(link=>link.hidden)));
-    }
+    window.DashboardSidebar.organize();
     for(const link of document.querySelectorAll('[data-mobile-route]'))hide(link,window.DashboardNavigation.isHidden(link.dataset.mobileRoute));
   }
   const beforeFields=fieldsFor;

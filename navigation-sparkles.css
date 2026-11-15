@@ -4,9 +4,9 @@ body.glow-redesign>aside nav .app-nav-group>summary{display:flex;align-items:cen
 body.glow-redesign>aside nav .app-nav-group>summary::-webkit-details-marker{display:none}
 body.glow-redesign>aside nav .app-nav-group>summary:after{content:'⌄';font-size:16px;transform:rotate(-90deg)}
 body.glow-redesign>aside nav .app-nav-group[open]>summary:after{transform:none}
-body.glow-redesign>aside nav button.app-nav-link{display:flex!important;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 14px!important;margin:3px 0!important;background:transparent!important;border:1px solid transparent!important;border-radius:10px!important;box-shadow:none!important;color:#c7c9dc!important;font:inherit;font-size:15px!important;text-align:left;font-weight:500!important}
-body.glow-redesign>aside nav button.app-nav-link:hover{background:#ffffff0c!important;color:#fff!important}
-body.glow-redesign>aside nav button.app-nav-link.active{background:linear-gradient(105deg,var(--theme-active-start,var(--theme-accent,#763caa)),var(--theme-active-end,var(--theme-accent-end,#2b6097)))!important;color:#fff!important;border-color:#8299d044!important;font-weight:650!important}
+body.glow-redesign>aside nav :is(button,a).app-nav-link{display:flex!important;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 14px!important;margin:3px 0!important;background:transparent!important;border:1px solid transparent!important;border-radius:10px!important;box-shadow:none!important;color:#c7c9dc!important;font:inherit;font-size:15px!important;text-align:left;font-weight:500!important}
+body.glow-redesign>aside nav :is(button,a).app-nav-link:hover{background:#ffffff0c!important;color:#fff!important}
+body.glow-redesign>aside nav :is(button,a).app-nav-link.active{background:linear-gradient(105deg,var(--theme-active-start,var(--theme-accent,#763caa)),var(--theme-active-end,var(--theme-accent-end,#2b6097)))!important;color:#fff!important;border-color:#8299d044!important;font-weight:650!important}
 body.glow-redesign>aside nav .app-nav-icon{display:flex!important;align-items:center;justify-content:center;flex:0 0 22px;width:22px!important;height:22px!important;font-size:22px!important}
 body.glow-redesign>aside nav .app-nav-icon svg{width:22px;height:22px}
 body.glow-redesign>aside nav .app-nav-label{flex:1;min-width:0;font-size:inherit!important}
@@ -16,3 +16,12 @@ body.glow-redesign>aside nav :is(button,summary):focus-visible{outline:2px solid
 .tfy-little-sparkle{position:absolute;display:block;color:var(--tfy-star-color);font-size:var(--tfy-star-size);font-style:normal;line-height:1;text-shadow:0 0 4px currentColor;animation:tfySmallTwinkle 5s ease-in-out infinite;pointer-events:none}
 @keyframes tfySmallTwinkle{0%,100%{opacity:0;transform:translateY(6px) scale(.6)}40%,60%{opacity:.85;transform:translateY(-6px) scale(1)}}
 @media(prefers-reduced-motion:reduce){.tfy-little-sparkle{animation:none!important;opacity:.35;text-shadow:none}}
+
+body.glow-redesign>aside nav :is(button,a).app-nav-link {text-decoration:none;box-sizing:border-box;min-width:0;}
+body.glow-redesign>aside nav a.sidebar-quick-link .app-nav-label {white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+body.glow-redesign>aside nav .app-nav-group[hidden] {display:none!important;}
+body.glow-redesign>aside nav [data-pinned-page] {min-height:42px!important;}
+.grouped-mobile-menu {display:grid!important;grid-template-columns:1fr!important;gap:.7rem;}
+.grouped-mobile-menu section > div {display:flex;flex-wrap:wrap;gap:.35rem;}
+.grouped-mobile-menu h3 {margin:.25rem 0;}
+.household-settings form > fieldset {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr));gap:.35rem;margin-bottom:.6rem;}
