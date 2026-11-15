@@ -272,8 +272,41 @@ function plannedPurchases(root){
 }
 function editEvent(o){if(o.kind==='transfer')transferForm(m.transfers.find(t=>t.id===o.id));else if(['money-in','money-out'].includes(o.kind)){const entry=m.ledger.find(t=>t.id===o.id);if(entry?.afterDepositId)plannedPurchaseForm(entry);else moneyForm(o.direction,entry);}else occurrenceForm(o)}
 function historyDate(item){return item.kind==='bill'?(item.paymentDate||item.posted||item.date):item.date}
-function history(root,savingsOnly=false){if(!savingsOnly)plannedPurchases(root);const p=card(savingsOnly?'Savings activity':'Activity'),ids=new Set(m.accounts.filter(a=>!savingsOnly||a.type==='savings').map(a=>a.id));
- const historyEnd=[C.add(today(),90),...m.transfers.filter(t=>!t.deleted).map(t=>t.date)].sort().at(-1);if(!savingsOnly){
+function transactionTouchesAccount(item,id){
+ return item.kind==='transfer'?item.from===id||item.to===id:item.account===id;
+}
+function historyEnd(){
+ return [C.add(today(),90),...m.transfers.filter(t=>!t.deleted).map(t=>t.date)].sort().at(-1);
+}
+function newestFirst(a,b){
+ return historyDate(b).localeCompare(historyDate(a))||a.id.localeCompare(b.id);
+}
+function savingsActivity(account,events){
+ const rows=events.filter(item=>transactionTouchesAccount(item,account.id));
+ const details=e('details',undefined,'cf-group');
+ const key='Savings activity|'+account.id;
+ details.open=folded.get(key)||false;
+ details.addEventListener('toggle',()=>folded.set(key,details.open));
+ details.append(e('summary','Savings activity · '+rows.length));
+ if(!rows.length)details.append(e('p','No activity for this account yet.'));
+ for(const item of rows.slice(0,historyLimit)){
+  const route=item.kind==='transfer'?name(item.from)+' → '+name(item.to):name(item.account);
+  details.append(tile(item.name,item.amount,[dateLabel(historyDate(item)),route,item.notes],
+   [badge(item.status),b('Edit',()=>editEvent(item)),b('Delete',()=>deleteEvent(item),'link')],account.id));
+ }
+ if(rows.length>historyLimit)details.append(b('Show more transactions',()=>{
+  historyLimit+=24;
+  render();
+  const current=document.getElementById(details.id);
+  if(current){current.open=true;current.querySelector('summary')?.focus()}
+ }));
+ details.id='cf-savings-activity-'+account.id;
+ return details;
+}
+function history(root){
+ plannedPurchases(root);
+ const p=card('Activity'),ids=new Set(m.accounts.map(a=>a.id));
+ {
   const controls=row(searchField('Search transactions',historyFilters.search,v=>{historyFilters.search=v;historyLimit=24}));
   for(const key of ['from','to']){
    const date=input(key,'date',historyFilters[key],false);
@@ -290,18 +323,32 @@ function history(root,savingsOnly=false){if(!savingsOnly)plannedPurchases(root);
   }
   p.append(controls);
  }
- const visible=item=>savingsOnly||matchesTransaction(item)&&
+ const visible=item=>matchesTransaction(item)&&
   (!historyFilters.from||historyDate(item)>=historyFilters.from)&&(!historyFilters.to||historyDate(item)<=historyFilters.to)&&
   (!historyFilters.type||(historyFilters.type==='deposit'?['income','money-in'].includes(item.kind):item.kind===historyFilters.type))&&(!historyFilters.status||item.status===historyFilters.status)&&
   [item.name,item.notes,name(item.account),name(item.from),name(item.to)].join(' ').toLowerCase().includes(historyFilters.search);
- const rows=C.events(m,historyEnd).filter(visible).filter(o=>(o.status!=='planned'||o.kind==='transfer')&&(o.kind==='transfer'?(ids.has(o.from)||ids.has(o.to)):ids.has(o.account))).sort((a,b)=>historyDate(b).localeCompare(historyDate(a))||a.id.localeCompare(b.id));
- p.append(e('p',rows.length+' transactions · newest first'));p.append((savingsOnly?group:compactList)('Transactions & planned moves',rows.slice(0,historyLimit).map(o=>(savingsOnly?tile:compactRow)(o.name,o.amount,[dateLabel(historyDate(o)),o.kind==='transfer'?name(o.from)+' → '+name(o.to):name(o.account),savingsOnly?o.notes:o.kind==='bill'?statusLabel(o):o.status], [badge(o.kind==='bill'?statusLabel(o):o.status),b('Edit',()=>editEvent(o)),...(o.kind==='bill'&&o.status==='pending'?[b('Mark Cleared',()=>payment(o,true))]:[]),b('Delete',()=>deleteEvent(o),'link')],o.account||o.from,[o.notes])),true));if(rows.length>historyLimit)p.append(b('Show more transactions',()=>{historyLimit+=24;render()}));root.append(p);
- if(!savingsOnly){const audit=card('Corrections & undo');audit.append(e('p','Saved changes cover all accounts. Undo restores the dashboard entry. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].reverse();audit.append(group('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.undone?'Undone':'Saved'),...(!x.undone?[b('Undo',()=>undoChange(x))]:[]));const details=e('details');details.append(e('summary','Original / new values'));for(const op of x.changes)details.append(e('p',op.key+' · '+(op.after?.name||op.before?.name||op.id)+'\nBefore: '+JSON.stringify(op.before)+'\nAfter: '+JSON.stringify(op.after)));n.append(details);return n}),false));root.append(audit)}
+ const rows=C.events(m,historyEnd()).filter(visible).filter(o=>(o.status!=='planned'||o.kind==='transfer')&&(o.kind==='transfer'?(ids.has(o.from)||ids.has(o.to)):ids.has(o.account))).sort(newestFirst);
+ p.append(e('p',rows.length+' transactions · newest first'));p.append(compactList('Transactions & planned moves',rows.slice(0,historyLimit).map(o=>compactRow(o.name,o.amount,[dateLabel(historyDate(o)),o.kind==='transfer'?name(o.from)+' → '+name(o.to):name(o.account),o.kind==='bill'?statusLabel(o):o.status], [badge(o.kind==='bill'?statusLabel(o):o.status),b('Edit',()=>editEvent(o)),...(o.kind==='bill'&&o.status==='pending'?[b('Mark Cleared',()=>payment(o,true))]:[]),b('Delete',()=>deleteEvent(o),'link')],o.account||o.from,[o.notes])),true));if(rows.length>historyLimit)p.append(b('Show more transactions',()=>{historyLimit+=24;render()}));root.append(p);
+ {const audit=card('Corrections & undo');audit.append(e('p','Saved changes cover all accounts. Undo restores the dashboard entry. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].reverse();audit.append(group('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.undone?'Undone':'Saved'),...(!x.undone?[b('Undo',()=>undoChange(x))]:[]));const details=e('details');details.append(e('summary','Original / new values'));for(const op of x.changes)details.append(e('p',op.key+' · '+(op.after?.name||op.before?.name||op.id)+'\nBefore: '+JSON.stringify(op.before)+'\nAfter: '+JSON.stringify(op.after)));n.append(details);return n}),false));root.append(audit)}
 }
-function savings(root){const report=C.forecast(m,today(),horizon),p=card('Savings');const selected=report.savings.filter(a=>matchesOwner(a.id));const configured=selected.every(a=>a.configured);p.append(e('strong','Total Savings · '+(configured?dollars(selected.reduce((n,a)=>n+a.current,0)):'Set starting balances'),'cf-savings-balance'),e('p','Separate from everyday spending and bill coverage. Move money into checking when needed.'));const grid=e('div',undefined,'cf-record-grid cf-savings-grid');for(const a of report.savings.filter(a=>matchesOwner(a.id)))grid.append(tile(name(a.id),a.current,['Projected '+dollars(a.projected),'Pending change '+dollars(a.pending)], [...moneyActions(a.id).children,b('Edit account',()=>accountForm(m.accounts.find(x=>x.id===a.id)))],a.id));
+function savings(root){
+ const report=C.forecast(m,today(),horizon),p=card('Savings');
+ const selected=report.savings.filter(account=>matchesOwner(account.id));
+ const configured=selected.every(account=>account.configured);
+ p.append(e('strong','Total Savings · '+(configured?dollars(selected.reduce((total,account)=>total+account.current,0)):'Set starting balances'),'cf-savings-balance'),
+  e('p','Separate from everyday spending and bill coverage. Move money into checking when needed.'));
+ const grid=e('div',undefined,'cf-record-grid cf-savings-grid');
+ const events=C.events(m,historyEnd()).filter(item=>item.status!=='planned'||item.kind==='transfer').sort(newestFirst);
+ for(const account of selected){
+  const accountCard=tile(name(account.id),account.current,
+   ['Projected '+dollars(account.projected),'Pending change '+dollars(account.pending)],
+   [...moneyActions(account.id).children,b('Edit account',()=>accountForm(m.accounts.find(item=>item.id===account.id)))],account.id);
+  accountCard.append(savingsActivity(account,events));
+  grid.append(accountCard);
+ }
  p.append(grid,b('Create savings account',()=>accountForm(null,'savings')));root.append(p);
- const goals=card('Optional savings goals');goals.append(b('Add goal',()=>goalForm()));const goalCards=(m.goals||[]).filter(g=>!g.archived&&!g.deleted&&matchesOwner(g.account)).map(g=>{const a=report.savings.find(a=>a.id===g.account),n=tile(g.name,a?.current??null,['Target '+dollars(g.target),name(g.account),'Progress uses this account’s balance; goals do not reserve or move money.'],[b('Edit goal',()=>goalForm(g)),b('Delete',()=>safeAction('Delete savings goal',()=>{g.deleted=true}),'link')],g.id),progress=e('progress');progress.max=g.target;progress.value=Math.max(0,Math.min(g.target,a?.current||0));progress.setAttribute('aria-label',g.name+' savings progress');n.append(progress,e('p',Math.round(Math.max(0,Math.min(1,(a?.current||0)/g.target))*100)+'%'));return n});goals.append(group('Goals',goalCards));root.append(goals);history(root,true);
- if(state.savingsEntries?.length){const old=e('details',undefined,'cf-old-savings');old.append(e('summary','Earlier savings records · '+state.savingsEntries.length),e('p','Preserved separately; not replayed into current balances.'));for(const x of [...state.savingsEntries].filter(x=>!m.overrides['legacy-savings|'+x.id]?.skipped).sort((a,b)=>(b.date||'').localeCompare(a.date||'')))old.append(record(dateLabel(x.date)+' · '+x.kind,(state.people?.find(p=>p.id===x.person)?.name||'')+' · '+money(Number(x.amount))+(x.note?' · '+x.note:''),b('Delete',()=>safeAction('Delete earlier savings entry',()=>{m.overrides['legacy-savings|'+x.id]={id:'legacy-savings|'+x.id,skipped:true,legacyId:x.id}}),'link')));root.append(old)}
+ const goals=card('Optional savings goals');goals.append(b('Add goal',()=>goalForm()));const goalCards=(m.goals||[]).filter(g=>!g.archived&&!g.deleted&&matchesOwner(g.account)).map(g=>{const a=report.savings.find(a=>a.id===g.account),n=tile(g.name,a?.current??null,['Target '+dollars(g.target),name(g.account),'Progress uses this account’s balance; goals do not reserve or move money.'],[b('Edit goal',()=>goalForm(g)),b('Delete',()=>safeAction('Delete savings goal',()=>{g.deleted=true}),'link')],g.id),progress=e('progress');progress.max=g.target;progress.value=Math.max(0,Math.min(g.target,a?.current||0));progress.setAttribute('aria-label',g.name+' savings progress');n.append(progress,e('p',Math.round(Math.max(0,Math.min(1,(a?.current||0)/g.target))*100)+'%'));return n});goals.append(group('Goals',goalCards));root.append(goals);
+ if(!selectedOwner()&&state.savingsEntries?.length){const old=e('details',undefined,'cf-old-savings');old.append(e('summary','Earlier savings records · '+state.savingsEntries.length),e('p','Preserved separately; not replayed into current balances.'));for(const x of [...state.savingsEntries].filter(x=>!m.overrides['legacy-savings|'+x.id]?.skipped).sort((a,b)=>(b.date||'').localeCompare(a.date||'')))old.append(record(dateLabel(x.date)+' · '+x.kind,(state.people?.find(p=>p.id===x.person)?.name||'')+' · '+money(Number(x.amount))+(x.note?' · '+x.note:''),b('Delete',()=>safeAction('Delete earlier savings entry',()=>{m.overrides['legacy-savings|'+x.id]={id:'legacy-savings|'+x.id,skipped:true,legacyId:x.id}}),'link')));root.append(old)}
 }
 function goalForm(g){const choices=activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,name(a.id)]);if(!choices.length){alert('Create a savings account first.');return}form(g?'Edit savings goal':'Add savings goal',[field('Goal name',input('name','text',g?.name)),field('Savings account',select('account',choices,g?.account||choices[0][0])),field('Target ($)',number('target',g?g.target/100:'',.01)),field('Archive goal',check('archived',g?.archived))],f=>{const next={id:g?.id||uid(),name:reqName(f),account:f.account.value,target:cents(f.target.value),archived:f.archived.checked};if(next.target<=0)throw Error('Enter a positive target.');m.goals??=[];if(g)Object.assign(g,next);else m.goals.push(next)})}
 
