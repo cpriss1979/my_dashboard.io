@@ -1,0 +1,48 @@
+html.windows-wallpaper { --windows-taskbar-space: 64px; }
+html.windows-wallpaper body.glow-redesign > main {
+  padding-bottom: calc(var(--windows-taskbar-space) + 36px);
+  padding-right: max(62px,env(safe-area-inset-right));
+}
+html.windows-wallpaper body.glow-redesign > aside {
+  max-height: calc(100dvh - var(--windows-taskbar-space));
+  overscroll-behavior: contain;
+}
+html.windows-wallpaper #fbAccountGate {
+  bottom: var(--windows-taskbar-space);
+  padding-right: 62px;
+  align-items: safe center;
+}
+html.windows-wallpaper dialog[open] {
+  max-height: calc(100dvh - var(--windows-taskbar-space) - 26px);
+  margin-block-end: max(var(--windows-taskbar-space),env(safe-area-inset-bottom));
+}
+html.windows-wallpaper .sticky-launcher {
+  bottom: calc(var(--windows-taskbar-space) + 14px);
+}
+html.windows-wallpaper #phoneBottomNavigation {
+  bottom: var(--windows-taskbar-space);
+}
+.windows-wallpaper-scroll {
+  position: fixed;
+  z-index: 3100;
+  right: 12px;
+  top: 45vh;
+  display: grid;
+  gap: 6px;
+}
+.windows-wallpaper-scroll button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid #adb5c6;
+  border-radius: 10px;
+  background: #192338;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.windows-wallpaper-scroll button:focus-visible { outline: 2px solid #d9e5fa; }
+@media (max-width: 750px) {
+  html.windows-wallpaper body.glow-redesign > main { padding-bottom: calc(var(--windows-taskbar-space) + 110px); }
+  html.windows-wallpaper .sticky-launcher { bottom: calc(var(--windows-taskbar-space) + 74px); }
+}

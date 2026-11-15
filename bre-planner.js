@@ -4,7 +4,7 @@
     ['do', 'Do', 'Urgent and important'],
     ['schedule', 'Schedule', 'Important · can wait'],
     ['delegate', 'Delegate', 'Urgent · can hand off'],
-    ['delete', 'Let go', 'Neither urgent nor important']
+    ['delete', 'Delete', 'Drop low-value tasks']
   ];
   function node(tag, text, className) {
     const element = document.createElement(tag);
@@ -37,44 +37,81 @@
     const label = node('label', 'Priority board');
     const select = node('select');
     select.name = 'quadrant';
-    select.add(new Option('Unsorted', ''));
+    select.add(new Option('Do (default)', ''));
     for (const [key, title, description] of quadrants) select.add(new Option(title+' · '+description,key));
     label.append(select);
     fields.append(label);
   };
   kind.onchange = fieldsFor;
 
+  let showCompleted=false;
   function board() {
-    const panel = node('section', undefined, 'card bre-board');
-    panel.append(node('h2', 'Priority board'));
-    const grid = node('div', undefined, 'bre-board-grid');
-    const active = state.priorities.filter(task => !task.done);
-    for (const [key, name, description] of [...quadrants, ['', 'Unsorted', 'Choose a quadrant for these tasks']]) {
-      const column = node('section', undefined, 'bre-quadrant');
-      column.dataset.quadrant = key;
-      column.append(node('h3', name), node('p', description));
-      for (const task of active.filter(task => (task.quadrant || '') === key)) {
-        const row = node('div', undefined, 'bre-task');
-        const check = node('input');
-        check.type = 'checkbox';
-        check.setAttribute('aria-label', 'Complete '+task.title);
-        check.onchange = () => toggle('priorities', task.id);
-        const move = node('select');
-        move.setAttribute('aria-label', 'Move '+task.title+' to');
-        for (const [target, label] of [['', 'Unsorted'], ...quadrants]) move.add(new Option(label, target));
-        move.value = key;
-        move.onchange = () => {task.quadrant = move.value;save();render()};
-        row.append(check, button(task.title, () => editEntry('priorities', task.id), 'link'), move);
-        column.append(row);
-      }
-      if (key) column.append(button('＋ Add task', () => {
-        openAdd('priorities');
-        form.elements.quadrant.value = key;
-      }));
-      grid.append(column);
+    const owner=state;
+    const panel=node('section',undefined,'bre-board');
+    const heading=node('div',undefined,'bre-board-heading');
+    heading.append(node('h2','Priority board'),button('Focus timer',()=>go('Focus timer')));
+    const completed=node('input');completed.type='checkbox';completed.checked=showCompleted;
+    const completedLabel=node('label','Show completed');
+    completedLabel.prepend(completed);
+    completed.onchange=()=>{showCompleted=completed.checked;draw();completed.focus()};
+    heading.append(completedLabel);
+    const grid=node('div',undefined,'bre-board-grid');
+    const feedback=node('p',undefined,'bre-board-feedback');feedback.setAttribute('role','status');
+    const titleFields=new Map();
+    function draw(){
+      const drafts=new Map([...titleFields].map(([key,field])=>[key,field.value]));
+      grid.replaceChildren();
+      titleFields.clear();
+      grid.append(node('span',undefined,'bre-axis-corner'),node('span','Urgent','bre-axis-top'),node('span','Not urgent','bre-axis-top'));
+      quadrants.forEach(([key,name,description],i)=>{
+        if(i===0||i===2)grid.append(node('span',i===0?'Important':'Not important','bre-axis-side'));
+        const quadrant=node('section',undefined,'bre-quadrant');
+        quadrant.dataset.quadrant=key;
+        const title=node('h3',name);title.id='bre-matrix-'+key;
+        quadrant.setAttribute('aria-labelledby',title.id);
+        quadrant.append(title,node('p',description,'bre-quadrant-description'));
+        const rows=node('div',undefined,'bre-quadrant-items');
+        const effectiveQuadrant=task=>quadrants.some(([id])=>id===task.quadrant)?task.quadrant:'do';
+        for(const task of state.priorities.filter(item=>(showCompleted||!item.done)&&effectiveQuadrant(item)===key)){
+          const row=node('article',undefined,'bre-task');
+          const check=node('input');check.type='checkbox';check.checked=Boolean(task.done);
+          check.setAttribute('aria-label','Complete '+task.title);
+          check.onchange=()=>{task.done=check.checked;save();draw();titleFields.get(key)?.focus();feedback.textContent=task.done?'Task completed.':'Task reopened.'};
+          const label=button(task.title,()=>editEntry('priorities',task.id),'bre-task-title');
+          if(task.done)label.classList.add('bre-task-done');
+          const menu=node('details',undefined,'bre-task-menu');
+          const summary=node('summary','⋯');summary.setAttribute('aria-label','Options for '+task.title);
+          const move=node('select');move.setAttribute('aria-label','Move '+task.title+' to');
+          for(const [target,name] of quadrants)move.add(new Option(name,target));
+          move.value=key;
+          move.onchange=()=>{task.quadrant=move.value;save();draw();titleFields.get(task.quadrant)?.focus();feedback.textContent='Task moved.'};
+          menu.append(summary,move,button('Delete task',()=>{
+            if(!confirm('Delete '+task.title+'?'))return;
+            state.priorities=state.priorities.filter(item=>item.id!==task.id);
+            save();draw();titleFields.get(key)?.focus();feedback.textContent='Task deleted.';
+          }));
+          row.append(check,label,menu);rows.append(row);
+        }
+        const form=node('form',undefined,'bre-quadrant-add');
+        const input=node('input');input.placeholder='Add a task…';input.required=true;input.maxLength=200;
+        input.setAttribute('aria-label','Task for '+name);
+        input.value=drafts.get(key)||'';
+        titleFields.set(key,input);
+        const add=node('button','＋','bre-quadrant-submit');add.type='submit';add.setAttribute('aria-label','Add task to '+name);
+        form.append(input,add);
+        form.onsubmit=event=>{
+          event.preventDefault();
+          const value=input.value.trim();
+          if(state!==owner||!value)return;
+          state.priorities.push({id:crypto.randomUUID(),title:value,date:localDate(new Date()),quadrant:key});
+          input.value='';save();draw();titleFields.get(key)?.focus();feedback.textContent='Task added to '+name+'.';
+        };
+        quadrant.append(rows,form);grid.append(quadrant);
+      });
     }
-    panel.append(grid);
-    content.prepend(panel);
+    panel.append(heading,grid,feedback);
+    content.replaceChildren(panel);
+    draw();
   }
 
   const durations = {focus:25, short:5, long:15};
@@ -236,6 +273,7 @@
     document.body.append(dialog);dialog.showModal();
   }
 
+  addEventListener('dashboard:account-changing',()=>{showCompleted=false});
   window.DashboardQuickLinks={open:manageLinks,rows:quickLinkRows};
   const priorRender=render;
   render=function(){
@@ -254,7 +292,6 @@
       content.replaceChildren();timerPanel();tick();
     }
     if(page==='Daily priorities')board();
-    if(page==='Daily priorities')content.querySelector('.bre-board h2')?.after(button('🍅 Focus timer',()=>go('Focus timer')));
   };
   render();
 })();

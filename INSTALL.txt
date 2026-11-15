@@ -1,89 +1,10 @@
-MY DASHBOARD — SIDEBAR ORGANIZATION
+Upload all five HTML, JS, and CSS files to the root of the existing
+cpriss1979/my_dashboard.io repository. This update assumes the Sidebar
+Organization update is installed. Replace matching filenames.
 
-If the Notebook and Collection Photos update is already installed, upload
-these six files to the dashboard GitHub repository root:
+After GitHub Pages publishes, use these addresses:
+Crystal in Plash: https://cpriss1979.github.io/my_dashboard.io/
+Bre on Windows: https://cpriss1979.github.io/my_dashboard.io/?wallpaper=windows
 
-  index.html
-  navigation-sparkles.js
-  navigation-sparkles.css
-  household.js
-  bre-planner.js
-  dashboard-sharing.js
-
-After GitHub Pages publishes, refresh My Dashboard. Home sits directly
-below the profile. Planner, Household, Money, Personal, and Links fold
-away on Home, and the current page's category opens when you visit it.
-
-Settings > Navigation lets you rename categories, hide pages, or pin up
-to three pages below Home. Open Sharing directly from Settings. Manage
-Quick Links from Links or Bookmarks. On phones, use More to see the
-grouped menu. This update needs no new Firebase rules.
-
-The ZIP also includes the earlier update files for a combined upload.
-If you need those, follow the combined upload instructions below.
-
-
-MY DASHBOARD — COMBINED INSTALL
-
-1. Unzip this package.
-2. In the GitHub repository cpriss1979/my_dashboard.io, upload the HTML,
-   CSS, and JavaScript files to the root of the branch that publishes
-   your dashboard. Replace the matching files and keep the other repo files.
-3. Once GitHub Pages finishes building, refresh My Dashboard.
-
-This is a combined update with the earlier Planner and Shopping/Wish List
-changes. The updated pages use your existing dashboard data.
-
-WHERE TO FIND THE CHANGES
-
-Daily is the first Chores tab. Its house upkeep checklist resets each day.
-
-Chores: In Plan & organize on desktop and More on a phone. Weekly
-checklists start over on Mondays. Monthly and yearly checklists follow
-the calendar. Use Add chore or the Options menu for each item.
-
-Home: Arrange cards enables drag handles. Earlier and Later work with
-touch and keyboard controls. Edit Home cards lets you show or hide cards
-and add up to four photos. Photos are resized for dashboard sync.
-
-Navigation: Open Settings > Navigation > Choose visible sections &
-rename groups. Changes apply to sidebar links and the matching phone
-navigation links. Home remains available for access to settings.
-
-Profile: Click your sidebar profile or Settings > Edit profile. Upload
-the original photo to get the full image area for positioning. The visible
-preview is what will be saved.
-
-Projects: Add or edit a project and enter a category such as Crafts,
-Work, or Home. Existing uncategorized projects appear together.
-
-Finances: Accounts shows separate totals just below Checking and Savings.
-Open Loan amortization from Accounts or Amortization from the sidebar.
-
-Collections: Use Gallery or Compact list, filter by collection, and
-optionally add a cover image URL to an item.
-
-Journal and colors: Writing paper and Writing text change the writing area
-directly. Use theme colors restores the Journal theme. General page and
-entry color settings are under Settings > Appearance.
-
-Habit Tracker: Choose Build a good habit for daily check-ins. Type your
-own type or select a suggestion. Stop a habit retains the time-and-savings
-tracker.
-
-Little Joys and Badges: Browse ideas collapses. Delete unwanted ideas from
-the library. Reset all badges clears earned badges and keeps the saved
-entries and history used by future milestones.
-
-Bible: Choose NKJV, NLT, or NIV under Reading translation. Full NLT and
-NIV passages open in Bible Gateway.
-
-SHARING FROM THE EARLIER PLANNER UPDATE
-
-If you already published the dashboard's sharing rules, the Chores update
-requires no Firestore rule changes. The ZIP includes those same rules for
-anyone who still needs to enable Sharing. In Firebase Console, open
-Firestore Database > Rules for my-dashboard-95981. Keep your existing
-user and widget rules and merge the dashboard sharing rules if your live
-rules contain changes beyond the GitHub copy. Invitees sign in with a
-verified email and can view the sections you grant.
+Both addresses use the same dashboard code. Windows mode adds taskbar
+clearance and scroll arrows. No Firebase rule changes are needed.
