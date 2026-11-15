@@ -315,7 +315,11 @@ body[data-glitter-color="silver"] { --glitter-one:#fff; --glitter-two:#c6daf5; -
 body[data-glitter-color="coral"] { --glitter-one:#ff946f; --glitter-two:#ffb9a0; --glitter-three:#ffe1a3; }
 
 .home-journal-sparkles { display:none; }
-body[data-glitter-enabled]:is([data-glow-page="Overview"],[data-glow-page="Home"]) > .home-journal-sparkles {
+body[data-glitter-enabled]:not([data-glitter-page-preference]):is([data-glow-page="Overview"],[data-glow-page="Home"]) > .home-journal-sparkles {
+  display:block;
+}
+body[data-dashboard-theme="custom"][data-glitter-enabled]:not([data-glitter-page-preference], [data-glow-page="Journal"]) > .home-journal-sparkles,
+body[data-glitter-page-active] > .home-journal-sparkles {
   display:block;
 }
 body[data-glitter-motion="off"] .home-journal-sparkles .journal-magic-star {
@@ -382,3 +386,23 @@ body.glow-redesign[data-dashboard-theme="custom"] main #content .cf-card {
   --theme-page-panel: #fce2ed;
   --theme-finance-panel: #fff0f4;
 }
+
+
+body[data-glitter-page-preference] > #journalMagicLayer,
+body[data-glitter-page-preference]:not([data-glitter-page-active]) > aside .brand::after {
+  display:none;
+}
+.glitter-page-picker { margin-block:12px; }
+.glitter-page-picker > div {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));
+  gap:4px 12px;
+}
+.glitter-page-picker label {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:32px;
+  margin:0;
+}
+.glitter-page-picker[hidden], .theme-studio-controls > label[hidden] { display:none!important; }

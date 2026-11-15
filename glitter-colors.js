@@ -33,6 +33,18 @@
     ['cyan','Electric Blue'], ['lime','Lime'], ['violet','Violet'],
     ['silver','Silver'], ['coral','Coral']
   ];
+  const glitterPages = [
+    ['Overview', 'Home'], ['Calendar', 'Calendar'], ['Daily priorities', 'Tasks'],
+    ['Projects', 'Projects'], ['Quick notes', 'Notes'], ['Bookmarks', 'Bookmarks'],
+    ['Finances', 'Finances'], ['Time for You', 'Little Joys'], ['Habit Tracker', 'Habit Tracker'],
+    ['Journal', 'Journal'], ['Games', 'Games'], ['Badges', 'Badges'], ['Bible', 'Bible']
+  ];
+
+  function readGlitterPages(saved) {
+    if (saved === 'all') return saved;
+    if (Array.isArray(saved)) return glitterPages.map(([id]) => id).filter(id => saved.includes(id));
+    return null;
+  }
   const customFields = [
     ['background', 'Page background', '#080b1e'],
     ['sidebar', 'Sidebar top', '#16102b'],
@@ -66,7 +78,7 @@
   let base, applied;
   function readAppearance() {
     base = 'glow';
-    applied = { theme: demo ? 'midnight' : base, intensity: demo ? 'dreamy' : 'off', motion: true, accent: 'lavender', glitterColor: 'rainbow', custom: customPalette() };
+    applied = { theme: demo ? 'midnight' : base, intensity: demo ? 'dreamy' : 'off', motion: true, accent: 'lavender', glitterColor: 'rainbow', custom: customPalette(), pages: null };
     try {
       const previous = storage.getItem(key);
       if (!demo && standardTheme(previous)) base = previous;
@@ -74,6 +86,7 @@
       const saved = JSON.parse(storage.getItem(studioKey) || 'null');
       if (saved) {
         applied.custom = customPalette(saved.custom);
+        applied.pages = readGlitterPages(saved.pages);
         if (themes.some(([id]) => id === saved.theme)) applied.theme = saved.theme;
         if (intensities.some(([id]) => id === saved.intensity)) applied.intensity = saved.intensity;
         if (accents.some(([id]) => id === saved.accent)) applied.accent = saved.accent;
@@ -124,6 +137,18 @@
     }
   }
 
+  function updateGlitterPage() {
+    const body = document.body;
+    const current = body.dataset.glowPage;
+    body.toggleAttribute('data-glitter-page-preference', applied.pages !== null);
+    body.toggleAttribute('data-glitter-page-active', applied.intensity !== 'off' &&
+      (applied.pages === 'all' || applied.pages?.includes(current)));
+  }
+
+  if (!demo) new MutationObserver(updateGlitterPage).observe(document.body, {
+    attributes: true, attributeFilter: ['data-glow-page']
+  });
+
   function applyAppearance() {
     const body = document.body;
     if (standardTheme(applied.theme)) base = applied.theme;
@@ -136,6 +161,7 @@
     body.dataset.glitterAccent = applied.accent;
     body.dataset.glitterColor = applied.glitterColor;
     refreshSparkles();
+    updateGlitterPage();
   }
 
   applyAppearance();
@@ -217,6 +243,28 @@
   motionLabel.append(motion, document.createTextNode('Animate sparkles'));
   controls.append(motionLabel);
 
+  const pageScope = selectControl('Glitter pages', [['all', 'All pages'], ['selected', 'Choose pages']]);
+  pageScope.parentElement.hidden = demo;
+  const pagePicker = document.createElement('fieldset');
+  pagePicker.className = 'glitter-page-picker';
+  const pageTitle = document.createElement('legend');
+  pageTitle.textContent = 'Pages with glitter';
+  const pageOptions = document.createElement('div');
+  const pageInputs = new Map();
+  for (const [id, name] of glitterPages) {
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    label.append(input, document.createTextNode(name));
+    pageOptions.append(label);
+    pageInputs.set(id, input);
+  }
+  pagePicker.append(pageTitle, pageOptions);
+  function updatePagePicker() {
+    pagePicker.hidden = demo || pageScope.value === 'all';
+  }
+  pageScope.addEventListener('change', updatePagePicker);
+
   const palette = document.createElement('fieldset');
   palette.className = 'custom-theme-palette';
   const paletteTitle = document.createElement('legend');
@@ -260,7 +308,7 @@
   const status = document.createElement('p');
   status.setAttribute('role', 'status');
   const help = document.createElement('p');
-  help.textContent = 'Sparkles work with every theme on Home and the sidebar. Choose Off to hide them, or turn animation off to keep them still.';
+  help.textContent = 'Choose where glitter appears. Sparkle intensity and animation apply to those pages.';
 
   function resetControls() {
     choices.get(applied.theme).checked = true;
@@ -268,6 +316,10 @@
     accent.value = applied.accent;
     glitterColor.value = applied.glitterColor;
     motion.checked = applied.motion;
+    const pages = applied.pages ?? (applied.theme === 'custom' ? 'all' : ['Overview']);
+    pageScope.value = pages === 'all' ? 'all' : 'selected';
+    for (const [id, input] of pageInputs) input.checked = pages === 'all' || pages.includes(id);
+    updatePagePicker();
     for (const [id, input] of colorInputs) input.value = applied.custom[id];
     updateControls();
     status.textContent = '';
@@ -277,7 +329,9 @@
     const selected = themes.find(([id]) => choices.get(id).checked);
     if (!selected) return;
     const [id, name] = selected;
-    applied = { theme: id, intensity: intensity.value, accent: accent.value, glitterColor: glitterColor.value, motion: motion.checked, custom: readColors() };
+    const pages = demo ? null : pageScope.value === 'all' ? 'all' :
+      [...pageInputs].filter(([, input]) => input.checked).map(([id]) => id);
+    applied = { pages, theme: id, intensity: intensity.value, accent: accent.value, glitterColor: glitterColor.value, motion: motion.checked, custom: readColors() };
     applyAppearance();
     try {
       storage.setItem(studioKey, JSON.stringify(applied));
@@ -296,6 +350,6 @@
   });
   settings.addEventListener('close', resetControls);
   resetControls();
-  appearance.append(legend, help, grid, controls, palette, apply, status);
+  appearance.append(legend, help, grid, controls, pagePicker, palette, apply, status);
   settings.append(appearance);
 })();
