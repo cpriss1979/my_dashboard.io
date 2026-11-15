@@ -173,11 +173,14 @@
     for (const pin of pinned) {
       const url = website(pin.url);
       if (!url) continue;
-      const link = node('a', [pin.emoji,pin.label].filter(Boolean).join(' '), 'app-nav-link');
+      const link = node('a', pin.label, 'app-nav-link');
+      window.DashboardNavIcon?.(link,pin.label,'link');
       link.href=url;link.target='_blank';link.rel='noopener noreferrer';
       detail.append(link);
     }
-    detail.append(button('Manage quick links', manageLinks,'app-nav-link'));
+    const manage=button('Manage quick links',manageLinks,'app-nav-link');
+    window.DashboardNavIcon?.(manage,'Manage quick links','link');
+    detail.append(manage);
     nav.append(detail);
   }
   function website(value){
@@ -263,7 +266,8 @@
     const nav=document.querySelector('aside nav');
     nav.querySelector('.bre-favorites')?.remove();
     nav.querySelector('[data-bre-focus]')?.remove();
-    const focus=button('🍅 Focus timer',()=>go('Focus timer'),'app-nav-link');
+    const focus=button('Focus timer',()=>go('Focus timer'),'app-nav-link');
+    window.DashboardNavIcon?.(focus,'Focus timer','timer');
     focus.dataset.breFocus='';
     if(custom){focus.classList.add('active');focus.setAttribute('aria-current','page')}
     const tasks=nav.querySelector('[data-page="Daily priorities"]');

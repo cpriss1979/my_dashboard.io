@@ -1,3 +1,27 @@
+NOTEBOOK, SIDEBAR & COLLECTION PHOTOS
+
+If the Daily Chores update is already installed, upload only these seven
+files to the root of your GitHub Pages repository:
+
+  index.html
+  navigation-sparkles.js
+  bre-planner.js
+  household.js
+  dashboard-lists.js
+  notes-studio.js
+  notes-studio.css
+
+This ZIP also contains the earlier dashboard update files. If you have
+not installed the earlier updates, follow the combined instructions below.
+
+In Notes, select New note or a colored template. Click a saved note to
+edit it. Use Pin and the Pinned filter to keep key notes handy. Notes and
+Home share the Quick capture scratchpad.
+
+In Collections, choose Add collectible or Edit, then Upload item photos.
+Save up to three photos per item. The first photo is the gallery cover.
+Click the photo count on an item to see its uploaded photos.
+
 MY DASHBOARD — CHORES AND BRE'S UPDATES
 
 1. Unzip this package.
@@ -10,6 +34,8 @@ This is a combined update with the earlier Planner and Shopping/Wish List
 changes. The updated pages use your existing dashboard data.
 
 WHERE TO FIND THE CHANGES
+
+Daily is the first Chores tab. Its house upkeep checklist resets each day.
 
 Chores: In Plan & organize on desktop and More on a phone. Weekly
 checklists start over on Mondays. Monthly and yearly checklists follow

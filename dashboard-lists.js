@@ -51,6 +51,47 @@
   }
   function amount(value) { return Math.round(Number(value)*100); }
 
+  function itemPhotos(record){
+    return Array.isArray(record?.photos)?record.photos.filter(value=>typeof value==='string'&&value.length<=32000&&/^data:image\/jpeg;base64,[a-z0-9+/=]+$/i.test(value)).slice(0,3):[];
+  }
+
+  async function preparePhoto(file){
+    if(file.size>20*1024*1024)throw Error('Choose an image under 20 MB.');
+    const image=new Image(),url=URL.createObjectURL(file);
+    try{
+      image.src=url;
+      try{await image.decode()}catch{throw Error('This image could not be opened. Try a JPEG, PNG, or WebP.')}
+      const canvas=document.createElement('canvas');
+      const scale=Math.min(1,480/Math.max(image.naturalWidth,image.naturalHeight));
+      canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+      canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+      const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(image,0,0,canvas.width,canvas.height);
+      for(const quality of [.75,.6,.45,.3]){
+        const result=canvas.toDataURL('image/jpeg',quality);
+        if(result.length<=32000)return result;
+      }
+      throw Error('This photo is too detailed to save. Try a smaller image.');
+    }finally{URL.revokeObjectURL(url)}
+  }
+
+  function viewPhotos(item){
+    const dialog=el('dialog',undefined,'priss-options-dialog inventory-dialog inventory-photo-viewer');
+    const photos=itemPhotos(item);
+    let index=0;
+    const image=el('img');image.alt=item.title||'Collection item';
+    const count=el('span');count.setAttribute('aria-live','polite');
+    const draw=()=>{image.src=photos[index];count.textContent=(index+1)+' of '+photos.length};
+    const controls=el('div',undefined,'inventory-actions');
+    if(photos.length>1)controls.append(button('Previous photo',()=>{index=(index+photos.length-1)%photos.length;draw()}),count,
+      button('Next photo',()=>{index=(index+1)%photos.length;draw()}));
+    controls.append(button('Close',()=>dialog.close()));
+    dialog.append(el('h2',item.title||'Item photos'),image,controls);
+    dialog.setAttribute('aria-label','Photos of '+(item.title||'collection item'));
+    dialog.onclose=()=>dialog.remove();
+    document.body.append(dialog);draw();dialog.showModal();
+  }
+
   function editor(definition,existing,refresh) {
     const owner=state;
     const dialog=el('dialog',undefined,'priss-options-dialog inventory-dialog');
@@ -80,6 +121,36 @@
     const submit=el('button','Save','primary');
     submit.type='submit';
     actions.append(submit,button('Cancel',()=>dialog.close()));
+    let photos=itemPhotos(existing),loading=false;
+    if(definition.key==='collectibles'){
+      const gallery=el('fieldset',undefined,'inventory-photo-field inventory-wide');
+      const thumbs=el('div',undefined,'inventory-photo-grid');
+      const picker=el('input');picker.type='file';picker.accept='image/*';picker.multiple=true;
+      const label=el('label','Upload item photos');label.append(picker);
+      function showPhotos(){
+        thumbs.replaceChildren();
+        photos.forEach((source,i)=>{
+          const tile=el('div'),preview=el('img');preview.src=source;preview.alt='Item photo '+(i+1);
+          tile.append(preview,button('Remove photo '+(i+1),()=>{photos.splice(i,1);showPhotos()}));
+          thumbs.append(tile);
+        });
+        picker.disabled=loading||photos.length>=3;
+      }
+      picker.onchange=async()=>{
+        const files=[...picker.files];if(!files.length)return;
+        if(files.length>3-photos.length){status.textContent='You can save up to three photos on each item.';picker.value='';return}
+        loading=true;submit.disabled=true;status.textContent='Preparing photos…';showPhotos();
+        try{
+          const prepared=await Promise.all(files.map(preparePhoto));
+          if(state!==owner||!dialog.open)return;
+          photos=photos.concat(prepared);
+          status.textContent='Photos ready. Save the item to keep them.';
+        }catch(error){status.textContent=error.message}
+        finally{loading=false;submit.disabled=false;picker.value='';showPhotos()}
+      };
+      gallery.append(el('legend','Item photos'),el('p','Upload up to three photos. The first photo appears in Gallery.'),label,thumbs);
+      form.append(gallery);showPhotos();
+    }
     form.append(status,actions);
     form.onsubmit=event=>{
       event.preventDefault();
@@ -92,7 +163,15 @@
       if((data.url&&!href(data.url))||(data.cover&&!href(data.cover))){status.textContent='Enter a link beginning with https:// or http://.';return}
       const records=items(definition);
       const updated={...existing,...data,id:existing?.id??crypto.randomUUID()};
-      state[definition.key]=existing?records.map(item=>item.id===existing.id?updated:item):[...records,updated];
+      if(definition.key==='collectibles')updated.photos=photos;
+      const next=existing?records.map(item=>item.id===existing.id?updated:item):[...records,updated];
+      if(photos.reduce((sum,photo)=>sum+photo.length,0)>itemPhotos(existing).reduce((sum,photo)=>sum+photo.length,0)){
+        const bundle=window.DashboardSyncBridge.snapshot();
+        bundle.state[definition.key]=next;
+        try{window.DashboardSyncCore.encode(bundle)}
+        catch{status.textContent='Your dashboard is near its sync limit. Remove some photos before adding more.';return}
+      }
+      state[definition.key]=next;
       save();
       dialog.close();
       refresh();
@@ -143,8 +222,9 @@
         if(view.value==='gallery'){
           const cover=el('div',item.category?.toLowerCase().includes('movie')?'🎬':item.category?.toLowerCase().includes('card')?'🃏':'✦','collection-cover');
           cover.setAttribute('aria-hidden','true');
-          if(href(item.cover)){
-            const picture=el('img');picture.loading='lazy';picture.referrerPolicy='no-referrer';picture.alt='';picture.src=href(item.cover);
+          const source=itemPhotos(item)[0]||href(item.cover);
+          if(source){
+            const picture=el('img');picture.loading='lazy';picture.referrerPolicy='no-referrer';picture.alt='';picture.src=source;
             picture.onerror=()=>picture.remove();cover.append(picture);
           }
           tile.append(cover);
@@ -172,6 +252,8 @@
           state[definition.key]=items(definition).filter(record=>record.id!==item.id);
           save();draw();
         }));
+        const count=itemPhotos(item).length;
+        if(count)actions.prepend(button(count+' '+(count===1?'photo':'photos'),()=>viewPhotos(item),'secondary collection-photo-button'));
         tile.append(heading,checkLabel);
         if(detail.children.length)tile.append(detail);
         if(item.notes)tile.append(el('p',item.notes,'inventory-notes'));

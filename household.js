@@ -1,20 +1,31 @@
 (function(){
   'use strict';
   const routines={
+    daily:['Make the beds','Wash or load the dishes','Wipe kitchen counters and table','Sweep up kitchen crumbs','Put stray items back where they belong','Put dirty clothes in the hamper','Check the trash and empty it if full','Do a quick living room tidy'],
     weekly:['Vacuum and sweep floors','Mop hard floors','Clean toilets and sinks','Clean the shower or tub','Change bed sheets','Dust surfaces','Wipe kitchen counters and appliances','Empty household trash','Do laundry'],
     monthly:['Clean inside the microwave','Wipe refrigerator shelves','Wash bath mats','Dust ceiling fans and vents','Wipe cabinet fronts','Check pantry for expired food','Clean mirrors and interior glass','Vacuum under furniture'],
     yearly:['Wash curtains or clean blinds','Deep-clean carpets and upholstery','Wash windows and screens','Declutter closets and donate items','Deep-clean the oven','Clean behind the refrigerator','Sort seasonal storage','Wash walls and baseboards']
   };
-  const periods={weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'};
+  const periods={daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'};
   const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node};
   const button=(text,action,cls='secondary')=>{const node=el('button',text,cls);node.type='button';node.onclick=action;return node};
   const label=(text,field)=>{const node=el('label',text);node.append(field);return node};
   const nav=()=>document.querySelector('aside nav');
-  let selectedPeriod='weekly';
+  let selectedPeriod='daily';
+  let refreshChores;
   function chores(){
-    return state.chores??=Object.entries(routines).flatMap(([period,titles])=>titles.map((title,index)=>({id:period+'-'+index,title,period})));
+    const presets=(period,titles)=>titles.map((title,index)=>({id:period+'-'+index,title,period}));
+    if(!Array.isArray(state.chores)){
+      state.chores=Object.entries(routines).flatMap(([period,titles])=>presets(period,titles));
+      state.dailyChoresInitialized=true;
+    }else if(!state.dailyChoresInitialized){
+      if(!state.chores.some(item=>item.period==='daily'))state.chores.push(...presets('daily',routines.daily));
+      state.dailyChoresInitialized=true;
+    }
+    return state.chores;
   }
   function cycle(period,date=new Date()){
+    if(period==='daily')return localDate(date);
     if(period==='yearly')return String(date.getFullYear());
     if(period==='monthly')return localDate(date).slice(0,7);
     const monday=new Date(date.getFullYear(),date.getMonth(),date.getDate());
@@ -24,7 +35,7 @@
   function paintChores(){
     const root=el('div',undefined,'household-chores');
     const hero=el('section',undefined,'household-hero');
-    hero.append(el('h2','Chores'),el('p','Check off your cleaning as you go. Each list starts fresh at the next week, month, or year.'));
+    hero.append(el('h2','Chores'),el('p','Check off your cleaning as you go. Each list starts fresh at the next day, week, month, or year.'));
     const tabs=el('div',undefined,'household-actions');
     for(const [period,text] of Object.entries(periods)){
       const tab=button(text,()=>{selectedPeriod=period;paintChores();document.querySelector('.household-actions [aria-pressed=true]')?.focus()});
@@ -37,12 +48,14 @@
     entry.append(title,add);
     const progress=el('p');progress.setAttribute('aria-live','polite');
     const list=el('div');
-    panel.append(el('h3',periods[selectedPeriod]+' cleaning'),progress,entry,list);
+    panel.append(el('h3',selectedPeriod==='daily'?'Daily house upkeep':periods[selectedPeriod]+' cleaning'),progress,entry,list);
     const period=selectedPeriod;
+    let displayedCycle;
     function draw(){
       const current=cycle(period);
+      displayedCycle=current;
       const records=chores().filter(item=>item.period===period);
-      progress.textContent=records.filter(item=>item.checked===current).length+' of '+records.length+' finished '+(period==='weekly'?'this week':period==='monthly'?'this month':'this year');
+      progress.textContent=records.filter(item=>item.checked===current).length+' of '+records.length+' finished '+({daily:'today',weekly:'this week',monthly:'this month',yearly:'this year'}[period]);
       list.replaceChildren();
       for(const item of records){
         const row=el('div',undefined,'household-chore-row');
@@ -65,7 +78,10 @@
       chores().push({id:crypto.randomUUID(),title:name,period});title.value='';save();draw();title.focus();
     };
     hero.append(tabs);root.append(hero,panel);content.replaceChildren(root);draw();
+    refreshChores=()=>{if(root.isConnected&&displayedCycle!==cycle(period))draw()};
   }
+  setInterval(()=>refreshChores?.(),30000);
+  addEventListener('focus',()=>refreshChores?.());
   function navigationOptions(){
     const appSettings=document.getElementById('appSettings');
     appSettings?.close();
@@ -122,7 +138,8 @@
     }
     const sidebar=nav();
     sidebar.querySelector('[data-household-chores]')?.remove();
-    const item=button('🧹 Chores',()=>{go('Chores');window.scrollTo(0,0)},'app-nav-link');
+    const item=button('Chores',()=>{go('Chores');window.scrollTo(0,0)},'app-nav-link');
+    window.DashboardNavIcon?.(item,'Chores','chores');
     item.dataset.householdChores='';item.dataset.page='Chores';
     if(page==='Chores'){item.classList.add('active');item.setAttribute('aria-current','page')}
     const projects=sidebar.querySelector('[data-page="Projects"]');
@@ -131,6 +148,7 @@
     if(focus)focus.dataset.page='Focus timer';
     const share=sidebar.querySelector('[data-dashboard-sharing]');
     if(share){
+      window.DashboardNavIcon?.(share,'Sharing','sharing');
       share.dataset.page='Sharing';
       const keep=sidebar.querySelector('[data-page="Finances"]')?.parentElement;
       if(keep)keep.append(share);

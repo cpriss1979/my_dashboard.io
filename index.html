@@ -4100,7 +4100,7 @@ const beforeColorfulDashboardRender=render;render=function(){beforeColorfulDashb
 
 function applyDashboardActionColors(){
  document.querySelectorAll('button,a').forEach(button=>{
-  if(button.closest('.list-planner,.list-item-editor'))return;
+  if(button.closest('.list-planner,.list-item-editor,.notes-studio'))return;
   const label=button.textContent.trim();let action='';
   if(/^Delete(?:\s|$)/i.test(label)||button.classList.contains('del'))action='delete';
   else if(/\bEdit\b/i.test(label)&&!button.closest('nav'))action='edit';
@@ -4492,7 +4492,7 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
   search.oninput=fill;fill();content.replaceChildren(panelNode);
  }
  function readNote(x){const d=dialog('glowNote',x.title||'Note');const body=d.lastElementChild;const text=document.createElement('p');text.className='glow-note-full';text.textContent=x.text||'';body.append(text,button('Edit note',()=>{d.close();editEntry('notes',x.id)}),button('Delete',()=>{if(confirm('Delete this note?')){d.close();remove('notes',x.id)}}));d.showModal()}
- function notes(){const s=panel('Your notes','notes');headingAction(s,'＋ Add note',()=>openAdd('notes'));const grid=document.createElement('div');grid.className='glow-note-grid';for(const x of state.notes){const b=button('',()=>readNote(x),'glow-note-card');const h=document.createElement('h3');h.textContent=x.title;const p=document.createElement('p');p.textContent=x.text;const more=document.createElement('small');more.textContent='Open note →';b.append(h,p,more);grid.append(b)}if(!grid.children.length)grid.append(empty('A clean page for your next idea.'));s.append(grid);content.replaceChildren(s)}
+ function notes(){if(window.DashboardNotebook)return window.DashboardNotebook.paint(content);const s=panel('Your notes','notes');headingAction(s,'＋ Add note',()=>openAdd('notes'));const grid=document.createElement('div');grid.className='glow-note-grid';for(const x of state.notes){const b=button('',()=>readNote(x),'glow-note-card');const h=document.createElement('h3');h.textContent=x.title;const p=document.createElement('p');p.textContent=x.text;const more=document.createElement('small');more.textContent='Open note →';b.append(h,p,more);grid.append(b)}if(!grid.children.length)grid.append(empty('A clean page for your next idea.'));s.append(grid);content.replaceChildren(s)}
  function taskRow(x){const row=document.createElement('div');row.className='glow-task-row';const check=document.createElement('input');check.type='checkbox';check.checked=Boolean(x.done);check.setAttribute('aria-label','Complete '+x.title);check.onchange=()=>toggle('priorities',x.id);const label=document.createElement('div');const title=document.createElement('strong');title.textContent=x.title;title.className=x.done?'done':'';const date=document.createElement('small');date.textContent=x.date?displayUSDate(x.date):'No date';label.append(title,date);const actions=document.createElement('div');actions.className='household-task-actions';actions.append(button('Edit',()=>editEntry('priorities',x.id),'link'),button('Delete',()=>{if(confirm('Delete this priority?'))remove('priorities',x.id)},'link'));row.append(check,label,actions);return row}
  function deleteTasks(tasks, scope){
   if(!tasks.length||!confirm('Delete '+tasks.length+' '+scope+'? This cannot be undone.'))return;
@@ -4949,7 +4949,7 @@ dialog.tfy-dialog.app-action-dialog {
 </style>
 <script src="./time-for-you.js?v=compact-ideas"></script>
 <link rel="stylesheet" href="./navigation-sparkles.css?v=midnight-home-1">
-<script src="./navigation-sparkles.js?v=family-lists"></script>
+<script src="./navigation-sparkles.js?v=outline-icons"></script>
 <link rel="stylesheet" href="./peaceful-polish.css?v=20261104">
 <script src="./welcome-verse.js?noPopups=1&v=20261104"></script>
 <link rel="stylesheet" href="./chess-themes.css?v=20261104">
@@ -4982,12 +4982,15 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./dashboard-colors.js?v=emoji-stickers"></script>
 <link rel="stylesheet" href="./dashboard-personalize.css?v=family-lists">
 <script src="./amortization.js?v=1"></script>
-<script src="./dashboard-lists.js?v=collection-gallery"></script>
+<script src="./dashboard-lists.js?v=collection-photos"></script>
 <script src="./dashboard-personalize.js?v=home-widgets"></script>
 <link rel="stylesheet" href="./bre-planner.css?v=2">
 <link rel="stylesheet" href="./dashboard-lists.css?v=stationery-2">
-<script src="./bre-planner.js?v=1"></script>
+<script src="./bre-planner.js?v=outline-icons"></script>
 <script src="./dashboard-sharing.js?v=1"></script>
 <link rel="stylesheet" href="./household.css?v=1">
-<script src="./household.js?v=1"></script>
+<script src="./household.js?v=outline-icons"></script>
+<link rel="stylesheet" href="./notes-studio.css?v=1">
+<script src="./notes-studio.js?v=1"></script>
+<script>render()</script>
 </body></html>
