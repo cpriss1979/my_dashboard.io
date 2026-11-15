@@ -1,4 +1,4 @@
-import {createSound} from './sound-engine.mjs?v=20261027-framed';
+import {createSound} from './sound-engine.mjs?v=action-audio';
 export function button(doc,text,fn){const b=doc.createElement('button');b.type='button';b.textContent=text;b.onclick=fn;return b}
 export function audioTools(root){return createSound(root)}
 export function controls(root,state,handlers){

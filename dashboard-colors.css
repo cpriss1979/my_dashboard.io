@@ -1,0 +1,104 @@
+.dashboard-color-settings {
+  margin-block: 1rem;
+  padding: .85rem;
+  border: 1px solid #66738d;
+  border-radius: 12px;
+}
+.dashboard-color-settings > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.dashboard-color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
+  gap: .65rem;
+  margin-top: .75rem;
+}
+.dashboard-color-grid > div {
+  padding: .55rem;
+  border: 1px solid #5b6883;
+  border-radius: 8px;
+}
+.dashboard-color-grid label { margin-top: 0; }
+.dashboard-color-grid input[type="color"] {
+  display: block;
+  width: 100%;
+  height: 40px;
+  margin-block: .35rem;
+  cursor: pointer;
+}
+.dashboard-color-grid button { margin-inline-end: .25rem; }
+
+body[data-section-color] main #content {
+  --section-panel: color-mix(in srgb, var(--dashboard-section-color) 45%, white);
+  --section-card: color-mix(in srgb, var(--dashboard-section-color) 25%, white);
+}
+body.glow-redesign[data-section-color] main #content :is(.card, .cf-card, .journal-layout, .journal-editor, .journal-sidebar, .joy-hero, .joy-feature, .joy-library, .bible-hero, .bible-panel, .achievement-collection) {
+  background: var(--section-panel) !important;
+  color: #18243a !important;
+}
+body.glow-redesign[data-section-color] main #content :is(.glow-task-group, .glow-bookmark-tile, .glow-note-card, .glow-month-cell, .week-day, .cf-record, .joy-tile, .achievement-tile, .activity-category) {
+  background: var(--section-card) !important;
+  color: #18243a !important;
+}
+body.glow-redesign[data-section-color] main #content :is(.card, .journal-layout, .joy-hero, .joy-feature, .joy-library, .bible-panel) :is(h1, h2, h3) {
+  color: #18243a !important;
+}
+
+#appAllEvents .app-event {
+  display: grid;
+  grid-template-columns: minmax(9rem, .9fr) minmax(0, 2fr) minmax(8rem, 1fr);
+  align-items: center;
+  gap: .4rem 1rem;
+  padding: .75rem 1rem;
+  overflow-wrap: anywhere;
+}
+#appAllEvents .app-event strong { font-size: 1.05rem; }
+#appAllEvents .app-event :is(.entry-date, .entry-time) {
+  color: #293e58;
+  font-weight: 650;
+}
+#appAllEvents .app-event-list { display: grid; gap: .35rem; }
+#appAllEvents .app-event-list .app-event { margin: 0; }
+.calendar-colored-entry :is(strong, small, b, .calendar-event-time) {
+  color: #18243a !important;
+}
+button.calendar-holiday-entry.week-event {
+  width: 100%;
+  text-align: start;
+  white-space: normal;
+}
+@media (max-width: 620px) {
+  #appAllEvents .app-event { grid-template-columns: minmax(0, 1fr); }
+  #appAllEvents .app-event strong { grid-row: 1; }
+}
+
+.sticky-layer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 0 16px 10px 0;
+  overflow: auto;
+}
+.sticky-layer:has(.sticky-card) {
+  left: auto;
+  width: min(300px, 90vw);
+  max-height: calc(100dvh - 170px);
+  bottom: auto;
+}
+.sticky-layer > .sticky-card {
+  position: relative;
+  flex: none;
+}
+.sticky-controls { justify-content: flex-end; }
+.sticky-icon {
+  min-width: 38px;
+  min-height: 44px;
+  padding: 3px 8px;
+  font-size: 1.08rem;
+  line-height: 1;
+}
+@media (max-width: 760px) {
+  .sticky-layer { display: none; }
+}

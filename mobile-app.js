@@ -71,21 +71,51 @@
   const dates=document.createElement('p');dates.textContent=calendarDateRange(event);body.append(dates);
   const time=document.createElement('p');time.textContent=calendarTimeRange(event)||'All day';body.append(time);
   const repeat=document.createElement('p');repeat.textContent=event.repeatYearly?'Repeats yearly from the saved start date.':'Does not repeat.';body.append(repeat);
-  for(const [key,value] of Object.entries(event))if(!['id','title','date','endDate','time','endTime','repeatYearly'].includes(key)&&typeof value==='string'&&value){const field=document.createElement('p');field.textContent=key+': '+value;body.append(field)}
+  for(const [key,value] of Object.entries(event))if(!['id','title','date','endDate','time','endTime','repeatYearly','calendarColor'].includes(key)&&typeof value==='string'&&value){const field=document.createElement('p');field.textContent=key+': '+value;body.append(field)}
   body.append(actionButton('Edit entry',()=>{d.close();editEntry('events',id)}),actionButton('Delete',()=>{if(confirm('Delete this calendar entry and its repeating occurrences?')){d.close();remove('events',id)}}));d.showModal();
  }
  function allEvents(){
   const d=simpleDialog('appAllEvents','All calendar entries');const body=d.lastElementChild;
   const label=document.createElement('label');label.textContent='Find any entry, including past and yearly events';const search=document.createElement('input');search.type='search';search.placeholder='Title or MM/DD/YYYY';label.append(search);const list=document.createElement('div');list.className='app-event-list';body.append(label,list);
-  function fill(){list.replaceChildren();const q=search.value.toLowerCase();const events=[...state.events].sort((a,b)=>a.date.localeCompare(b.date)).filter(e=>(e.title+' '+calendarDateRange(e)+' '+calendarTimeRange(e)+(e.repeatYearly?' yearly':'')).toLowerCase().includes(q));for(const e of events){const b=eventButton(e);b.lastElementChild.textContent=calendarDateRange(e);const time=document.createElement('span');time.className='entry-time';time.textContent=(calendarTimeRange(e)||'All day')+(e.repeatYearly?' · Repeats yearly':'');b.append(time);b.onclick=()=>{d.close();eventDetails(e.id)};list.append(b)}if(!events.length){const p=document.createElement('p');p.textContent='No entries found.';list.append(p)}}search.oninput=fill;fill();d.showModal();
+  function fill(){
+   list.replaceChildren();
+   const q=search.value.trim().toLowerCase();
+   const holidays=[...new Map(usHolidaysForYear(month.getFullYear()).map(event=>[event.title+'|'+event.date,event])).values()];
+   const events=[...state.events,...holidays]
+    .sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'')||a.title.localeCompare(b.title))
+    .filter(event=>[event.title,calendarDateRange(event),calendarTimeRange(event)||'All day',event.repeatYearly?'yearly':''].join(' ').toLowerCase().includes(q));
+   for(const event of events){
+    const button=eventButton(event);
+    button.onclick=()=>{d.close();if(event.id)eventDetails(event.id);else window.DashboardColors?.holidayDetails(event)};
+    list.append(button);
+   }
+   if(!events.length){const p=document.createElement('p');p.textContent='No entries found.';list.append(p)}
+  }
+  search.oninput=fill;fill();d.showModal();
  }
- function eventButton(event){const b=document.createElement('button');b.type='button';b.className='app-event';const title=document.createElement('strong');title.textContent=event.title;const detail=document.createElement('span');detail.textContent=calendarDateRange(event)+' · '+(calendarTimeRange(event)||'All day')+(event.repeatYearly?' · Yearly':'');b.append(title,detail);b.onclick=()=>eventDetails(event.id);return b}
+ function eventButton(event){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='app-event';
+  const title=document.createElement('strong');
+  title.textContent=event.title;
+  const dates=document.createElement('span');
+  dates.className='entry-date';
+  dates.textContent=calendarDateRange(event);
+  const time=document.createElement('span');
+  time.className='entry-time';
+  time.textContent=(calendarTimeRange(event)||'All day')+(event.repeatYearly?' · Yearly':event.id?'':' · Holiday');
+  button.append(dates,title,time);
+  button.onclick=()=>eventDetails(event.id);
+  window.DashboardColors?.paint(button,event);
+  return button;
+ }
  function calendar(){
   const card=document.createElement('section');card.className='card app-calendar';card.innerHTML=cal();
   const toolbar=document.createElement('div');toolbar.className='app-calendar-actions';toolbar.append(actionButton('＋ Add entry',()=>openAdd('events')),actionButton('All entries',allEvents));card.prepend(toolbar);
   const events=document.createElement('section');events.className='card app-day-events';const h=document.createElement('h2');h.textContent='Events · '+displayUSDate(selected);events.append(h);
   const entries=state.events.filter(e=>eventOnDate(e,selected));entries.forEach(e=>events.append(eventButton(e)));if(!entries.length){const p=document.createElement('p');p.textContent='No events on this day.';events.append(p)}
-  card.querySelectorAll('.week-event').forEach(el=>{const edit=el.querySelector('button[onclick]');const id=edit?.getAttribute('onclick')?.match(/editEntry\('events','([^']+)'/);if(!id)return;el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-label','Event details: '+el.querySelector('b')?.textContent);el.onclick=()=>eventDetails(id[1]);el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();eventDetails(id[1])}};edit.remove()});
+  card.querySelectorAll('.week-event').forEach(el=>{const edit=el.querySelector('button[onclick]');const id=edit?.getAttribute('onclick')?.match(/editEntry\('events','([^']+)'/);if(!id)return;const event=state.events.find(event=>event.id===id[1]);if(event)window.DashboardColors?.paint(el,event);el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-label','Event details: '+el.querySelector('b')?.textContent);el.onclick=()=>eventDetails(id[1]);el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();eventDetails(id[1])}};edit.remove()});
   content.replaceChildren(card,events);
  }
  function enhance(){setupShell();if(!mobile.matches)return;if(page==='Finances')finance();if(page==='Calendar')calendar()}

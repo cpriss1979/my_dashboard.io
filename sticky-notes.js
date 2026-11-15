@@ -17,6 +17,14 @@
     return node;
   }
 
+  function icon(symbol, label, action) {
+    const node = button(symbol, action);
+    node.className = 'sticky-icon';
+    node.setAttribute('aria-label', label);
+    node.title = label;
+    return node;
+  }
+
   const appearance = {
     color: [['butter','Butter'],['rose','Rose'],['lavender','Lavender'],['mint','Mint'],
       ['sky','Sky'],['peach','Peach'],['cream','Cream'],['lilac','Lilac']],
@@ -29,26 +37,31 @@
       card.dataset[setting] = options.some(([value]) => value === note[setting])
         ? note[setting] : options[0][0];
     }
+    if(note.customColor)card.style.setProperty('background-color',note.customColor,'important');
+    else card.style.removeProperty('background-color');
+    if(note.textColor)card.style.color=note.textColor;
+    else card.style.removeProperty('color');
   }
 
   const layer = element('div', undefined, 'sticky-layer');
   const tray = element('dialog', undefined, 'sticky-dialog');
   const editor = element('dialog', undefined, 'sticky-dialog');
   const addMenu = element('dialog', undefined, 'sticky-dialog');
-  const launcher = button('Sticky notes', () => {
+  const launcher = button('▧', () => {
     renderTray();
     tray.showModal();
   });
   launcher.className = 'sticky-launcher';
+  launcher.title='Sticky notes';
+  launcher.setAttribute('aria-label','Sticky notes');
+  let trayTab='active';
   document.body.append(layer, launcher, tray, editor, addMenu);
 
   const mobile = matchMedia('(max-width: 760px)');
   const notes = () => Array.isArray(state.stickyNotes) ? state.stickyNotes : [];
   const financeView = () => window.dashboardFinanceView?.() || '';
-  const visible = note => note.pin === 'always' || (
-    note.page === page &&
-    (page !== 'Finances' || note.financeView === null || note.financeView === financeView())
-  );
+  const visible = note => (note.page || 'Overview') === page &&
+    (page !== 'Finances' || note.financeView == null || note.financeView === financeView());
 
   function makeNote() {
     editNote({
@@ -60,7 +73,7 @@
 
   function editNote(note) {
     const owner = state;
-    const originPage = note.pin === 'page' ? note.page : page;
+    const originPage = note.page || 'Overview';
     const originView = originPage === 'Finances' && page === 'Finances' ? financeView() : note.financeView;
     const title = element('h2', 'Sticky note');
     title.id = 'sticky-editor-title';
@@ -75,9 +88,7 @@
     if (originPage === 'Finances') {
       pin.add(new Option('Show in all finance views', 'finance'));
     }
-    pin.add(new Option('Always visible', 'always'));
-    pin.value = note.pin === 'always' ? 'always'
-      : note.page === 'Finances' && note.financeView === null && originPage === 'Finances' ? 'finance'
+    pin.value = note.page === 'Finances' && note.financeView === null && originPage === 'Finances' ? 'finance'
       : 'page';
 
     function store() {
@@ -101,7 +112,7 @@
       store();
     };
     pin.onchange = () => {
-      note.pin = pin.value === 'always' ? 'always' : 'page';
+      note.pin = 'page';
       note.page = originPage;
       note.financeView = originPage === 'Finances' && pin.value === 'page' ? originView : null;
       store();
@@ -121,12 +132,45 @@
       styling.append(field);
       control.onchange = () => {
         note[setting] = control.value;
+        if(setting==='color')note.customColor='';
         updatePreview();
         store();
       };
     }
+    const custom = element('details',undefined,'sticky-custom-colors');
+    custom.append(element('summary','Custom colors'));
+    const favorites = element('select');
+    favorites.setAttribute('aria-label','Saved sticky note colors');
+    function fillColors(){
+      favorites.replaceChildren(new Option('Saved colors',''));
+      for(const color of state.stickyPalette||[])favorites.add(new Option(color,color));
+    }
+    function customColor(key,value){
+      note[key]=value;
+      updatePreview();store();
+    }
+    if(window.DashboardColorFields){
+      custom.append(window.DashboardColorFields('Note background',note.customColor,'#fff0ac',value=>customColor('customColor',value)),
+        window.DashboardColorFields('Note text',note.textColor,'#3a2c37',value=>customColor('textColor',value)));
+      fillColors();
+      favorites.onchange=()=>{
+        if(!favorites.value)return;
+        const picker=custom.querySelector('input[type="color"]');
+        picker.value=favorites.value;
+        picker.dispatchEvent(new Event('input'));
+      };
+      custom.append(favorites,button('Save background to palette',()=>{
+        if(state!==owner||!note.customColor)return;
+        state.stickyPalette=[...new Set([...(state.stickyPalette||[]),note.customColor])];
+        save();fillColors();
+      }),button('Remove selected color',()=>{
+        if(state!==owner||!favorites.value)return;
+        state.stickyPalette=(state.stickyPalette||[]).filter(color=>color!==favorites.value);
+        save();fillColors();
+      }));
+    }
     const close = button('Done editing', () => editor.close());
-    editor.replaceChildren(title, text, label, styling, element('p', 'Preview', 'sticky-preview-label'), preview, close);
+    editor.replaceChildren(title, text, ...(originPage === 'Finances' ? [label] : []), styling, custom, element('p', 'Preview', 'sticky-preview-label'), preview, close);
     if (tray.open) tray.close();
     editor.showModal();
     text.focus();
@@ -145,81 +189,56 @@
       button('New note', makeNote),
       button('Close', () => tray.close())
     );
-    for (const [heading, list] of [
-      ['On this page', notes().filter(note => !note.done && visible(note))],
-      ['Done', notes().filter(note => note.done)]
-    ]) {
-      if (!list.length) continue;
-      const group = element('details');
-      group.open = heading === 'On this page';
-      group.append(element('summary', heading));
+    const active=notes().filter(note=>!note.done&&visible(note));
+    const done=notes().filter(note=>note.done);
+    const tabs=element('div',undefined,'sticky-tray-tabs');
+    for(const [key,title,count] of [['active','On this page',active.length],['done','Done',done.length]]){
+      const tab=button(title+' · '+count,()=>{trayTab=key;renderTray();tray.querySelector('[aria-pressed="true"]')?.focus()});
+      tab.setAttribute('aria-pressed',String(trayTab===key));
+      tabs.append(tab);
+    }
+    tray.append(tabs);
+    const list=trayTab==='done'?done:active;
+    const group=element('section');
+    if(!list.length)group.append(element('p',trayTab==='done'?'No completed notes yet.':'No sticky notes on this page.'));
       for (const note of list) {
         const row = element('div', undefined, 'sticky-tray-row');
         const sample = element('div', undefined, 'sticky-card sticky-preview');
         applyAppearance(sample, note);
         sample.append(element('p', note.text || 'Empty note'));
         row.append(sample,
-          ...(note.done ? [button('Restore', () => setDone(note, false))]
-            : [button('Edit', () => editNote(note)), button('Done', () => setDone(note, true))]));
+          ...(note.done ? [icon('↶', 'Restore note', () => setDone(note, false))]
+            : [icon('✎', 'Edit note', () => editNote(note)), icon('✓', 'Mark done', () => setDone(note, true))]),
+          icon('×', 'Delete note', () => deleteNote(note)));
         group.append(row);
       }
-      tray.append(group);
-    }
+    tray.append(group);
   }
 
-  function dragNote(handle, card, note) {
-    handle.onpointerdown = event => {
-      if (event.button !== 0) return;
-      const start = card.getBoundingClientRect();
-      const bounds = layer.getBoundingClientRect();
-      const owner = state;
-      const x = event.clientX;
-      const y = event.clientY;
-      let moved = false;
-      handle.setPointerCapture(event.pointerId);
-      handle.onpointermove = move => {
-        if (state !== owner) return;
-        const dx = move.clientX - x;
-        const dy = move.clientY - y;
-        if (!moved && Math.hypot(dx, dy) < 5) return;
-        moved = true;
-        card.style.left = Math.max(0, Math.min(bounds.width - card.offsetWidth, start.left - bounds.left + dx)) + 'px';
-        card.style.top = Math.max(0, Math.min(bounds.height - card.offsetHeight, start.top - bounds.top + dy)) + 'px';
-      };
-      handle.onlostpointercapture = () => {
-        handle.onpointermove = null;
-        if (!moved || state !== owner) return;
-        note.x = parseFloat(card.style.left);
-        note.y = parseFloat(card.style.top);
-        save();
-      };
-    };
+  function deleteNote(note) {
+    if (!confirm('Delete this sticky note?')) return;
+    state.stickyNotes = notes().filter(item => item.id !== note.id);
+    save();
+    paintNotes();
+    if (tray.open) renderTray();
   }
 
   function paintNotes() {
     layer.replaceChildren();
     if (mobile.matches) return;
-    for (const [index, note] of notes().filter(note => !note.done && visible(note)).entries()) {
+    for (const note of notes().filter(note => !note.done && visible(note))) {
       const card = element('article', undefined, 'sticky-card');
       applyAppearance(card, note);
       const controls = element('div', undefined, 'sticky-controls');
-      if (note.pin === 'page') {
-        const handle = element('span', 'Drag to move', 'sticky-handle');
-        dragNote(handle, card, note);
-        controls.append(handle);
-      } else {
-        controls.append(element('span', 'Always visible'));
-      }
-      controls.append(button('Done', () => setDone(note, true)));
+      controls.append(icon('✎', 'Edit note', () => editNote(note)),
+        icon('✓', 'Mark done', () => setDone(note, true)),
+        icon('×', 'Delete note', () => deleteNote(note)));
       const copy = button(note.text || 'Edit note', () => editNote(note));
       copy.className = 'sticky-copy';
       copy.setAttribute('aria-label', 'Edit sticky note: ' + (note.text || 'Empty note'));
       card.append(controls, copy);
       layer.append(card);
-      const maxX = Math.max(0, layer.clientWidth - card.offsetWidth);
-      const maxY = Math.max(0, layer.clientHeight - card.offsetHeight);
-      card.style.left = Math.max(0, Math.min(maxX, note.pin === 'page' ? note.x ?? maxX - 18 : maxX - 18)) + 'px';
-      card.style.top = Math.max(0, Math.min(maxY, note.pin === 'page' ? note.y ?? index * 150 : index * 150)) + 'px';
+
     }
   }
 

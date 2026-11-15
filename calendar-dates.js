@@ -30,7 +30,23 @@
  function holidayEntries(){
   const content=document.querySelector('#content');if(!content)return;
   content.querySelectorAll('.calendar-holiday-entry,.us-holiday-tags,.us-holiday-key,.us-holiday-list').forEach(el=>el.remove());
-  function entry(h,kind){const el=document.createElement(kind==='month'?'button':'div');el.className='calendar-holiday-entry '+(kind==='month'?'glow-month-event':kind==='week'?'week-event':'glow-event');if(kind==='month'){el.type='button';el.textContent=h.title;el.onclick=()=>selectDate(h.date)}else{const time=document.createElement(kind==='week'?'span':'small');time.className='calendar-event-time';time.textContent='All day';const title=document.createElement(kind==='week'?'b':'strong');title.textContent=h.title;el.append(time,title)}return el}
+  function entry(holiday, kind) {
+   const button=document.createElement('button');
+   button.type='button';
+   button.className='calendar-holiday-entry '+(kind==='month'?'glow-month-event':'week-event');
+   button.onclick=()=>window.DashboardColors ? window.DashboardColors.holidayDetails(holiday) : selectDate(holiday.date);
+   const title=document.createElement('strong');
+   title.textContent=holiday.title;
+   button.append(title);
+   if(kind==='week'){
+    const time=document.createElement('span');
+    time.className='calendar-event-time';
+    time.textContent='All day';
+    button.append(time);
+   }
+   window.DashboardColors?.paint(button,holiday);
+   return button;
+  }
   content.querySelectorAll('.glow-month-cell').forEach(cell=>{const date=cell.querySelector('button[onclick]')?.getAttribute('onclick')?.match(/selectDate\('([^']+)'/)?.[1];if(date)holidaysOnDate(date).forEach(h=>cell.append(entry(h,'month')))});
   content.querySelectorAll('.week-day').forEach(cell=>{const date=cell.querySelector('.week-date')?.getAttribute('onclick')?.match(/selectDate\('([^']+)'/)?.[1];if(date){const holidays=holidaysOnDate(date);if(holidays.length)cell.querySelector('.week-empty')?.remove();holidays.forEach(h=>cell.append(entry(h,'week')))}});
 

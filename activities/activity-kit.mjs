@@ -1,5 +1,5 @@
-import {createSound} from './sound-engine.mjs?v=20261027-framed';
-import {button,canvas,point,help} from './relax-tools.mjs?v=20261027-framed';
+import {createSound} from './sound-engine.mjs?v=action-audio';
+import {button,canvas,point,help} from './relax-tools.mjs?v=action-audio';
 export {button,canvas,point,help};
 export function kit(root,ctx,model){
  const d=root.ownerDocument,w=d.defaultView;model.reduced=typeof model.reduced==='boolean'?model.reduced:!!ctx.reducedMotion;model.volume=Math.max(0,Math.min(1,Number(model.volume??.55)));model.paused=false;

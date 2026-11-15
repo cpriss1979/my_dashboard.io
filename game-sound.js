@@ -1,13 +1,94 @@
-(function(){function createSound(root){const w=root.ownerDocument.defaultView;let audio=null,enabled=false,volume=.45,scene='relax',master=null,bed=null,activity=0,sources=[],interval=0,last=-Infinity,speech=false,extraTimers=[],soundEpoch=0;
- const profiles={pond:[650,.18,.12],sand:[260,.15,.075],ocean:[950,.22,.065],city:[440,.08,.13],casino:[1800,.07,.3],bingo:[1300,.07,.2],spinner:[1700,.055,.2],clean:[2300,.035,1.5],relax:[400,.045,.09]};
+(function(){function createSound(root){const w=root.ownerDocument.defaultView;let audio=null,enabled=false,volume=.45,scene='relax',master=null,bed=null,bedFilter=null,spinPulse=null,spinDepth=null,activity=0,sources=[],interval=0,last=-Infinity,speech=false,extraTimers=[],soundEpoch=0,starting=false;
+ const profiles={pond:[650,.18,.12],sand:[260,.15,.075],ocean:[950,.22,.065],city:[440,.08,.13],casino:[1800,.07,.3],bingo:[1300,.07,.2],spinner:[1450,.16,2.2],clean:[2300,.035,1.5],relax:[400,.045,.09]};
  function note(hz,time=.2,delay=0,type='sine',level=.14){if(!audio||!enabled)return;const t=audio.currentTime+delay,o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(hz,t);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(level,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+time);o.connect(g);g.connect(master);o.start(t);o.stop(t+time+.03);o.onended=()=>{o.disconnect();g.disconnect()}}
  function burst(duration=.45,freq=800,level=.1){if(!audio||!enabled)return;const s=audio.createBufferSource(),f=audio.createBiquadFilter(),g=audio.createGain(),n=Math.ceil(audio.sampleRate*duration),buffer=audio.createBuffer(1,n,audio.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<n;i++)data[i]=(Math.random()*2-1)*(1-i/n);s.buffer=buffer;f.type='lowpass';f.frequency.value=freq;g.gain.value=level;s.connect(f);f.connect(g);g.connect(master);s.start();s.onended=()=>{s.disconnect();f.disconnect();g.disconnect()}}
  function murmur(voices){for(let i=0;i<voices;i++){const source=audio.createOscillator(),envelope=audio.createGain(),lfo=audio.createOscillator(),depth=audio.createGain();source.type='sawtooth';source.frequency.value=85+i*9+Math.random()*20;envelope.gain.value=.6;lfo.frequency.value=2.1+Math.random()*2.7;depth.gain.value=.4;lfo.connect(depth);depth.connect(envelope.gain);source.connect(envelope);const filters=[];for(const [frequency,gain] of [[400,.0025],[1200,.0017],[2450,.0007]]){const f=audio.createBiquadFilter(),g=audio.createGain();f.type='bandpass';f.frequency.value=frequency*(.85+Math.random()*.3);f.Q.value=3;g.gain.value=gain;envelope.connect(f);f.connect(g);g.connect(master);filters.push(f)}source.start();lfo.start();sources.push(source,lfo);extraTimers.push(w.setInterval(()=>{if(!enabled||!audio)return;source.frequency.setTargetAtTime(85+i*9+Math.random()*30,audio.currentTime,.15);filters.forEach((f,j)=>f.frequency.setTargetAtTime([400,1200,2450][j]*(.7+Math.random()*.6),audio.currentTime,.18))},420+Math.floor(Math.random()*430)))}}
  function rockyWaves(){const n=audio.sampleRate*16,buffer=audio.createBuffer(2,n,audio.sampleRate);for(let ch=0;ch<2;ch++){const out=buffer.getChannelData(ch);let low=0;for(let i=0;i<n;i++){const t=i/audio.sampleRate,phase=(t+ch*.16)%8,impact=Math.exp(-Math.pow((phase-2)/.4,2)),wash=Math.exp(-Math.pow((phase-3.1)/1.15,2)),retreat=phase>3.4?Math.exp(-(phase-3.4)/1.5):0,white=Math.random()*2-1;low=(low+white*.06)/1.025;const edges=Math.min(1,t/.5,(16-t)/.5);out[i]=(low*(.42+.6*wash)+white*(impact*.23+wash*.055+retreat*.065))*Math.max(0,edges)}}const source=audio.createBufferSource(),g=audio.createGain();source.buffer=buffer;source.loop=true;g.gain.value=.75;source.connect(g);g.connect(master);source.start();sources.push(source)}
  function recorded(key,fallback){const file={ocean:'rocky-waves.mp3',bingo:'bingo-chatter.mp3',casino:'casino-room.mp3'}[key];if(!w.fetch){fallback();return}const owner=audio,epoch=soundEpoch,url=new URL('./assets/audio/'+file,root.ownerDocument.baseURI).href;w.__glowSoundBytes??=new Map();if(!w.__glowSoundBytes.has(url))w.__glowSoundBytes.set(url,w.fetch(url).then(r=>{if(!r.ok)throw Error('Audio asset unavailable');return r.arrayBuffer()}));w.__glowSoundBytes.get(url).then(bytes=>{if(!enabled||audio!==owner||epoch!==soundEpoch)return null;return owner.decodeAudioData(bytes.slice(0))}).then(buffer=>{if(!buffer||!enabled||audio!==owner||epoch!==soundEpoch)return;const source=owner.createBufferSource(),gain=owner.createGain(),filter=owner.createBiquadFilter();source.buffer=buffer;source.loop=true;filter.type='lowpass';filter.frequency.value=key==='bingo'?1800:key==='casino'?3200:9500;gain.gain.value=key==='bingo'?.22:key==='casino'?.28:.38;source.connect(filter);filter.connect(gain);gain.connect(master);source.start();sources.push(source)}).catch(()=>{w.__glowSoundBytes.delete(url);if(enabled&&audio===owner&&epoch===soundEpoch)fallback()})}
- function ambient(){if(!audio||!enabled)return;soundEpoch++;bed?.disconnect();bed=null;sources.forEach(s=>{try{s.stop()}catch{}});sources=[];w.clearInterval(interval);extraTimers.forEach(id=>w.clearInterval(id));extraTimers=[];const key=scene,profile=profiles[key];if(key==='ocean'){recorded(key,rockyWaves);return}if(key==='bingo'||key==='casino'){recorded(key,()=>murmur(key==='bingo'?6:12));return}if(!profile)return;const [frequency,level,rate]=profile,n=audio.sampleRate*4,buffer=audio.createBuffer(1,n,audio.sampleRate),data=buffer.getChannelData(0);let previous=0;for(let i=0;i<n;i++){previous=(previous+(Math.random()*2-1)*.08)/1.02;data[i]=previous*3*Math.max(0,Math.min(1,i/128,(n-1-i)/128))}const noise=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain(),lfo=audio.createOscillator(),depth=audio.createGain();noise.buffer=buffer;noise.loop=true;filter.type='lowpass';filter.frequency.value=frequency;gain.gain.value=level*(key==='spinner'||key==='clean'?activity:1);lfo.frequency.value=rate;depth.gain.value=level*.35;lfo.connect(depth);depth.connect(gain.gain);noise.connect(filter);filter.connect(gain);gain.connect(master);noise.start();lfo.start();bed=gain;sources=[noise,lfo];if(key==='spinner'||key==='clean')depth.gain.value=0;if(key==='city'||key==='casino'||key==='bingo')interval=w.setInterval(()=>{if(!enabled)return;if(key==='city'){note(110,.8,0,'triangle',.035);note(145,.8,.2,'sine',.025)}else{note(key==='casino'?920:440,.1,0,'sine',.035);burst(.15,1200,.025)}},key==='city'?6500:4000)}
- function tone(kind='soft',force=false){if(!enabled||!audio||audio.state!=='running')return false;if(scene==='bowling'&&kind!=='pins')return false;if(scene==='bingo')return false;const now=w.performance.now();if(!force&&now-last<80)return false;last=now;if(scene==='rpg'||kind==='star'){[392,494,587,784].forEach((n,i)=>note(n,.24,i*.1,'triangle',.17));return true}if(kind==='pins'){burst(.65,2500,.3);[220,330,185,460,260].forEach((n,i)=>note(n,.07,i*.06,'triangle',.12));return true}if(kind==='glass'){burst(.5,5200,.16);[1600,2200,2800].forEach((n,i)=>note(n,.15,i*.03,'sine',.06));return true}if(kind==='bingo-call')return true;note(typeof kind==='number'?kind:kind==='pop'?220:440,.2,0,'sine',.1);return true}
- const api={get enabled(){return enabled},setScene(value){scene=({'ripple-pond':'pond','glow-sand':'sand','power-wash':'clean','fidget-spinner':'spinner','little-wins':'rpg',glass:'city',blackjack:'casino'}[value]||value);if(enabled)ambient()},setActivity(value){activity=Math.max(0,Math.min(1,value));if(bed&&(scene==='spinner'||scene==='clean'))bed.gain.setTargetAtTime((profiles[scene]?.[1]||.04)*activity,audio.currentTime,.06);if(scene==='clean'&&activity&&enabled&&w.performance.now()-last>140){last=w.performance.now();note(740+Math.random()*700,.12,0,'sine',.04)}if(scene==='spinner'&&activity&&enabled&&w.performance.now()-last>140){last=w.performance.now();note(350+activity*1100,.18,0,'sine',activity*.055)}},setVolume(v){volume=Number.isFinite(Number(v))?Math.max(0,Math.min(1,Number(v))):.45;if(master)master.gain.value=volume},tone,async toggle(){if(enabled){api.stop();return false}try{const Audio=w.AudioContext||w.webkitAudioContext;if(!Audio)return false;audio=new Audio();await audio.resume();enabled=audio.state==='running';if(!enabled)return false;master=audio.createGain();master.gain.value=volume;master.connect(audio.destination);ambient();return true}catch{api.stop();return false}},announce(text){if(!enabled||!w.speechSynthesis||!w.SpeechSynthesisUtterance)return;w.speechSynthesis.cancel();const u=new w.SpeechSynthesisUtterance(text);u.rate=.82;u.volume=volume;speech=true;w.speechSynthesis.speak(u)},stop(){soundEpoch++;enabled=false;w.clearInterval(interval);extraTimers.forEach(id=>w.clearInterval(id));extraTimers=[];sources.forEach(s=>{try{s.stop()}catch{}});sources=[];bed=null;if(speech)w.speechSynthesis?.cancel();speech=false;const old=audio;audio=null;if(old&&old.state!=='closed')old.close().catch(()=>{})}};return api;
+ function ambient(){if(!audio||!enabled)return;soundEpoch++;bed?.disconnect();bed=null;sources.forEach(s=>{try{s.stop()}catch{}});sources=[];w.clearInterval(interval);extraTimers.forEach(id=>w.clearInterval(id));extraTimers=[];const key=scene,profile=profiles[key];if(key==='ocean'){recorded(key,rockyWaves);return}if(key==='bingo'||key==='casino'){recorded(key,()=>murmur(key==='bingo'?6:12));return}if(!profile)return;const [frequency,level,rate]=profile,n=audio.sampleRate*4,buffer=audio.createBuffer(1,n,audio.sampleRate),data=buffer.getChannelData(0);let previous=0;for(let i=0;i<n;i++){previous=(previous+(Math.random()*2-1)*.08)/1.02;data[i]=previous*3*Math.max(0,Math.min(1,i/128,(n-1-i)/128))}const noise=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain(),lfo=audio.createOscillator(),depth=audio.createGain();noise.buffer=buffer;noise.loop=true;filter.type='lowpass';filter.frequency.value=frequency;gain.gain.value=level*(key==='spinner'||key==='clean'?activity:1);lfo.frequency.value=rate;depth.gain.value=level*.35;lfo.connect(depth);depth.connect(gain.gain);noise.connect(filter);filter.connect(gain);gain.connect(master);noise.start();lfo.start();bed=gain;bedFilter=filter;spinPulse=key==='spinner'?lfo:null;spinDepth=key==='spinner'?depth:null;sources=[noise,lfo];if(key==='spinner')depth.gain.value=level*activity*.17;if(key==='clean')depth.gain.value=0;if(key==='sand'){zen();interval=w.setInterval(()=>{if(enabled)zen()},7600)}if(key==='city'||key==='casino'||key==='bingo')interval=w.setInterval(()=>{if(!enabled)return;if(key==='city'){note(110,.8,0,'triangle',.035);note(145,.8,.2,'sine',.025)}else{note(key==='casino'?920:440,.1,0,'sine',.035);burst(.15,1200,.025)}},key==='city'?6500:4000)}
+ function sweep(from,to,duration,level,type='sine'){
+  const t=audio.currentTime,source=audio.createOscillator(),gain=audio.createGain();
+  source.type=type;
+  source.frequency.setValueAtTime(from,t);
+  source.frequency.exponentialRampToValueAtTime(to,t+duration);
+  gain.gain.setValueAtTime(.0001,t);
+  gain.gain.linearRampToValueAtTime(level,t+.004);
+  gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+  source.connect(gain);gain.connect(master);source.start(t);source.stop(t+duration+.01);
+  source.onended=()=>{source.disconnect();gain.disconnect()};
+ }
+ function zen(){
+  [196,293.66,392,587.33].forEach((hz,index)=>note(hz,1.9,index*.24,'sine',.045));
+ }
+ function tone(kind='soft',force=false){
+  if(!enabled||!audio||audio.state!=='running')return false;
+  if(scene==='bowling'&&kind!=='pins'||scene==='bingo')return false;
+  const now=w.performance.now();
+  if(!force&&now-last<(kind==='pop'?24:80))return false;
+  last=now;
+  switch(kind){
+   case 'pop':
+    burst(.065,4200,.32);
+    sweep(350+Math.random()*130,92,.072,.23);
+    break;
+   case 'wipe':
+    burst(.14,1850,.08);
+    sweep(1180+Math.random()*230,570,.105,.085,'triangle');
+    break;
+   case 'spray':
+    burst(.18,4950,.12);
+    break;
+   case 'sand-brush':
+    burst(.18,1050,.085);
+    break;
+   case 'water':
+    sweep(410,183,.18,.15);
+    burst(.20,820,.05);
+    break;
+   case 'hit':
+    burst(.14,1050,.18);
+    sweep(210,74,.15,.12,'triangle');
+    break;
+   case 'card':
+    burst(.085,1600,.14);
+    sweep(640,280,.045,.04,'triangle');
+    break;
+   case 'move':
+    burst(.048,2200,.09);
+    sweep(430,190,.045,.045,'triangle');
+    break;
+   case 'pins':
+    burst(.65,2500,.3);
+    [220,330,185,460,260].forEach((hz,i)=>note(hz,.07,i*.06,'triangle',.12));
+    break;
+   case 'glass':
+    burst(.5,5200,.16);
+    [1600,2200,2800].forEach((hz,i)=>note(hz,.15,i*.03,'sine',.06));
+    break;
+   case 'star':
+    [392,494,587,784].forEach((hz,i)=>note(hz,.24,i*.1,'triangle',.17));
+    break;
+   case 'bingo-call':
+    break;
+   default:
+    if(typeof kind==='number')note(kind,.18,0,'sine',.12);
+    else if(scene==='pond')sweep(490,190,.16,.12);
+    else if(scene==='rpg')[392,494,587].forEach((hz,i)=>note(hz,.19,i*.08,'triangle',.11));
+    else sweep(460,225,.07,.07,'triangle');
+  }
+  return true;
+ }
+ const api={get enabled(){return enabled},setScene(value){scene=({'ripple-pond':'pond','glow-sand':'sand','power-wash':'clean','fidget-spinner':'spinner','little-wins':'rpg',glass:'city',blackjack:'casino'}[value]||value);if(enabled)ambient()},setActivity(value){
+  activity=Math.max(0,Math.min(1,value));
+  if(bed&&(scene==='spinner'||scene==='clean')){
+   bed.gain.setTargetAtTime((profiles[scene]?.[1]||.04)*activity,audio.currentTime,.07);
+   if(scene==='spinner'){
+    bedFilter?.frequency.setTargetAtTime(450+2600*activity,audio.currentTime,.06);
+    spinPulse?.frequency.setTargetAtTime(1.1+20*activity,audio.currentTime,.06);
+    spinDepth?.gain.setTargetAtTime(.025*activity,audio.currentTime,.06);
+   }
+  }
+ }, setVolume(v){volume=Number.isFinite(Number(v))?Math.max(0,Math.min(1,Number(v))):.45;if(master)master.gain.value=volume},tone,async toggle(){if(enabled){api.stop();return false}if(starting)return false;starting=true;try{const Audio=w.AudioContext||w.webkitAudioContext;if(!Audio)return false;const context=new Audio();audio=context;await context.resume();if(audio!==context)return false;enabled=context.state==='running';if(!enabled){api.stop();return false}master=audio.createGain();master.gain.value=volume;master.connect(audio.destination);ambient();return true}catch{api.stop();return false}finally{starting=false}},announce(text){if(!enabled||!w.speechSynthesis||!w.SpeechSynthesisUtterance)return;w.speechSynthesis.cancel();const u=new w.SpeechSynthesisUtterance(text);u.rate=.82;u.volume=volume;speech=true;w.speechSynthesis.speak(u)},stop(){soundEpoch++;enabled=false;w.clearInterval(interval);extraTimers.forEach(id=>w.clearInterval(id));extraTimers=[];sources.forEach(s=>{try{s.stop()}catch{}});sources=[];bed=null;if(speech)w.speechSynthesis?.cancel();speech=false;const old=audio;audio=null;if(old&&old.state!=='closed')old.close().catch(()=>{})}};return api;
 }
 
 window.GlowGameSound={create:createSound,play(kind){window.__glowActiveSound?.tone(kind)},announce(text){window.__glowActiveSound?.announce(text)}};})();

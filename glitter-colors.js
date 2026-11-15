@@ -12,6 +12,10 @@
     ['citrus', 'Citrus Pop'],
     ['electric', 'Electric Bloom'],
     ['rose-ribbon', 'Rose Ribbon'],
+    ['galaxy', 'Pink Galaxy'],
+    ['ocean-glass', 'Ocean Glass'],
+    ['pearl-parlor', 'Teddy & Pearls'],
+    ['candy-hearts', 'Candy Hearts'],
     ['custom', 'Custom']
   ];
   const key = 'glowcode-dashboard-theme';
@@ -36,7 +40,7 @@
   const glitterPages = [
     ['Overview', 'Home'], ['Calendar', 'Calendar'], ['Daily priorities', 'Tasks'],
     ['Projects', 'Projects'], ['Quick notes', 'Notes'], ['Bookmarks', 'Bookmarks'],
-    ['Finances', 'Finances'], ['Time for You', 'Little Joys'], ['Habit Tracker', 'Habit Tracker'],
+    ['Finances', 'Finances'], ['Amortization', 'Amortization'], ['Collections', 'Collections'], ['Shopping List', 'Shopping List'], ['Wish List', 'Wish List'], ['Time for You', 'Little Joys'], ['Habit Tracker', 'Habit Tracker'],
     ['Journal', 'Journal'], ['Games', 'Games'], ['Badges', 'Badges'], ['Bible', 'Bible']
   ];
 
@@ -272,6 +276,7 @@
   const swatches = document.createElement('div');
   swatches.className = 'custom-theme-swatches';
   const colorInputs = new Map();
+  const hexInputs = new Map();
   function readColors() {
     return customPalette(Object.fromEntries([...colorInputs].map(([id, input]) => [id, input.value])));
   }
@@ -283,9 +288,19 @@
     const input = document.createElement('input');
     input.type = 'color';
     input.value = applied.custom[id];
-    input.addEventListener('input', previewCustom);
+    const code=document.createElement('input');
+    code.type='text';code.maxLength=7;code.value=input.value;
+    code.setAttribute('aria-label',name+' hex color');
+    input.addEventListener('input',()=>{code.value=input.value;code.setCustomValidity('');previewCustom()});
+    code.oninput=()=>{
+      const value=code.value.trim();
+      const valid=/^#[0-9a-f]{6}$/i.test(value);
+      code.setCustomValidity(valid?'':'Enter a color like #ff80c0.');
+      if(valid){input.value=value;previewCustom()}
+    };
     colorInputs.set(id, input);
-    label.append(input, document.createTextNode(name));
+    hexInputs.set(id, code);
+    label.append(input, document.createTextNode(name),code);
     swatches.append(label);
   }
   palette.append(paletteTitle, swatches);
@@ -320,7 +335,7 @@
     pageScope.value = pages === 'all' ? 'all' : 'selected';
     for (const [id, input] of pageInputs) input.checked = pages === 'all' || pages.includes(id);
     updatePagePicker();
-    for (const [id, input] of colorInputs) input.value = applied.custom[id];
+    for (const [id, input] of colorInputs) {input.value=applied.custom[id];const code=hexInputs.get(id);code.value=input.value;code.setCustomValidity('')}
     updateControls();
     status.textContent = '';
   }
@@ -329,6 +344,7 @@
     const selected = themes.find(([id]) => choices.get(id).checked);
     if (!selected) return;
     const [id, name] = selected;
+    if(id==='custom')for(const code of hexInputs.values())if(!code.reportValidity())return;
     const pages = demo ? null : pageScope.value === 'all' ? 'all' :
       [...pageInputs].filter(([, input]) => input.checked).map(([id]) => id);
     applied = { pages, theme: id, intensity: intensity.value, accent: accent.value, glitterColor: glitterColor.value, motion: motion.checked, custom: readColors() };
@@ -336,7 +352,8 @@
     try {
       storage.setItem(studioKey, JSON.stringify(applied));
       if (!demo) storage.setItem(key, base);
-      if (settings.contains(appearance)) settings.close();
+      const host=appearance.closest('dialog');
+      if(host?.open)host.close();
       else status.textContent = name + ' saved.';
     } catch {
       status.textContent = name + ' applied for this session.';

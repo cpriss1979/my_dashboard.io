@@ -4,7 +4,21 @@ const dayMs=86400000, day=s=>Date.parse(s+'T00:00:00Z')/dayMs, iso=n=>new Date(n
 const month=(s,n)=>{const d=new Date(s+'T00:00:00Z');return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+n,1)).toISOString().slice(0,7)};
 const monthEnd=m=>add(month(m+'-01',1)+'-01',-1);
 const at=(m,n)=>m+'-'+String(Math.min(n,Number(monthEnd(m).slice(-2)))).padStart(2,'0');
-function payday(m,rule,n){if(rule==='last')return monthEnd(m);if(rule==='rick'){const dow=new Date(m+'-01T00:00:00Z').getUTCDay();return at(m,17+(3-dow+7)%7)}return at(m,n)}
+function weekdayRule(rule){
+ if(rule==='rick')return {ordinal:4,weekday:3,offset:-5};
+ const match=/^weekday:([0-4]):([0-6]):(-?[0-6])$/.exec(rule);
+ return match?{ordinal:Number(match[1]),weekday:Number(match[2]),offset:Number(match[3])}:null;
+}
+function payday(m,rule,n){
+ if(rule==='last')return monthEnd(m);
+ const pattern=weekdayRule(rule);
+ if(!pattern)return at(m,n);
+ const {ordinal,weekday,offset}=pattern;
+ const anchor=ordinal?m+'-01':monthEnd(m);
+ const dow=new Date(anchor+'T00:00:00Z').getUTCDay();
+ const shift=ordinal?(weekday-dow+7)%7+7*(ordinal-1):-((dow-weekday+7)%7);
+ return add(anchor,shift+offset);
+}
 const steps={monthly:1,bimonthly:2,quarterly:3,annually:12};
 function occurrences(r,end){
  if(!r.start||r.start>end)return [];
@@ -12,7 +26,10 @@ function occurrences(r,end){
  const out=[];
  if(r.frequency==='weekly'||r.frequency==='biweekly'){const step=r.frequency==='weekly'?7:14;for(let d=day(r.start),limit=day(end);d<=limit;d+=step)out.push(iso(d));return out}
  const step=steps[r.frequency]||1;
- for(let i=0;;i+=step){const m=month(r.start,i);if(m>end.slice(0,7))break;const d=payday(m,r.rule,Number(r.start.slice(-2)));if(d>=r.start&&d<=end)out.push(d)}
+ const pattern=weekdayRule(r.rule);
+ const first=pattern?.offset>0&&step===1?-1:0;
+ const through=pattern?.offset<0?add(end,-pattern.offset):end;
+ for(let i=first;;i+=step){const m=month(r.start,i);if(m>through.slice(0,7))break;const d=payday(m,r.rule,Number(r.start.slice(-2)));if(d>=r.start&&d<=end)out.push(d)}
  return out
 }
 function init(){return {schema:1,accounts:[],groups:[],income:[],bills:[],transfers:[],ledger:[],overrides:{}}}
@@ -114,5 +131,5 @@ function periods(today,end,current,cushion,rows){
 function priority(r){return ['income','money-in'].includes(r.kind)?0:r.kind==='transfer'?(r.delta<0?1:2):3}
 function balanceKey(a){return a.balanceVersion||a.asOf+'|'+a.opening}
 function billDate(r,today){if(!r.start||r.certainty==='unknown')return '';const dates=occurrences(r,add(today,370)).filter(d=>!r.stop||d<r.stop);return dates.find(d=>d>=today)||dates.at(-1)||r.start}
-const api={balanceKey,billDate,add,day,at,payday,occurrences,init,events,forecast};root.CashFlowCore=api;if(typeof module!=='undefined')module.exports=api;
+const api={balanceKey,billDate,add,day,at,payday,weekdayRule,occurrences,init,events,forecast};root.CashFlowCore=api;if(typeof module!=='undefined')module.exports=api;
 })(globalThis);
