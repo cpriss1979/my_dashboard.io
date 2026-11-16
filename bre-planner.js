@@ -202,12 +202,10 @@
       const url=website(pin.url);
       if(!url)continue;
       const link=node('a',pin.label,'app-nav-link sidebar-quick-link');
-      const mark=node('span',(pin.label.trim().split(/\s+/).slice(0,2).map(word=>word[0]).join('').toUpperCase() || '↗'),'shortcut-mark');
-      mark.setAttribute('aria-hidden','true');
       const host=new URL(url).hostname;
-      if(/(^|\.)youtube\.com$|^youtu\.be$/.test(host))mark.textContent='▶';
-      if(/(^|\.)amazon\.[a-z.]+$/.test(host))mark.textContent='🛒';
-      link.replaceChildren(mark,node('span',pin.label,'app-nav-label'));
+      const brand=/(^|\.)youtube\.com$|^youtu\.be$/.test(host)?'youtube':
+        /(^|\.)amazon\.[a-z.]+$/.test(host)?'amazon':'link';
+      window.DashboardNavIcon(link,pin.label,brand);
       link.href=url;link.target='_blank';link.rel='noopener noreferrer';
       rows.push(link);
     }

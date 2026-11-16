@@ -75,6 +75,8 @@
     }finally{URL.revokeObjectURL(url)}
   }
 
+  window.DashboardPhotos={prepare:preparePhoto};
+
   function viewPhotos(item){
     const dialog=el('dialog',undefined,'priss-options-dialog inventory-dialog inventory-photo-viewer');
     const photos=itemPhotos(item);

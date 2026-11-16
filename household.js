@@ -114,17 +114,20 @@
     const hidden=state.sidebarPreferences?.hidden||[];
     const renamed=state.sidebarPreferences?.groups||{};
     const inputs=[];
-    for(const group of nav().querySelectorAll('.app-nav-group[data-household-group]')){
-      const key=group.dataset.householdGroup;
+    for(const group of nav().querySelectorAll('.app-nav-group[data-household-group],[data-direct-route]')){
+      const direct=group.hasAttribute('data-direct-route');
+      const key=direct?group.dataset.page:group.dataset.householdGroup;
       const block=el('fieldset');block.append(el('legend',key));
-      const title=el('input');title.value=renamed[key]||window.DashboardSidebar.groupLabel(key);title.maxLength=40;title.required=true;
-      block.append(label('Group name',title));inputs.push([key,title]);
+      if(!direct){
+        const title=el('input');title.value=renamed[key]||window.DashboardSidebar.groupLabel(key);title.maxLength=40;title.required=true;
+        block.append(label('Group name',title));inputs.push([key,title]);
+      }
       if(key==='Links'){
         const check=el('input');check.type='checkbox';check.checked=!hidden.includes('Quick links');
         const row=label('Show Quick links',check);row.className='household-toggle';row.prepend(check);block.append(row);
         inputs.push(['Quick links',check]);
       }
-      for(const link of group.querySelectorAll('[data-page]')){
+      for(const link of direct?[group]:group.querySelectorAll('[data-page]')){
         const route=link.dataset.page;
         if(route==='Overview')continue;
         const check=el('input');check.type='checkbox';check.checked=!hidden.includes(route);

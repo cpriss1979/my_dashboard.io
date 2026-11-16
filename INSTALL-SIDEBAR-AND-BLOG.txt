@@ -1,0 +1,11 @@
+My Dashboard — Sidebar and Blog
+
+This package is for the static GitHub Pages dashboard at cpriss1979/my_dashboard.io.
+
+1. Extract the ZIP.
+2. Copy the extracted files into your repository root, allowing matching files to be replaced. Merge the folders into the matching folders in your repository.
+3. Commit the files to the branch that GitHub Pages serves. After Pages finishes publishing, refresh your usual dashboard URL.
+
+To use the blog, open Journal & Faith > Blog > New post. Add text and JPEG, PNG, or WebP photos. Use Move up or Move down to place the photos between text sections. Captions are optional. The feed shows the newest posts first.
+
+Posts follow the dashboard's existing storage and account sync settings. Images are compressed to fit the existing dashboard sync size limit. This update uses the existing Firebase configuration and needs no Firestore rules changes.

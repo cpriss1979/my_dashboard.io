@@ -1,0 +1,68 @@
+.dashboard-blog {
+  display: grid;
+  gap: 16px;
+  max-width: 850px;
+}
+.dashboard-blog-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dashboard-blog-post,
+.dashboard-blog-block {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.dashboard-blog-post :is(h2, time, p, figure),
+.dashboard-blog-status {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.dashboard-blog-post time,
+.dashboard-blog-post figcaption {
+  font-size: .9em;
+}
+.dashboard-blog-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.dashboard-blog img,
+.dashboard-blog-editor img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+.dashboard-blog-post figcaption {
+  padding-top: 6px;
+}
+.dashboard-blog-editor {
+  width: min(680px, calc(100% - 28px));
+  max-height: 90vh;
+  overflow: auto;
+}
+.dashboard-blog-editor form,
+.dashboard-blog-blocks {
+  display: grid;
+  gap: 12px;
+}
+.dashboard-blog-editor label,
+.dashboard-blog-editor textarea {
+  min-width: 0;
+  width: 100%;
+}
+.dashboard-blog-block {
+  padding: 12px;
+  border: 1px solid currentColor;
+  border-color: color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 12px;
+}
+.dashboard-blog-block img {
+  max-height: 180px;
+  object-fit: contain;
+}
+.dashboard-blog-status:empty {
+  display: none;
+}
