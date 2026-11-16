@@ -4743,7 +4743,7 @@ body.glow-redesign main #content .habit-intro,body.glow-redesign main #content .
 </style>
 <script src="./habits.js?v=build-habits"></script>
 <style id="overview-and-badge-collections">
-body.glow-redesign main #content .glow-overview>.glow-bookmarks{grid-column:1/-1!important;order:10}
+body.glow-redesign main #content .glow-overview .glow-bookmarks{grid-column:1/-1!important;order:10}
 body.glow-redesign main #content .achievement-collection{margin-top:20px;background:#e3edf8!important;color:#172b43!important}.achievement-collection>p{font-size:14px;line-height:1.6}.achievement-collection summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:700}.achievement-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:14px}.achievement-tile{text-align:center;padding:16px 12px;background:#ffffffb8;border:1px solid #b8c9dc;border-radius:14px;display:flex;flex-direction:column;align-items:center;min-width:0}.achievement-tile h3{color:#172b43!important;font-size:15px!important;margin:12px 0 6px!important;line-height:1.4;overflow-wrap:anywhere}.achievement-tile p{color:#42546a!important;font-size:13px!important;line-height:1.5!important;margin:0 0 10px!important}.achievement-tile small{color:#42546a!important;font-size:12px!important;margin-top:auto}.achievement-medal{--medal:#e9ad38;position:relative;width:76px;height:76px;flex-shrink:0;display:grid;place-items:center;font-size:36px;border:5px solid color-mix(in srgb,var(--medal),#2c2345 28%);border-radius:28% 28% 40% 40%;background:radial-gradient(ellipse at 30% 20%,#ffffffcb,transparent 52%),linear-gradient(140deg,color-mix(in srgb,var(--medal),white 45%),var(--medal));box-shadow:inset 0 0 0 3px #ffffff80,0 5px 10px #18304a26;text-shadow:0 2px 2px #fff8}.achievement-medal:after{content:'✧';position:absolute;right:4px;top:2px;font-size:18px;color:#fff}.achievement-tile.locked .achievement-medal{filter:grayscale(1);opacity:.6}.achievement-tile.earned .achievement-medal{box-shadow:inset 0 0 0 3px #ffffff80,0 0 15px color-mix(in srgb,var(--medal),transparent 40%),0 5px 10px #18304a26}
 @media(max-width:430px){.achievement-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.achievement-tile{padding:14px 8px}.achievement-medal{width:64px;height:64px;font-size:30px}}
 </style>
@@ -4837,19 +4837,19 @@ body .achievement-medal-card.is-locked h4,body .achievement-medal-card.is-locked
 <style>.achievement-tile[hidden]{display:none!important}</style>
 <style id="clean-home-priorities">
 /* Home priorities: clear task cards with compact, separate actions. */
-body.glow-redesign main #content .glow-overview>.glow-tasks>.cardhead{align-items:center;gap:12px;margin-bottom:18px}
-body.glow-redesign main #content .glow-overview>.glow-tasks>.cardhead h2{font-size:20px!important;line-height:1.4!important;margin:0!important}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row{display:grid!important;grid-template-columns:28px minmax(0,1fr) auto auto!important;align-items:start!important;column-gap:8px!important;row-gap:4px!important;padding:14px!important;margin:0 0 12px!important;background:#ffffff80!important;border:1px solid #c8bfd9!important;border-radius:12px!important;min-height:0!important;box-shadow:none!important}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>input{grid-column:1;grid-row:1;appearance:auto!important;-webkit-appearance:checkbox!important;accent-color:#316aad!important;width:21px!important;height:21px!important;min-width:21px!important;min-height:21px!important;margin:4px 0 0!important;cursor:pointer}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>div{grid-column:2/-1;grid-row:1;min-width:0!important;margin:0!important}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row strong{display:block!important;font-size:15px!important;font-weight:600!important;line-height:1.55!important;color:#20354e!important;white-space:normal!important;overflow-wrap:anywhere!important}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row small{display:block!important;font-size:12px!important;line-height:1.5!important;color:#53647a!important;margin-top:5px!important}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button{grid-row:2;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;min-width:44px!important;max-width:none!important;min-height:44px!important;height:auto!important;margin:0!important;padding:4px 8px!important;background:transparent!important;border:0!important;border-radius:6px!important;box-shadow:none!important;color:#46566b!important;text-decoration:none!important;font-size:13px!important;font-weight:600!important;line-height:1.4!important}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button:nth-last-child(2){grid-column:3}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button:last-child{grid-column:4}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button:hover{background:#ffffffa6!important}
-body.glow-redesign main #content .glow-overview>.glow-tasks .glow-task-row>button:focus-visible{outline:2px solid #1465c0!important;outline-offset:2px}
-body.glow-redesign main #content .glow-overview>.glow-tasks>button:last-child{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:44px!important;width:auto!important;padding:8px 14px!important;margin-top:4px!important;border-radius:8px!important;background:#ffffff90!important;color:#24578a!important;font-size:14px!important}
+body.glow-redesign main #content .glow-overview .glow-tasks>.cardhead{align-items:center;gap:12px;margin-bottom:18px}
+body.glow-redesign main #content .glow-overview .glow-tasks>.cardhead h2{font-size:20px!important;line-height:1.4!important;margin:0!important}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row{display:grid!important;grid-template-columns:28px minmax(0,1fr) auto auto!important;align-items:start!important;column-gap:8px!important;row-gap:4px!important;padding:14px!important;margin:0 0 12px!important;background:#ffffff80!important;border:1px solid #c8bfd9!important;border-radius:12px!important;min-height:0!important;box-shadow:none!important}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row>input{grid-column:1;grid-row:1;appearance:auto!important;-webkit-appearance:checkbox!important;accent-color:#316aad!important;width:21px!important;height:21px!important;min-width:21px!important;min-height:21px!important;margin:4px 0 0!important;cursor:pointer}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row>div{grid-column:2/-1;grid-row:1;min-width:0!important;margin:0!important}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row strong{display:block!important;font-size:15px!important;font-weight:600!important;line-height:1.55!important;color:#20354e!important;white-space:normal!important;overflow-wrap:anywhere!important}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row small{display:block!important;font-size:12px!important;line-height:1.5!important;color:#53647a!important;margin-top:5px!important}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row>button{grid-row:2;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;min-width:44px!important;max-width:none!important;min-height:44px!important;height:auto!important;margin:0!important;padding:4px 8px!important;background:transparent!important;border:0!important;border-radius:6px!important;box-shadow:none!important;color:#46566b!important;text-decoration:none!important;font-size:13px!important;font-weight:600!important;line-height:1.4!important}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row>button:nth-last-child(2){grid-column:3}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row>button:last-child{grid-column:4}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row>button:hover{background:#ffffffa6!important}
+body.glow-redesign main #content .glow-overview .glow-tasks .glow-task-row>button:focus-visible{outline:2px solid #1465c0!important;outline-offset:2px}
+body.glow-redesign main #content .glow-overview .glow-tasks>button:last-child{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:44px!important;width:auto!important;padding:8px 14px!important;margin-top:4px!important;border-radius:8px!important;background:#ffffff90!important;color:#24578a!important;font-size:14px!important}
 </style>
 <style id="time-for-you-style">
 .little-joys {
@@ -4975,7 +4975,7 @@ dialog.tfy-dialog.app-action-dialog {
 </style>
 <script src="./time-for-you.js?v=compact-ideas"></script>
 <link rel="stylesheet" href="./navigation-sparkles.css?v=sidebar-blog">
-<script src="./navigation-sparkles.js?v=sidebar-blog"></script>
+<script src="./navigation-sparkles.js?v=layout-wellness"></script>
 <link rel="stylesheet" href="./peaceful-polish.css?v=20261104">
 <script src="./welcome-verse.js?noPopups=1&v=20261104"></script>
 <link rel="stylesheet" href="./chess-themes.css?v=20261104">
@@ -4986,8 +4986,8 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./cash-flow-core.js?v=weekday-rules"></script>
 <script src="./finance-tools.js?v=personal-finance-1"></script>
 <script src="./cash-flow.js?v=owner-tabs"></script>
-<link rel="stylesheet" href="./glitter-colors.css?v=glitter-page-settings">
-<script src="./glitter-colors.js?v=settings-layout"></script>
+<link rel="stylesheet" href="./glitter-colors.css?v=layout-wellness">
+<script src="./glitter-colors.js?v=reflect-palette"></script>
 <link rel="stylesheet" href="./profile.css?v=home-greeting">
 <dialog id="dashboardProfile">
   <form>
@@ -5006,23 +5006,25 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./sticky-notes.js?v=icon-tools"></script>
 <link rel="stylesheet" href="./dashboard-colors.css?v=1">
 <script src="./dashboard-colors.js?v=emoji-stickers"></script>
-<link rel="stylesheet" href="./dashboard-personalize.css?v=settings-layout">
+<link rel="stylesheet" href="./dashboard-personalize.css?v=layout-wellness">
 <script src="./amortization.js?v=1"></script>
 <script src="./dashboard-lists.js?v=sidebar-blog"></script>
-<script src="./dashboard-personalize.js?v=owner-tabs"></script>
+<script src="./dashboard-personalize.js?v=layout-wellness"></script>
 <link rel="stylesheet" href="./bre-planner.css?v=matrix">
 <link rel="stylesheet" href="./dashboard-lists.css?v=stationery-2">
 <script src="./bre-planner.js?v=sidebar-blog"></script>
 <script src="./dashboard-sharing.js?v=sidebar-groups"></script>
 <link rel="stylesheet" href="./household.css?v=1">
 <script src="./household.js?v=sidebar-blog"></script>
-<link rel="stylesheet" href="./notes-studio.css?v=1">
-<script src="./notes-studio.js?v=1"></script>
+<link rel="stylesheet" href="./notes-studio.css?v=reflect-palette">
+<script src="./notes-studio.js?v=reflect-palette"></script>
 <link rel="stylesheet" href="./dashboard-planning.css?v=calendar-first">
 <script src="./dashboard-planning.js?v=calendar-first"></script>
 <script>render()</script>
 <link rel="stylesheet" href="./windows-wallpaper.css?v=1">
 <script src="./windows-wallpaper.js?v=1"></script>
 <link rel="stylesheet" href="./dashboard-blog.css?v=1">
-<script src="./dashboard-blog.js?v=1"></script>
+<script src="./dashboard-blog.js?v=layout-wellness"></script>
+<link rel="stylesheet" href="./dashboard-wellness.css?v=1">
+<script src="./dashboard-wellness.js?v=1"></script>
 </body></html>

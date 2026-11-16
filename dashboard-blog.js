@@ -175,6 +175,7 @@
         id: existing?.id || crypto.randomUUID(),
         date: existing?.date || new Date().toISOString(),
         title: title.value.trim(),
+        width: existing?.width,
         blocks: clean
       };
       const current = posts();
@@ -197,6 +198,7 @@
     dialog.showModal();
   }
 
+  let arranging = false;
   function paint() {
     const blog = element('section', undefined, 'dashboard-blog');
     const toolbar = element('div', undefined, 'dashboard-blog-actions');
@@ -204,11 +206,68 @@
     const status = element('p', '', 'dashboard-blog-status');
     status.setAttribute('role', 'status');
     blog.append(toolbar, status);
-    const ordered = posts().filter(post => post && Array.isArray(post.blocks))
-      .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const ordered = posts().filter(post => post && Array.isArray(post.blocks));
+    const grid = element('div', undefined, 'dashboard-post-grid');
+    const arrange = button(arranging ? 'Done arranging' : 'Arrange posts', () => {
+      arranging = !arranging;
+      paint();
+      document.querySelector('.dashboard-blog-arrange')?.focus();
+    }, 'dashboard-control dashboard-blog-arrange');
+    arrange.setAttribute('aria-pressed', String(arranging));
+    toolbar.append(arrange);
+    function change(next) {
+      try {
+        commit(next);
+        paint();
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    }
+    function move(id, target, after) {
+      if (id === target || !ordered.some(post => post.id === id)) return;
+      const next = ordered.filter(post => post.id !== id);
+      const index = next.findIndex(post => post.id === target);
+      if (index < 0) return;
+      next.splice(index + Number(after), 0, ordered.find(post => post.id === id));
+      change(next);
+    }
     if (!ordered.length) blog.append(element('p', 'Your posts will appear here.', 'card'));
-    for (const post of ordered) {
+    for (const [index, post] of ordered.entries()) {
       const article = element('article', undefined, 'card dashboard-blog-post');
+      article.dataset.postWidth = [2,3,4,6].includes(post.width) ? post.width : 6;
+      if (arranging) {
+        const controls = element('div', undefined, 'dashboard-layout-actions');
+        const width = element('select');
+        width.setAttribute('aria-label', 'Width of ' + post.title);
+        for (const [label,value] of [['One third',2],['Half',3],['Two thirds',4],['Full width',6]]) {
+          width.add(new Option(label,value));
+        }
+        width.value = article.dataset.postWidth;
+        width.onchange = () => change(ordered.map(item => item.id === post.id ? {...item,width:Number(width.value)} : item));
+        const grip = button('⠿ Drag', () => {});
+        grip.draggable = true;
+        grip.setAttribute('aria-label', 'Drag ' + post.title);
+        grip.ondragstart = event => {
+          event.dataTransfer.setData('application/x-dashboard-post', post.id);
+          event.dataTransfer.effectAllowed = 'move';
+        };
+        article.ondragover = event => {
+          if (event.dataTransfer.types.includes('application/x-dashboard-post')) event.preventDefault();
+        };
+        article.ondrop = event => {
+          event.preventDefault();
+          const bounds = article.getBoundingClientRect();
+          const after = event.clientY > bounds.top + bounds.height * .7 ||
+            (event.clientY > bounds.top + bounds.height * .3 && event.clientX > bounds.left + bounds.width / 2);
+          move(event.dataTransfer.getData('application/x-dashboard-post'), post.id, after);
+        };
+        const earlier = button('Earlier', () => move(post.id, ordered[index-1]?.id, false));
+        const later = button('Later', () => move(post.id, ordered[index+1]?.id, true));
+        earlier.disabled = index === 0;
+        later.disabled = index === ordered.length-1;
+        controls.append(grip, width, earlier, later);
+        article.append(controls);
+      }
       const date = new Date(post.date);
       const time = element('time', date.toLocaleDateString(undefined, {dateStyle:'long'}));
       time.dateTime = post.date;
@@ -234,28 +293,32 @@
         render();
       }));
       article.append(actions);
-      blog.append(article);
+      grid.append(article);
     }
+    blog.append(grid);
     document.getElementById('content').replaceChildren(blog);
   }
 
   addEventListener('dashboard:account-changing', () => {
+    arranging = false;
     document.querySelector('.dashboard-blog-editor[open]')?.close();
   });
   const previous = render;
   render = function () {
-    if (page !== 'Blog') {
+    const target = page;
+    if (target !== 'Blog' && target !== 'Brain Dump') {
       previous();
       return;
     }
     page = 'Quick notes';
-    try { previous(); } finally { page = 'Blog'; }
+    try { previous(); } finally { page = target; }
     document.body.dataset.glowPage = page;
     for (const id of ['title', 'appPageTitle', 'mobileCurrentPage']) {
       const heading = document.getElementById(id);
-      if (heading) heading.textContent = 'Blog';
+      if (heading) heading.textContent = target;
     }
     window.DashboardSidebar.organize();
-    paint();
+    if (target === 'Blog') paint();
+    else window.DashboardNotebook.paint(document.getElementById('content'), true);
   };
 })();

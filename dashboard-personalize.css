@@ -37,8 +37,8 @@ body.glow-redesign aside .glow-side-settings { flex:none;min-height:44px;width:4
 .priss-home-card dl div { display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.2rem .65rem;padding:.35rem 0;border-bottom:1px solid #76829a55; }
 .priss-home-card dd { font-weight:700;margin:0; }
 .priss-home-card small { grid-column:1/-1; }
-body.glow-redesign main #content .glow-overview > #homeBibleHero.priss-scripture {
-  grid-column:auto!important;min-height:0!important;padding:1rem!important;margin:0!important;
+body.glow-redesign main #content .glow-overview #homeBibleHero.priss-scripture {
+  grid-column:auto!important;min-height:0!important;padding:1rem!important;margin-inline:0!important;margin-bottom:0!important;
 }
 #homeBibleHero.priss-scripture p { display:none; }
 #homeBibleHero.priss-scripture::before { display:none!important; }
@@ -118,7 +118,7 @@ body.glow-redesign #content .little-joys .joy-hero { padding:clamp(1rem,3vw,2rem
   body.glow-redesign #content .glow-task-groups { grid-template-columns:minmax(0,1fr)!important; }
   .priss-page-tools button { flex:1 1 auto; }
 }
-body.glow-redesign #content .glow-overview > .glow-tasks .glow-task-row > div { grid-column:2/-1; }
+body.glow-redesign #content .glow-overview .glow-tasks .glow-task-row > div { grid-column:2/-1; }
 body.glow-redesign #content .calendar .calendar-date-number { font-variant-numeric:tabular-nums; }
 #appSettings {
   --settings-surface: color-mix(in srgb, var(--theme-background, #151a30) 85%, var(--theme-header, #22273f));
@@ -160,23 +160,6 @@ body.glow-redesign #content .calendar .calendar-date-number { font-variant-numer
 #appSettings .theme-studio-controls { margin-top: .65rem; }
 #appSettings .appearance-save { display: grid; justify-content: start; gap: .2rem; margin-top: .8rem; }
 #appSettings .appearance-save p:empty { display: none; }
-.custom-theme-swatches {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
-}
-.custom-theme-swatches label {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 36px 70px;
-  gap: .45rem;
-}
-.custom-theme-swatches input[type="color"] { width: 36px; height: 36px; }
-.custom-theme-swatches input[type="text"] {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding-inline: .25em;
-  font: 13px ui-monospace, monospace;
-}
 body.glow-redesign[data-dashboard-theme="custom"] #appMobileHeader .digital-clock {
   color: var(--theme-clock, #80defa);
 }

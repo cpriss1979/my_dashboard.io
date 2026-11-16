@@ -300,52 +300,85 @@
     cards.sort((a,b)=>{const n=node=>{const i=order.indexOf(node.dataset.homeWidget);return i<0?order.length:i};return n(a)-n(b)});
     layout.append(...cards);
     const editing=Boolean(prefs().arrangingHome);
-    if(!editing)return;
-    function move(key,target){
-      const order=cards.map(node=>node.dataset.homeWidget);
-      const from=order.indexOf(key),to=order.indexOf(target);
-      if(from<0||to<0||from===to)return;
-      order.splice(from,1);order.splice(to,0,key);
-      write().homeOrder=order;save();render();
-    }
-    cards.forEach((card,i)=>{
+    const saved=prefs().homePlacement;
+    if(!saved&&!editing)return;
+    const placement=Object.fromEntries(cards.map((card,index)=>{
       const key=card.dataset.homeWidget;
-      const actions=el('div',undefined,'home-widget-actions');
-      const grip=button('↕ Drag',()=>{});
-      grip.classList.add('home-widget-grip');
-      grip.setAttribute('aria-label','Drag '+key);
-      let pointer=null, target=null;
-      const clearDrag=()=>{
-        card.classList.remove('home-widget-dragged');
-        target?.classList.remove('home-widget-drop-target');
-        target=null;
-        pointer=null;
-      };
-      grip.onpointerdown=event=>{
-        if(event.button!==0||!event.isPrimary)return;
-        pointer=event.pointerId;
-        grip.setPointerCapture(pointer);
-        card.classList.add('home-widget-dragged');
-      };
-      grip.onpointermove=event=>{
-        if(event.pointerId!==pointer)return;
-        const next=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-home-widget]');
-        if(next===target)return;
-        target?.classList.remove('home-widget-drop-target');
-        target=cards.includes(next)&&next!==card?next:null;
-        target?.classList.add('home-widget-drop-target');
-      };
-      grip.onpointerup=event=>{
-        if(event.pointerId!==pointer)return;
-        const destination=target?.dataset.homeWidget;
-        clearDrag();
-        if(destination)move(key,destination);
-      };
-      grip.onlostpointercapture=clearDrag;
-      const earlier=button('Earlier',()=>move(key,cards[i-1]?.dataset.homeWidget));earlier.disabled=i===0;
-      const later=button('Later',()=>move(key,cards[i+1]?.dataset.homeWidget));later.disabled=i===cards.length-1;
-      actions.append(grip,earlier,later);card.append(actions);
+      const prior=saved?.[key];
+      return [key,{column:[0,1,2].includes(prior?.column)?prior.column:index%3,gap:[0,1,2].includes(prior?.gap)?prior.gap:0}];
+    }));
+    function place(key,column,anchor,after=false){
+      const order=cards.map(card=>card.dataset.homeWidget).filter(id=>id!==key);
+      if(anchor&&anchor!==key&&order.includes(anchor)){
+        order.splice(order.indexOf(anchor)+(after?1:0),0,key);
+      }else order.push(key);
+      placement[key].column=column;
+      const options=write();
+      options.homePlacement={...options.homePlacement,...placement};
+      options.homeOrder=order;
+      save();render();
+    }
+    layout.classList.add('dashboard-lanes');
+    const lanes=Array.from({length:3},(_,column)=>{
+      const lane=el('div',undefined,'dashboard-lane');
+      lane.dataset.column=column;
+      lane.setAttribute('aria-label',['Left column','Center column','Right column'][column]);
+      if(editing){
+        lane.append(el('strong',lane.getAttribute('aria-label'),'dashboard-lane-label'));
+        lane.ondragover=event=>{if(event.dataTransfer.types.includes('application/x-dashboard-home'))event.preventDefault()};
+        lane.ondrop=event=>{
+          const key=event.dataTransfer.getData('application/x-dashboard-home');
+          if(!Object.hasOwn(placement,key))return;
+          event.preventDefault();
+          const hit=event.target.closest('[data-home-widget]');
+          if(hit?.dataset.homeWidget===key)return;
+          const bounds=hit?.getBoundingClientRect();
+          place(key,column,hit?.dataset.homeWidget,bounds&&event.clientY>bounds.top+bounds.height/2);
+        };
+      }
+      layout.append(lane);
+      return lane;
     });
+    for(const card of cards){
+      const key=card.dataset.homeWidget;
+      const position=placement[key];
+      const lane=lanes[position.column];
+      card.dataset.cardGap=position.gap;
+      lane.append(card);
+      if(!editing)continue;
+      const actions=el('div',undefined,'home-widget-actions dashboard-layout-actions');
+      const grip=button('⠿ Drag',()=>{});
+      grip.classList.add('home-widget-grip');
+      grip.draggable=true;
+      grip.ondragstart=event=>{
+        event.dataTransfer.setData('application/x-dashboard-home',key);
+        event.dataTransfer.effectAllowed='move';
+      };
+      const column=el('select');
+      column.setAttribute('aria-label','Column for '+key);
+      ['Left','Center','Right'].forEach((name,index)=>column.add(new Option(name,index)));
+      column.value=position.column;
+      column.onchange=()=>place(key,Number(column.value));
+      const gap=el('select');
+      gap.setAttribute('aria-label','Space above '+key);
+      ['Standard gap','More space','Large gap'].forEach((name,index)=>gap.add(new Option(name,index)));
+      gap.value=position.gap;
+      gap.onchange=()=>{
+        position.gap=Number(gap.value);
+        card.dataset.cardGap=position.gap;
+        const options=write();
+        options.homePlacement={...options.homePlacement,...placement};
+        save();
+      };
+      const neighbors=cards.filter(node=>placement[node.dataset.homeWidget].column===position.column);
+      const index=neighbors.indexOf(card);
+      const earlier=button('↑',()=>place(key,position.column,neighbors[index-1].dataset.homeWidget));
+      earlier.setAttribute('aria-label','Move '+key+' up');earlier.disabled=index===0;
+      const later=button('↓',()=>place(key,position.column,neighbors[index+1].dataset.homeWidget,true));
+      later.setAttribute('aria-label','Move '+key+' down');later.disabled=index===neighbors.length-1;
+      actions.append(grip,column,earlier,later,gap);
+      card.append(actions);
+    }
   }
 
   function setupSettings() {
@@ -414,12 +447,21 @@
 
     if(page==='Overview') {
       home();
-      tools.append(button('Edit Home cards',editHome),button(prefs().arrangingHome?'Done arranging':'Arrange cards',()=>{
-        write().arrangingHome=!prefs().arrangingHome;save();render();
-      }));
+      tools.classList.add('dashboard-home-controls');
+      const arrange=button(prefs().arrangingHome?'Done arranging':'Arrange cards',()=>{
+        const entering=!prefs().arrangingHome;
+        const options=write();
+        options.arrangingHome=entering;
+        if(entering&&!options.homePlacement)options.homePlacement={};
+        save();render();
+        const focus=content.querySelector(entering?'.home-widget-grip':'.dashboard-arrange-toggle');
+        focus?.focus();
+      },'dashboard-control dashboard-arrange-toggle');
+      arrange.setAttribute('aria-pressed',String(Boolean(prefs().arrangingHome)));
+      tools.append(button('Edit Home cards',editHome,'dashboard-control'),arrange);
     }
     const toolbar=page==='Finances'?content.querySelector('.cf-toolbar'):null;
-    if(tools.childElementCount){if(toolbar)toolbar.after(tools);else content.prepend(tools);}
+    if(tools.childElementCount){if(toolbar)toolbar.after(tools);else content.append(tools);}
     paintColors();
   };
   addEventListener('dashboard:account-changing',()=>{

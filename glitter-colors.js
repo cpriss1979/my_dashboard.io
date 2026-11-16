@@ -41,7 +41,7 @@
     ['Overview', 'Home'], ['Calendar', 'Calendar'], ['Daily priorities', 'Tasks'],
     ['Projects', 'Projects'], ['Quick notes', 'Notes'], ['Bookmarks', 'Bookmarks'],
     ['Finances', 'Finances'], ['Amortization', 'Amortization'], ['Collections', 'Collections'], ['Shopping List', 'Shopping List'], ['Wish List', 'Wish List'], ['Time for You', 'Little Joys'], ['Habit Tracker', 'Habit Tracker'],
-    ['Journal', 'Journal'], ['Games', 'Games'], ['Badges', 'Badges'], ['Bible', 'Bible']
+    ['Journal', 'Journal'], ['Blog', 'Blog'], ['Brain Dump', 'Brain Dump'], ['Games', 'Games'], ['Badges', 'Badges'], ['Bible', 'Bible']
   ];
 
   function readGlitterPages(saved) {
@@ -274,18 +274,42 @@
   palette.className = 'custom-theme-palette';
   const paletteTitle = document.createElement('legend');
   paletteTitle.textContent = 'Custom palette';
-  const swatches = document.createElement('div');
-  swatches.className = 'custom-theme-swatches';
+  const map = document.createElement('div');
+  map.className = 'palette-map';
+  map.setAttribute('role', 'group');
+  map.setAttribute('aria-label', 'Dashboard preview');
+  const instruction = document.createElement('p');
+  instruction.textContent = 'Select an area in the preview to change its color.';
+  const editor = document.createElement('div');
+  editor.className = 'palette-editor';
+  const hotspots = new Map();
+  function selectArea(id) {
+    for (const [key, {button, row}] of hotspots) {
+      button.setAttribute('aria-pressed', String(key === id));
+      row.hidden = key !== id;
+    }
+  }
   const colorInputs = new Map();
   const hexInputs = new Map();
   function readColors() {
     return customPalette(Object.fromEntries([...colorInputs].map(([id, input]) => [id, input.value])));
   }
   function previewCustom() {
-    paintCustomPalette(choices.get('custom').parentElement, readColors());
+    const colors = readColors();
+    paintCustomPalette(choices.get('custom').parentElement, colors);
+    paintCustomPalette(map, colors);
   }
   for (const [id, name] of customFields) {
-    const label = document.createElement('label');
+    const label = document.createElement('div');
+    label.className = 'palette-editor-row';
+    const hotspot = document.createElement('button');
+    hotspot.type = 'button';
+    hotspot.className = 'palette-hotspot';
+    hotspot.dataset.area = id;
+    hotspot.textContent = name;
+    hotspot.onclick = () => selectArea(id);
+    map.append(hotspot);
+    hotspots.set(id, {button:hotspot, row:label});
     const input = document.createElement('input');
     input.type = 'color';
     input.value = applied.custom[id];
@@ -304,10 +328,13 @@
     const nameLabel = document.createElement('span');
     nameLabel.textContent = name;
     input.setAttribute('aria-label', name + ' color picker');
-    label.append(nameLabel, input, code);
-    swatches.append(label);
+    const hexLabel = document.createElement('label');
+    hexLabel.append('Hex code', code);
+    label.append(nameLabel, input, hexLabel);
+    editor.append(label);
   }
-  palette.append(paletteTitle, swatches);
+  palette.append(paletteTitle, instruction, map, editor);
+  selectArea('background');
 
   function updateControls() {
     const customSelected = choices.get('custom').checked;
@@ -352,6 +379,7 @@
     for (const [id, input] of pageInputs) input.checked = pages === 'all' || pages.includes(id);
     updatePagePicker();
     for (const [id, input] of colorInputs) {input.value=applied.custom[id];const code=hexInputs.get(id);code.value=input.value;code.setCustomValidity('')}
+    selectArea('background');
     updateControls();
     status.textContent = '';
   }
@@ -360,7 +388,15 @@
     const selected = themes.find(([id]) => choices.get(id).checked);
     if (!selected) return;
     const [id, name] = selected;
-    if(id==='custom')for(const code of hexInputs.values())if(!code.reportValidity())return;
+    if (id === 'custom') {
+      for (const [area, code] of hexInputs) {
+        if (!code.validity.valid) {
+          selectArea(area);
+          code.reportValidity();
+          return;
+        }
+      }
+    }
     const pages = demo ? null : pageScope.value === 'all' ? 'all' :
       [...pageInputs].filter(([, input]) => input.checked).map(([id]) => id);
     applied = { pages, theme: id, intensity: intensity.value, accent: accent.value, glitterColor: glitterColor.value, motion: motion.checked, custom: readColors() };

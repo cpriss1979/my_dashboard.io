@@ -1,0 +1,26 @@
+My Dashboard — Layouts, Gifts, and Wellness
+
+1. Unzip the package and open the extracted folder.
+2. Copy its files into the root of cpriss1979/my_dashboard.io.
+   Replace matching files and merge matching folders.
+3. Commit the changes to the branch served by GitHub Pages. Refresh the
+   dashboard once Pages finishes publishing.
+
+Home: Scroll below the cards for Edit Home cards and Arrange cards.
+Drag cards into a column above or below other cards. You can also use the
+column, up/down, and spacing controls. On a phone the columns stack.
+
+Reflect > Blog: Select Arrange posts. Drag to reorder, or use Earlier
+and Later. Set each post to one third, half, two thirds, or full width.
+
+Shopping > Gift Planner: Save gift ideas with recipients, occasions,
+dates, budgets, links, notes, and status.
+
+Wellness > Exercise: Enter weight check-ins and a goal. Add exercises
+from Workout library to My routine. Exercise photos load from the NHS.
+
+Wellness > Calorie Log: Enter calories per serving and servings consumed.
+Choose a date to review that day's foods and calorie total.
+
+This ZIP includes the earlier sidebar, Blog, Notes, Reflect, and
+Custom Palette changes.

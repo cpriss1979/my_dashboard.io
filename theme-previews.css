@@ -140,7 +140,7 @@ body[data-midnight-glitter][data-glow-page="Overview"] #content {
   position:relative;
   z-index:1;
 }
-body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content :is(.glow-overview > .card,#homeBibleHero) {
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content :is(.glow-overview .card,#homeBibleHero) {
   --midnight-card:var(--midnight-lavender);
   background:linear-gradient(145deg,#ffffffdf,var(--midnight-card))!important;
   color:var(--midnight-ink)!important;
@@ -148,10 +148,10 @@ body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content :i
   border-radius:18px!important;
   box-shadow:inset 0 1px 0 #fff,0 8px 24px #03051b50;
 }
-body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview > .glow-calendar { --midnight-card:var(--midnight-ice); }
-body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview > .glow-tasks { --midnight-card:var(--midnight-pink); }
-body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview > .glow-notes { --midnight-card:var(--midnight-mint); }
-body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview > .glow-bookmarks { --midnight-card:var(--midnight-peach); }
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview .glow-calendar { --midnight-card:var(--midnight-ice); }
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview .glow-tasks { --midnight-card:var(--midnight-pink); }
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview .glow-notes { --midnight-card:var(--midnight-mint); }
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview .glow-bookmarks { --midnight-card:var(--midnight-peach); }
 body[data-midnight-glitter][data-glow-page="Overview"] :is(.glow-overview,#homeBibleHero) button:focus-visible,
 body[data-midnight-glitter] > aside button:focus-visible { outline:2px solid #628ae0; outline-offset:2px; }
 
@@ -196,11 +196,11 @@ body[data-midnight-glitter][data-glitter-motion="on"][data-glow-page="Overview"]
 }
 @media (hover:hover) {
   body[data-midnight-glitter][data-glitter-motion="on"] > aside nav button,
-  body[data-midnight-glitter][data-glitter-motion="on"][data-glow-page="Overview"] #content :is(.glow-overview > .card,#homeBibleHero,button) {
+  body[data-midnight-glitter][data-glitter-motion="on"][data-glow-page="Overview"] #content :is(.glow-overview .card,#homeBibleHero,button) {
     transition:box-shadow .2s ease;
   }
   body[data-midnight-glitter] > aside nav button:hover,
-  body[data-midnight-glitter][data-glow-page="Overview"] #content :is(.glow-overview > .card,#homeBibleHero,button):hover {
+  body[data-midnight-glitter][data-glow-page="Overview"] #content :is(.glow-overview .card,#homeBibleHero,button):hover {
     box-shadow:0 0 14px color-mix(in srgb,var(--midnight-accent) 46%,transparent);
   }
 }
@@ -217,7 +217,7 @@ body[data-glitter-enabled][data-glitter-intensity="off"] > aside .brand::after {
     animation:none;
   }
   body[data-midnight-glitter][data-glitter-motion="on"] > aside nav button,
-  body[data-midnight-glitter][data-glitter-motion="on"][data-glow-page="Overview"] #content :is(.glow-overview > .card,#homeBibleHero,button) {
+  body[data-midnight-glitter][data-glitter-motion="on"][data-glow-page="Overview"] #content :is(.glow-overview .card,#homeBibleHero,button) {
     transition:none;
   }
 }
@@ -354,14 +354,14 @@ body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .g
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:16px;
 }
-body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview > .card {
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content .glow-overview .card {
   grid-row:auto;
   grid-column:auto;
 }
 body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] #content #homeBibleHero {
   order:1;
 }
-body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] main #content :is(.glow-overview > .card,#homeBibleHero) {
+body.glow-redesign[data-midnight-glitter][data-glow-page="Overview"] main #content :is(.glow-overview .card,#homeBibleHero) {
   background:linear-gradient(145deg,#fffdf9,var(--midnight-lavender))!important;
   border:1px solid var(--midnight-accent)!important;
   border-radius:18px!important;
