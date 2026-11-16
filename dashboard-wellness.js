@@ -4,6 +4,10 @@
   const guides = {
     strength: 'https://www.nhs.uk/live-well/exercise/strength-exercises/',
     seated: 'https://www.nhs.uk/live-well/exercise/sitting-exercises/',
+    yoga:'https://www.nhs.uk/live-well/exercise/pilates-and-yoga/',
+    core:'https://www.nhs.uk/live-well/exercise/pilates-and-yoga/pilates-for-beginners/',
+    flexibility:'https://www.nhs.uk/live-well/exercise/flexibility-exercises/',
+    balance:'https://www.nhs.uk/live-well/exercise/balance-exercises/',
     activity: 'https://www.cdc.gov/healthy-weight-growth/physical-activity/'
   };
   const workouts = [
@@ -14,6 +18,201 @@
     {id:'heel', name:'Supported calf raise', guide:'strength', image:'STRENGTH_EXERCISES-_calf-raises', alt:'Person holding a chair and lifting both heels', steps:['Hold a sturdy support and stand with feet flat.', 'Raise both heels a comfortable distance.', 'Lower slowly. Start with up to 5 repetitions.']},
     {id:'squat', name:'Supported mini-squat', guide:'strength', image:'STRENGTH_EXERCISES-_mini-squats', alt:'Person using a chair for support while bending their knees', steps:['Hold a sturdy chair or counter for balance.', 'Bend your knees slightly while keeping them pointed forward.', 'Rise slowly. Keep the movement small and comfortable.']}
   ];
+  const originalCategories={
+    march:['Cardio','Legs'],stretch:['Stretching','Arms & shoulders'],
+    chair:['Legs','Glutes & thighs'],wall:['Arms & shoulders','Full body'],
+    heel:['Legs','Balance'],squat:['Glutes & thighs','Legs']
+  };
+  for(const workout of workouts)workout.categories=originalCategories[workout.id];
+  workouts.push(...[
+  {
+    "id": "curl",
+    "name": "Biceps curl",
+    "guide": "strength",
+    "categories": [
+      "Arms & shoulders"
+    ],
+    "steps": [
+      "Use a light object in each hand. Keep elbows by your sides and slowly curl and lower."
+    ],
+    "image": "STRENGTH_EXERCISES-_Bicep_curls",
+    "alt": "Biceps curl demonstration"
+  },
+  {
+    "id": "leglift",
+    "name": "Supported side leg lift",
+    "guide": "strength",
+    "categories": [
+      "Legs",
+      "Glutes & thighs",
+      "Balance"
+    ],
+    "steps": [
+      "Hold a sturdy chair. Raise one leg to the side a comfortable distance; lower it slowly."
+    ],
+    "image": "STRENGTH_EXERCISES-_Sideways-leg-lift",
+    "alt": "Supported side leg lift demonstration"
+  },
+  {
+    "id": "legback",
+    "name": "Supported back leg lift",
+    "guide": "strength",
+    "categories": [
+      "Glutes & thighs",
+      "Legs"
+    ],
+    "steps": [
+      "Hold stable support. Move one straight leg gently behind you and return without leaning forward."
+    ],
+    "image": "STRENGTH_EXERCISES-_Leg-extension",
+    "alt": "Supported back leg lift demonstration"
+  },
+  {
+    "id": "turn",
+    "name": "Seated torso turn",
+    "guide": "seated",
+    "categories": [
+      "Back",
+      "Stretching"
+    ],
+    "steps": [
+      "Sit with feet grounded. Turn your upper body gently to one side, return to center, and switch sides."
+    ]
+  },
+  {
+    "id": "neck",
+    "name": "Seated neck rotation",
+    "guide": "seated",
+    "categories": [
+      "Stretching"
+    ],
+    "steps": [
+      "Sit tall. Slowly turn your head to look over one shoulder, then return to center and switch sides."
+    ]
+  },
+  {
+    "id": "ankle",
+    "name": "Seated ankle movement",
+    "guide": "seated",
+    "categories": [
+      "Stretching",
+      "Legs"
+    ],
+    "steps": [
+      "Support yourself on a stable chair. Lift one foot slightly, then gently point and flex it."
+    ]
+  },
+  {
+    "id": "pilates",
+    "name": "Beginner Pilates",
+    "guide": "core",
+    "categories": [
+      "Core & stomach",
+      "Back",
+      "Full body"
+    ],
+    "steps": [
+      "Open the NHS beginner video and choose a comfortable range and pace."
+    ]
+  },
+  {
+    "id": "chair-pilates",
+    "name": "Chair-based Pilates",
+    "guide": "yoga",
+    "categories": [
+      "Core & stomach",
+      "Full body",
+      "Stretching"
+    ],
+    "steps": [
+      "Open Chair-based Pilates in the NHS video library and follow the seated routine."
+    ]
+  },
+  {
+    "id": "yoga-flow",
+    "name": "Vinyasa flow yoga",
+    "guide": "yoga",
+    "categories": [
+      "Yoga",
+      "Full body"
+    ],
+    "steps": [
+      "Open Vinyasa flow yoga in the NHS video library. Follow the demonstration at a manageable pace."
+    ]
+  },
+  {
+    "id": "yoga-stretch",
+    "name": "Yoga and mobility video",
+    "guide": "yoga",
+    "categories": [
+      "Yoga",
+      "Stretching"
+    ],
+    "steps": [
+      "Choose a suitable session from the NHS video library. Keep stretches within a comfortable range."
+    ]
+  },
+  {
+    "id": "walk",
+    "name": "Walking",
+    "guide": "activity",
+    "categories": [
+      "Cardio",
+      "Full body"
+    ],
+    "steps": [
+      "Choose a level route and a comfortable pace. Increase the duration gradually as you are able."
+    ]
+  },
+  {
+    "id": "dance",
+    "name": "Low-impact dance",
+    "guide": "activity",
+    "categories": [
+      "Cardio",
+      "Full body"
+    ],
+    "steps": [
+      "Put on a song and move at a comfortable pace. Use small steps or stay seated if preferred."
+    ]
+  },
+  {
+    "id": "bike",
+    "name": "Easy cycling",
+    "guide": "activity",
+    "categories": [
+      "Cardio",
+      "Legs"
+    ],
+    "steps": [
+      "Use a stationary bike or a safe route. Start at a comfortable resistance or pace."
+    ]
+  },
+  {
+    "id": "heel-toe",
+    "name": "Supported heel-to-toe stand",
+    "guide": "balance",
+    "categories": [
+      "Balance"
+    ],
+    "steps": [
+      "Standing near sturdy support, place one foot just in front of the other. Change sides when ready."
+    ]
+  },
+  {
+    "id": "shoulder",
+    "name": "Chest and shoulder mobility",
+    "guide": "flexibility",
+    "categories": [
+      "Arms & shoulders",
+      "Stretching"
+    ],
+    "steps": [
+      "Follow the NHS flexibility guide. Move slowly and stop short of pain."
+    ]
+  }
+]);
+  const categories=['Yoga','Stretching','Legs','Arms & shoulders','Core & stomach','Cardio','Back','Glutes & thighs','Balance','Full body'];
 
   function el(tag, value, className) {
     const node = document.createElement(tag);
@@ -92,15 +291,44 @@
 
   function gifts(root) {
     let editing;
+    let groupView='';
+    let editingGroup;
     const key = 'giftPlanner';
     function draw() {
+      const grouping=panel('Gift groups');
+      const groupForm=el('form');
+      const label=field(groupForm,'groupName','Group name','text',editingGroup?.name,{required:true,maxLength:100});
+      const limit=field(groupForm,'limit','Group budget ($)','number',editingGroup?.limit,{required:true,min:0,step:'0.01'});
+      submit(groupForm,editingGroup?'Save group':'Create group',()=>{
+        if(!label.value.trim())return;
+        const record={id:editingGroup?.id||crypto.randomUUID(),name:label.value.trim(),limit:limit.valueAsNumber};
+        groupView=record.id;
+        const next=replaceItem(list('giftGroups'),record,editingGroup);
+        editingGroup=undefined;
+        updateList('giftGroups',next,draw);
+      },editingGroup?()=>{editingGroup=undefined;draw();}:undefined);
+      grouping.append(groupForm);
+      const filters=actions(button('All gifts',()=>{groupView='';draw();}));
+      for(const group of list('giftGroups')){
+        const tab=button(group.name,()=>{groupView=group.id;draw();});
+        tab.setAttribute('aria-pressed',String(groupView===group.id));
+        filters.append(tab);
+      }
+      grouping.append(filters);
+      const selectedGroup=list('giftGroups').find(group=>group.id===groupView);
       const editor = panel(editing ? 'Edit gift' : 'Add a gift');
       const form = el('form');
       const title = field(form,'title','Gift idea','text',editing?.title,{required:true,maxLength:120});
       const recipient = field(form,'recipient','Recipient','text',editing?.recipient,{maxLength:100});
       const occasion = field(form,'occasion','Occasion','text',editing?.occasion,{maxLength:100});
       const due = field(form,'due','Occasion date','date',editing?.due);
-      const budget = field(form,'budget','Budget ($)','number',editing?.budget,{min:0,step:'0.01'});
+      const budget = field(form,'budget','Expected price ($)','number',editing?.budget,{min:0,step:'0.01'});
+      const groupControl=el('select');
+      groupControl.add(new Option('No group',''));
+      for(const group of list('giftGroups'))groupControl.add(new Option(group.name,group.id));
+      groupControl.value=editing?editing.groupId||'':groupView;
+      const groupLabel=el('label','Gift group');
+      groupLabel.append(groupControl);form.append(groupLabel);
       const url = field(form,'url','Product link','url',editing?.url,{maxLength:600});
       const notes = field(form,'notes','Notes','text',editing?.notes,{maxLength:240});
       const status = choice(form,'status','Status',['Idea','Purchased','Wrapped','Given'],editing?.status);
@@ -118,21 +346,31 @@
           product = parsed.href;
         }
         const record = {id:editing?.id||crypto.randomUUID(),title:title.value.trim(),recipient:recipient.value.trim(),
-          occasion:occasion.value.trim(),due:due.value,budget:budget.value,url:product,notes:notes.value.trim(),status:status.value};
+          occasion:occasion.value.trim(),due:due.value,budget:budget.value,groupId:groupControl.value,url:product,notes:notes.value.trim(),status:status.value};
         const next = replaceItem(list(key),record,editing);
         editing = undefined;
         updateList(key,next,draw);
       },editing?()=>{editing=undefined;draw();}:undefined);
       editor.append(form);
 
-      const saved = panel('Gift list');
+      const saved = panel(selectedGroup?.name||'Gift list');
       const catalog = el('div',undefined,'dashboard-feature-grid');
-      const records = [...list(key)].sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
+      const records = list(key).filter(item=>!selectedGroup||item.groupId===selectedGroup.id).sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999'));
+      const priced=records.filter(item=>item.budget!==''&&item.budget!=null&&Number.isFinite(Number(item.budget)));
+      const cents=item=>Math.round(Number(item.budget)*100);
+      const planned=priced.reduce((sum,item)=>sum+cents(item),0);
+      saved.append(el('p','Planned gift costs · '+usd(planned/100)+(priced.length<records.length?' · '+(records.length-priced.length)+' unpriced':'')));
+      if(selectedGroup){
+        const purchased=priced.filter(item=>['Purchased','Wrapped','Given'].includes(item.status)).reduce((sum,item)=>sum+cents(item),0);
+        saved.append(el('p','Group budget · '+usd(selectedGroup.limit)),el('p','Left after planned gifts · '+usd((Math.round(selectedGroup.limit*100)-planned)/100)),
+          el('p','Left after purchased gifts · '+usd((Math.round(selectedGroup.limit*100)-purchased)/100)),
+          button('Edit group',()=>{editingGroup=selectedGroup;draw();root.querySelector('input[name=groupName]').focus();}));
+      }
       if(!records.length) saved.append(el('p','No gifts saved yet.'));
       for(const record of records){
         const card = el('article',undefined,'card');
         card.append(el('h3',record.title),el('p',[record.recipient,record.occasion,record.due].filter(Boolean).join(' · '),'feature-meta'),
-          el('p',record.status+(record.budget!==''?' · '+usd(Number(record.budget))+' budget':''),'feature-meta'));
+          el('p',record.status+(record.budget!==''?' · '+usd(Number(record.budget))+' expected':''),'feature-meta'));
         if(record.notes) card.append(el('p',record.notes));
         if(/^https?:\/\//i.test(record.url)) card.append(link('Open product',record.url));
         card.append(actions(button('Edit',()=>{editing=record;draw();root.querySelector('input[name=title]').focus();}),
@@ -140,7 +378,7 @@
         catalog.append(card);
       }
       saved.append(catalog);
-      root.replaceChildren(editor,saved);
+      root.replaceChildren(grouping,editor,saved);
     }
     draw();
   }
@@ -189,6 +427,7 @@
 
   function exercise(root) {
     let tab = 'routine';
+    let category = categories[0];
     function draw() {
       const data = state.exercisePlanner || {};
       const profile = panel('Weight check-in');
@@ -232,19 +471,30 @@
       }
       routine.append(navigation);
       const selected = data.workouts || [];
-      const display = tab==='routine'?selected.map(id=>workouts.find(item=>item.id===id)).filter(Boolean):workouts;
+      if(tab==='library'){
+        const select=el('select');
+        select.setAttribute('aria-label','Workout category');
+        for(const name of categories)select.add(new Option(name,name));
+        select.value=category;
+        select.onchange=()=>{category=select.value;draw();root.querySelector('[aria-label="Workout category"]').focus();};
+        const label=el('label','Workout category');label.append(select);routine.append(label);
+      }
+      const display = tab==='routine'?selected.map(id=>workouts.find(item=>item.id===id)).filter(Boolean):
+        workouts.filter(workout=>workout.categories.includes(category));
       if(!display.length) routine.append(el('p','Choose exercises in the Workout library to build your routine.'));
       const cards = el('div',undefined,'dashboard-feature-grid');
       for(const workout of display){
         const card = el('article',undefined,'card');
         card.append(el('h3',workout.name));
+        if(workout.image){
         const picture = el('img');picture.alt=workout.alt;picture.loading='lazy';
         picture.src='https://assets.nhs.uk/nhsuk-cms/images/'+workout.image+'.width-320.jpg';
         picture.referrerPolicy='no-referrer';
         card.append(picture);
+        }
         const steps = el('ol');
         workout.steps.forEach(step=>steps.append(el('li',step)));
-        card.append(steps,link('NHS instructions and photos',guides[workout.guide]));
+        card.append(steps,link(workout.guide==='activity'?'CDC activity guide':'NHS exercise guide',guides[workout.guide]));
         const active = selected.includes(workout.id);
         card.append(actions(button(active?'Remove from routine':'Add to routine',()=>{
           state.exercisePlanner = {...data,workouts:active?selected.filter(id=>id!==workout.id):[...selected,workout.id]};

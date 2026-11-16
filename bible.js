@@ -45,4 +45,21 @@
  const prior=render;render=function(){const bible=page==='Bible';if(bible)page='Quick notes';try{prior()}finally{if(bible)page='Bible'}if(bible){document.body.dataset.glowPage='Bible';document.getElementById('title').textContent='Bible';document.getElementById('appPageTitle').textContent='Bible';document.getElementById('description').textContent='';document.querySelectorAll('aside nav button').forEach(b=>{const active=(b.getAttribute('onclick')||'')==="go('Bible')";b.classList.toggle('active',active);b.removeAttribute('aria-current');if(active)b.setAttribute('aria-current','page')});paint()}else {controller?.abort();if(page==='Overview'||page==='Home'){const homeHero=heroCard(true);homeHero.id='homeBibleHero';document.getElementById('homeBibleHero')?.remove();document.getElementById('content').prepend(homeHero)}}if(award())save();badges()};
  window.resetBibleBadges=()=>{const m=model();m.resetBadges=rules().flatMap((rule,i)=>rule[3]?[i]:[]);m.awards={}};
  window.BiblePlanMath={books,chapters,plan,dayNumber};render();
+  const badgesContent=document.getElementById('content');
+  function addBadgeDropdowns(){
+    if(page!=='Badges')return;
+    for(const tile of badgesContent.querySelectorAll('.achievement-tile')){
+      if(tile.querySelector(':scope > details'))continue;
+      const title=tile.querySelector('h3');
+      if(!title)continue;
+      const details=el('details');
+      const summary=el('summary',title.textContent);
+      const status=tile.querySelector('small');
+      if(status)summary.append(el('span',' · '+status.textContent.replace('🔒 ','').trim()));
+      details.append(summary);
+      for(const child of [...tile.childNodes])if(child!==title&&child!==status)details.append(child);
+      tile.replaceChildren(details);
+    }
+  }
+  if(badgesContent)new MutationObserver(addBadgeDropdowns).observe(badgesContent,{childList:true,subtree:true});
 })();
