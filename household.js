@@ -48,13 +48,26 @@
     entry.append(title,add);
     const progress=el('p');progress.setAttribute('aria-live','polite');
     const list=el('div');
-    panel.append(el('h3',selectedPeriod==='daily'?'Daily house upkeep':periods[selectedPeriod]+' cleaning'),progress,entry,list);
+    const archive=el('details',undefined,'chores-archive');
+    const archiveTitle=el('summary');
+    const archiveItems=el('div');
+    archive.append(archiveTitle,archiveItems);
+    const clear=button('Clear completed',()=>{
+      const current=cycle(period);
+      for(const item of chores()){
+        if(item.period!==period||item.archived||item.checked!==current)continue;
+        item.checked='';
+      }
+      save();draw();
+    });
+    panel.append(el('h3',selectedPeriod==='daily'?'Daily house upkeep':periods[selectedPeriod]+' cleaning'),progress,entry,clear,list,archive);
     const period=selectedPeriod;
     let displayedCycle;
     function draw(){
       const current=cycle(period);
       displayedCycle=current;
-      const records=chores().filter(item=>item.period===period);
+      const records=chores().filter(item=>item.period===period&&!item.archived);
+      clear.disabled=!records.some(item=>item.checked===current);
       progress.textContent=records.filter(item=>item.checked===current).length+' of '+records.length+' finished '+({daily:'today',weekly:'this week',monthly:'this month',yearly:'this year'}[period]);
       list.replaceChildren();
       for(const item of records){
@@ -65,12 +78,21 @@
         const menu=el('details');menu.append(el('summary','Options'),button('Rename',()=>{
           const next=prompt('Chore name',item.title)?.trim().slice(0,120);
           if(next){item.title=next;save();draw()}
-        }),button('Remove',()=>{
-          if(!confirm('Remove '+item.title+'?'))return;
-          state.chores=chores().filter(record=>record.id!==item.id);save();draw();title.focus();
+        }),button('Archive',()=>{
+          item.archived=true;save();draw();title.focus();
         }));
         row.append(name,menu);list.append(row);
       }
+      const archived=chores().filter(item=>item.period===period&&item.archived);
+      archiveTitle.textContent='Archive ('+archived.length+')';
+      archiveItems.replaceChildren();
+      for(const item of archived){
+        const row=el('div',undefined,'household-chore-row');
+        row.append(el('span',item.title),button('Restore',()=>{delete item.archived;item.checked='';save();draw()}),
+          button('Delete',()=>{if(!confirm('Permanently delete '+item.title+'?'))return;state.chores=chores().filter(record=>record.id!==item.id);save();draw()}));
+        archiveItems.append(row);
+      }
+      if(!archived.length)archiveItems.append(el('p','No archived chores.'));
       if(!records.length)list.append(el('p','Add a chore to start this checklist.'));
     }
     entry.onsubmit=event=>{
@@ -148,8 +170,8 @@
     const settings=document.getElementById('appSettings');
     if(settings&&!settings.querySelector('.nav-customize')){
       const actions=el('div',undefined,'household-actions nav-customize');
-      actions.append(button('Edit profile',()=>{settings.close();window.DashboardProfile.open()}),button('Sharing',()=>{settings.close();go('Sharing')}));
-      settings.querySelector('.app-dialog-heading')?.after(actions);
+      actions.append(button('Sticky Notes',()=>{settings.close();window.DashboardStickyNotes?.open()}),button('Timer',()=>{settings.close();go('Focus timer')}),button('Edit profile',()=>{settings.close();window.DashboardProfile.open()}),button('Sharing',()=>{settings.close();go('Sharing')}));
+      settings.querySelector('#appSettingsContent')?.prepend(actions);
     }
     window.DashboardSidebar.organize();
     for(const link of document.querySelectorAll('[data-mobile-route]'))hide(link,window.DashboardNavigation.isHidden(link.dataset.mobileRoute));

@@ -311,11 +311,37 @@
     cards.forEach((card,i)=>{
       const key=card.dataset.homeWidget;
       const actions=el('div',undefined,'home-widget-actions');
-      const grip=button('↕ Drag',()=>{});grip.draggable=true;grip.setAttribute('aria-label','Drag '+key);
-      grip.ondragstart=event=>{event.dataTransfer.setData('text/plain',key);event.dataTransfer.effectAllowed='move';card.classList.add('home-widget-dragged')};
-      grip.ondragend=()=>card.classList.remove('home-widget-dragged');
-      card.ondragover=event=>event.preventDefault();
-      card.ondrop=event=>{event.preventDefault();move(event.dataTransfer.getData('text/plain'),key)};
+      const grip=button('↕ Drag',()=>{});
+      grip.classList.add('home-widget-grip');
+      grip.setAttribute('aria-label','Drag '+key);
+      let pointer=null, target=null;
+      const clearDrag=()=>{
+        card.classList.remove('home-widget-dragged');
+        target?.classList.remove('home-widget-drop-target');
+        target=null;
+        pointer=null;
+      };
+      grip.onpointerdown=event=>{
+        if(event.button!==0||!event.isPrimary)return;
+        pointer=event.pointerId;
+        grip.setPointerCapture(pointer);
+        card.classList.add('home-widget-dragged');
+      };
+      grip.onpointermove=event=>{
+        if(event.pointerId!==pointer)return;
+        const next=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-home-widget]');
+        if(next===target)return;
+        target?.classList.remove('home-widget-drop-target');
+        target=cards.includes(next)&&next!==card?next:null;
+        target?.classList.add('home-widget-drop-target');
+      };
+      grip.onpointerup=event=>{
+        if(event.pointerId!==pointer)return;
+        const destination=target?.dataset.homeWidget;
+        clearDrag();
+        if(destination)move(key,destination);
+      };
+      grip.onlostpointercapture=clearDrag;
       const earlier=button('Earlier',()=>move(key,cards[i-1]?.dataset.homeWidget));earlier.disabled=i===0;
       const later=button('Later',()=>move(key,cards[i+1]?.dataset.homeWidget));later.disabled=i===cards.length-1;
       actions.append(grip,earlier,later);card.append(actions);
@@ -330,15 +356,22 @@
     const appearance=el('section');
     const themeDialog=document.getElementById('dashboardThemes');
     if(themeDialog) {
-      const colors=el('details');
+      const colors=el('details',undefined,'appearance-page-colors');
       colors.append(el('summary','Page & entry colors'),button('Customize the current page',()=>{
         settings.close();customize();
       }));
       const controls=[...themeDialog.querySelectorAll('.dashboard-color-settings')];
       colors.append(...controls);
       const studio=themeDialog.querySelector('.dashboard-appearance');
-      if(studio)appearance.append(studio);
-      appearance.append(colors);
+      if(studio){
+        const saveArea=el('div',undefined,'appearance-save');
+        const apply=studio.querySelector('button');
+        const status=studio.querySelector('[role="status"]');
+        saveArea.append(apply,status);
+        studio.append(colors,saveArea);
+        appearance.append(studio);
+        settings.addEventListener('close',()=>{colors.open=false});
+      }else appearance.append(colors);
       addEventListener('dashboard:data-applied',()=>themeDialog.dispatchEvent(new Event('close')));
       settings.addEventListener('close',()=>themeDialog.dispatchEvent(new Event('close')));
     }

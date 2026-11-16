@@ -2,10 +2,12 @@
 (function(){
  const home=['Overview','Home','home'];
  const groups=[
-  ['Planner',[['Calendar','Calendar','calendar'],['Daily priorities','Tasks','tasks'],['Focus timer','Focus Timer','timer'],['Projects','Projects','projects'],['Quick notes','Notes','notes']]],
-  ['Household',[['Chores','Chores','chores'],['Shopping List','Shopping List','tasks'],['Wish List','Wish List','bookmarks'],['Collections','Collections','projects']]],
+  ['Planner',[['Calendar','Calendar','calendar'],['Daily priorities','Tasks','tasks'],['Projects','Projects','projects'],['Quick notes','Notes','notes']]],
+  ['Household',[['Chores','Chores','chores'],['Shopping List','Shopping List','tasks']]],
+  ['Kitchen',[['Meal Planner','Meal Planner','calendar'],['Recipes','Recipes','bible']]],
+  ['Travel',[['Packing Checklist','Packing Checklist','tasks']]],
   ['Money',[['Finances','Finances','finances'],['Amortization','Amortization','calendar']]],
-  ['Personal',[['Journal','Journal','journal'],['Habit Tracker','Habit Tracker','habit'],['Bible','Bible','bible'],['Time for You','Little Joys','sun'],['Games','Games','games'],['Badges','Badges','badges']]],
+  ['Personal',[['Wish List','Wish List','bookmarks'],['Collections','Collections','projects'],['Journal','Journal','journal'],['Habit Tracker','Habit Tracker','habit'],['Bible','Bible','bible'],['Time for You','Little Joys','sun'],['Games','Games','games'],['Badges','Badges','badges']]],
   ['Links',[['Bookmarks','Bookmarks','bookmarks']]]
  ];
  const entries=groups.flatMap(([,links])=>links);

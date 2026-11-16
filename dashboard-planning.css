@@ -1,0 +1,108 @@
+body.glow-redesign aside .dashboard-utility-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
+  margin-top: auto;
+  padding-top: .65rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+body.glow-redesign aside .dashboard-utility-bar button {
+  position: static;
+  inset: auto;
+  margin: 0;
+  padding: .4rem .5rem;
+  min-height: 36px;
+  font-size: .78rem;
+}
+.dashboard-utility-bar .glow-side-settings { order: -1; }
+.shortcut-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  border-radius: .45rem;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: .75rem;
+  font-weight: 750;
+}
+.bookmarks-manage-links { margin-block: .45rem .85rem; }
+.planning-page {
+  max-width: 74rem;
+  margin-inline: auto;
+  padding: clamp(.85rem, 2.4vw, 2rem);
+}
+.planning-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .55rem;
+  margin-block: .35rem .85rem;
+}
+.planning-toolbar > h2 { margin: 0 auto 0 0; }
+.planning-toolbar label { flex: 1 1 12rem; margin: 0; }
+.meal-week {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem),1fr));
+  gap: .85rem;
+}
+.meal-day, .planning-records > details {
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: .8rem;
+  padding: .85rem;
+}
+.meal-day h3 { margin: 0 0 .5rem; }
+.meal-day label { display: block; margin-block: .35rem; }
+.planning-records { display: grid; gap: .55rem; }
+.planning-records summary { cursor: pointer; font-weight: 700; }
+.packing-line { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-block: .25rem; }
+.packing-line label { display: flex; align-items: center; gap: .55rem; margin: 0; }
+.packing-line input { width: auto; margin: 0; }
+.recipe-copy { white-space: pre-wrap; overflow-wrap: anywhere; }
+.recipe-editor textarea { min-height: 7rem; }
+body.glow-redesign main #content .journal-layout.journal-notebook {
+  display: block !important;
+  max-width: 54rem;
+  margin-inline: auto;
+}
+body.glow-redesign #content .journal-notebook > :is(.journal-editor,.journal-library) {
+  background: var(--journal-custom-paper, var(--journal-paper, #fff8fb)) !important;
+  color: var(--journal-custom-ink, #352638) !important;
+  padding: clamp(1rem, 4vw, 2.75rem) !important;
+  border: 0 !important;
+  border-radius: .9rem !important;
+  box-shadow: 0 12px 32px #140e2522 !important;
+  animation: none !important;
+}
+body.glow-redesign #content .journal-notebook:not(.glow-entries-open) > .journal-library,
+body.glow-redesign #content .journal-notebook.glow-entries-open > .journal-editor {
+  display: none !important;
+}
+body.glow-redesign #content .journal-notebook.glow-entries-open > .journal-library { display: block !important; }
+body.glow-redesign #content .journal-notebook > .glow-journal-browse {
+  display: block;
+  margin: 0 0 .65rem auto;
+}
+body.glow-redesign #content .journal-notebook .journal-prompt-box,
+body.glow-redesign #content .journal-notebook .journal-memory-box {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: .5rem 0 !important;
+}
+body.glow-redesign #content .journal-notebook .journal-editor textarea {
+  min-height: 19rem;
+  border-width: 0 0 1px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--journal-custom-ink,#352638) !important;
+  font-family: Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+body.glow-redesign #content .journal-notebook #journalEntries { max-height: none; }
+.journal-notebook details { margin-block: .6rem; }
+.journal-notebook summary { cursor: pointer; color: var(--journal-custom-ink,#352638); }
+.home-widget-actions .home-widget-grip { touch-action: none; user-select: none; }
+.home-widget-drop-target { outline: 2px solid #9469bb; outline-offset: 3px; }

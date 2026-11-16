@@ -54,6 +54,7 @@
     ['sidebar', 'Sidebar top', '#16102b'],
     ['sidebar-end', 'Sidebar bottom', '#090e24'],
     ['header', 'Top bar', '#0c1128'],
+    ['clock', 'Clock color', '#80defa'],
     ['accent', 'Active tab start', '#7637a4'],
     ['accent-end', 'Active tab end', '#285f9c'],
     ['page-panel', 'Page cards', '#e3edf8'],
@@ -199,7 +200,7 @@
   const appearance = document.createElement('fieldset');
   appearance.className = 'dashboard-appearance';
   const legend = document.createElement('legend');
-  legend.textContent = 'Theme Studio';
+  legend.textContent = 'Appearance';
   const grid = document.createElement('div');
   grid.className = 'theme-preview-grid';
   const choices = new Map();
@@ -300,7 +301,10 @@
     };
     colorInputs.set(id, input);
     hexInputs.set(id, code);
-    label.append(input, document.createTextNode(name),code);
+    const nameLabel = document.createElement('span');
+    nameLabel.textContent = name;
+    input.setAttribute('aria-label', name + ' color picker');
+    label.append(nameLabel, input, code);
     swatches.append(label);
   }
   palette.append(paletteTitle, swatches);
@@ -310,6 +314,7 @@
     palette.hidden = !customSelected;
     glitterColor.disabled = customSelected;
     accent.disabled = customSelected;
+    currentTheme.textContent = themes.find(([id]) => choices.get(id).checked)?.[1] || '';
     previewCustom();
     choices.get('midnight').parentElement.dataset.glitterAccent = accent.value;
   }
@@ -322,8 +327,19 @@
   apply.textContent = 'Apply theme and close';
   const status = document.createElement('p');
   status.setAttribute('role', 'status');
-  const help = document.createElement('p');
-  help.textContent = 'Choose where glitter appears. Sparkle intensity and animation apply to those pages.';
+  function settingsGroup(title, ...children) {
+    const group = document.createElement('details');
+    group.className = 'appearance-group';
+    const summary = document.createElement('summary');
+    summary.textContent = title;
+    group.append(summary, ...children);
+    return group;
+  }
+  const currentTheme = document.createElement('span');
+  currentTheme.className = 'appearance-theme-name';
+  const presets = settingsGroup('Theme', grid);
+  presets.firstElementChild.append(currentTheme);
+  const glitter = settingsGroup('Sparkle & glitter', controls, pagePicker);
 
   function resetControls() {
     choices.get(applied.theme).checked = true;
@@ -365,8 +381,12 @@
     applyAppearance();
     resetControls();
   });
-  settings.addEventListener('close', resetControls);
+  settings.addEventListener('close', () => {
+    resetControls();
+    presets.open = false;
+    glitter.open = false;
+  });
   resetControls();
-  appearance.append(legend, help, grid, controls, pagePicker, palette, apply, status);
+  appearance.append(legend, presets, palette, glitter, apply, status);
   settings.append(appearance);
 })();

@@ -4240,7 +4240,7 @@ function journalDateText(date){return date.slice(5,7)+'/'+date.slice(8,10)+'/'+d
 function journalParseDate(value){const m=value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(!m)return '';const year=Number(m[3]),month=Number(m[1]),day=Number(m[2]);if(year<1000||month<1||month>12||day<1||day>new Date(year,month,0).getDate())return '';return m[3]+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
 function initJournal(){if(!Array.isArray(state.journal))state.journal=[];if(!state.journalDraft)state.journalDraft={id:'',date:journalDateText(localDate(new Date())),title:'',text:'',mood:''}}
 function journalHasChanges(){initJournal();const d=state.journalDraft,x=state.journal.find(x=>x.id===d.id);if(!x)return Boolean(d.title||d.text||d.mood||d.emoji);return (d.emoji||'')!==(x.emoji||'')||d.title!==x.title||d.text!==x.text||d.mood!==(x.mood||'')||d.date!==journalDateText(x.date)}
-function openJournalEntry(id){initJournal();if(journalHasChanges()&&!confirm('Leave this draft without saving it as an entry?'))return;const x=state.journal.find(x=>x.id===id);state.journalDraft=x?{id:x.id,date:journalDateText(x.date),title:x.title,text:x.text,mood:x.mood||'',emoji:x.emoji||''}:{id:'',date:journalDateText(localDate(new Date())),title:'',text:'',mood:''};save();renderJournalPage()}
+function openJournalEntry(id){initJournal();if(journalHasChanges()&&!confirm('Leave this draft without saving it as an entry?'))return;const x=state.journal.find(x=>x.id===id);state.journalDraft=x?{id:x.id,date:journalDateText(x.date),title:x.title,text:x.text,mood:x.mood||'',emoji:x.emoji||''}:{id:'',date:journalDateText(localDate(new Date())),title:'',text:'',mood:''};save();window.GlowDashboardUI?.showJournalWriting();renderJournalPage()}
 function journalList(){const list=document.getElementById('journalEntries');if(!list)return;const query=(document.getElementById('journalSearch').value||'').toLowerCase(),entries=[...state.journal].filter(x=>(x.title+' '+x.text+' '+journalDateText(x.date)).toLowerCase().includes(query)).sort((a,b)=>b.date.localeCompare(a.date)||(b.updatedAt||'').localeCompare(a.updatedAt||''));list.innerHTML=entries.map(x=>`<button type="button" class="journal-entry-link ${state.journalDraft.id===x.id?'chosen':''}" data-journal-open="${esc(x.id)}"><small>${esc(journalDateText(x.date))}${x.mood?' · '+esc(x.mood):''}</small><strong>${esc([x.emoji,x.title||'Untitled entry'].filter(Boolean).join(' '))}</strong><span>${esc(x.text.slice(0,85))}${x.text.length>85?'…':''}</span></button>`).join('')||'<p class="empty">'+(query?'No matching entries.':'Your journal starts here. Write your first entry.')+'</p>';list.querySelectorAll('[data-journal-open]').forEach(b=>b.onclick=()=>openJournalEntry(b.dataset.journalOpen))}
 function renderJournalPage(){
  initJournal();const d=state.journalDraft;document.getElementById('title').textContent='Journal';document.getElementById('description').textContent='A little space for your thoughts, memories, and reflections.';
@@ -4418,11 +4418,9 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
     if(window.DashboardNavigation?.isHidden(target)||['Calendar','Daily priorities','Finances'].includes(target))continue;
     items.append(button(label,()=>{d.close();navTo(target)}));
    }
-   if(group==='Links'&&!window.DashboardNavigation?.isHidden('Quick links'))
-    items.append(button('Quick links',()=>{d.close();window.DashboardQuickLinks?.open()}));
    if(items.children.length){section.append(heading,items);menu.append(section)}
   }
-  menu.append(button('Settings',()=>{d.close();window.DashboardMobileUI.openSettings()}));
+  menu.append(button('Settings',()=>{d.close();window.DashboardMobileUI.openSettings()}),button('Sticky Notes',()=>{d.close();window.DashboardStickyNotes?.open()}),button('Timer',()=>{d.close();navTo('Focus timer')}));
   d.showModal();
  }
 
@@ -4487,7 +4485,7 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
  function bookmarks(){
   const panelNode=panel('Bookmarks','bookmarks');
   headingAction(panelNode,'＋ Add bookmark',()=>openAdd('bookmarks'));
-  if(window.DashboardQuickLinks)headingAction(panelNode,'Manage quick links',()=>window.DashboardQuickLinks.open());
+  if(window.DashboardQuickLinks)panelNode.append(button('Manage quick links',()=>window.DashboardQuickLinks.open(),'secondary bookmarks-manage-links'));
   const label=document.createElement('label');label.textContent='Find a bookmark';
   const search=document.createElement('input');search.type='search';search.value=bookmarkQuery;search.placeholder='Search titles or websites';
   label.append(search);
@@ -4525,19 +4523,20 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
   const actions=document.createElement('div');
   actions.className='actions';
   const completed=state.priorities.filter(task=>task.done);
-  const deleteCompleted=button('Delete completed',()=>deleteTasks(completed,'completed tasks'));
+  const deleteCompleted=button('Clear completed archive',()=>deleteTasks(completed,'completed tasks'));
   const deleteAll=button('Delete all tasks',()=>deleteTasks(state.priorities,'tasks'));
   deleteCompleted.disabled=!completed.length;
   deleteAll.disabled=!state.priorities.length;
   actions.append(deleteCompleted,deleteAll);
   const grid=document.createElement('div');
   grid.className='glow-task-groups';
-  const groups=[['Today',x=>!x.done&&(!x.date||x.date===today)],['Upcoming',x=>!x.done&&x.date>today],['Overdue',x=>!x.done&&x.date&&x.date<today],['Completed',x=>x.done]];
+  const groups=[['Today',x=>!x.done&&(!x.date||x.date===today)],['Upcoming',x=>!x.done&&x.date>today],['Overdue',x=>!x.done&&x.date&&x.date<today],['Completed archive',x=>x.done]];
   for(const [name,test] of groups){
-   const group=document.createElement('section');
+   const archived=name==='Completed archive';
+   const group=document.createElement(archived?'details':'section');
    group.className='glow-task-group';
    const matches=state.priorities.filter(test).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-   const heading=document.createElement('h3');
+   const heading=document.createElement(archived?'summary':'h3');
    heading.textContent=name+' · '+matches.length;
    group.append(heading);
    matches.forEach(task=>group.append(taskRow(task)));
@@ -4588,7 +4587,7 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
  function apply(){shell();if(page==='Overview')overview();else if(page==='Calendar')calendar();else if(page==='Projects')projects();else if(page==='Bookmarks')bookmarks();else if(page==='Quick notes')notes();else if(page==='Daily priorities')tasks();else if(page==='Finances')finances();else if(page==='Journal')journalLayout();else if(page==='Games')games();}
  const before=render;render=function(){before();apply()};
  const beforeJournalLayout=renderJournalPage;renderJournalPage=function(){beforeJournalLayout();journalLayout()};
- window.GlowDashboardUI={more,refresh:apply};apply();
+ window.GlowDashboardUI={more,refresh:apply,showJournalWriting(){entriesOpen=false}};apply();
 })();
 
 </script><script src="./game-sound.js?v=action-audio"></script>
@@ -4968,7 +4967,7 @@ dialog.tfy-dialog.app-action-dialog {
 </style>
 <script src="./time-for-you.js?v=compact-ideas"></script>
 <link rel="stylesheet" href="./navigation-sparkles.css?v=sidebar-groups">
-<script src="./navigation-sparkles.js?v=sidebar-groups"></script>
+<script src="./navigation-sparkles.js?v=planning-update"></script>
 <link rel="stylesheet" href="./peaceful-polish.css?v=20261104">
 <script src="./welcome-verse.js?noPopups=1&v=20261104"></script>
 <link rel="stylesheet" href="./chess-themes.css?v=20261104">
@@ -4980,7 +4979,7 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./finance-tools.js?v=personal-finance-1"></script>
 <script src="./cash-flow.js?v=account-totals"></script>
 <link rel="stylesheet" href="./glitter-colors.css?v=glitter-page-settings">
-<script src="./glitter-colors.js?v=family-lists"></script>
+<script src="./glitter-colors.js?v=settings-layout"></script>
 <link rel="stylesheet" href="./profile.css?v=home-greeting">
 <dialog id="dashboardProfile">
   <form>
@@ -4996,21 +4995,23 @@ dialog.tfy-dialog.app-action-dialog {
 <link rel="stylesheet" href="./widgets/focus.css">
 <script src="./widgets/focus.js?v=savings-bible"></script>
 <link rel="stylesheet" href="./sticky-notes.css?v=2">
-<script src="./sticky-notes.js?v=personalize"></script>
+<script src="./sticky-notes.js?v=planning-update"></script>
 <link rel="stylesheet" href="./dashboard-colors.css?v=1">
 <script src="./dashboard-colors.js?v=emoji-stickers"></script>
-<link rel="stylesheet" href="./dashboard-personalize.css?v=family-lists">
+<link rel="stylesheet" href="./dashboard-personalize.css?v=settings-layout">
 <script src="./amortization.js?v=1"></script>
-<script src="./dashboard-lists.js?v=collection-photos"></script>
-<script src="./dashboard-personalize.js?v=home-widgets"></script>
+<script src="./dashboard-lists.js?v=planning-update"></script>
+<script src="./dashboard-personalize.js?v=settings-layout"></script>
 <link rel="stylesheet" href="./bre-planner.css?v=matrix">
 <link rel="stylesheet" href="./dashboard-lists.css?v=stationery-2">
-<script src="./bre-planner.js?v=matrix"></script>
+<script src="./bre-planner.js?v=planning-update"></script>
 <script src="./dashboard-sharing.js?v=sidebar-groups"></script>
 <link rel="stylesheet" href="./household.css?v=1">
-<script src="./household.js?v=sidebar-groups"></script>
+<script src="./household.js?v=planning-update"></script>
 <link rel="stylesheet" href="./notes-studio.css?v=1">
 <script src="./notes-studio.js?v=1"></script>
+<link rel="stylesheet" href="./dashboard-planning.css?v=1">
+<script src="./dashboard-planning.js?v=1"></script>
 <script>render()</script>
 <link rel="stylesheet" href="./windows-wallpaper.css?v=1">
 <script src="./windows-wallpaper.js?v=1"></script>

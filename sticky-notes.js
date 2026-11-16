@@ -47,15 +47,24 @@
   const tray = element('dialog', undefined, 'sticky-dialog');
   const editor = element('dialog', undefined, 'sticky-dialog');
   const addMenu = element('dialog', undefined, 'sticky-dialog');
-  const launcher = button('▧', () => {
+  const launcher = button('Sticky Notes', () => {
     renderTray();
     tray.showModal();
   });
-  launcher.className = 'sticky-launcher';
+  launcher.className = 'secondary';
   launcher.title='Sticky notes';
   launcher.setAttribute('aria-label','Sticky notes');
   let trayTab='active';
-  document.body.append(layer, launcher, tray, editor, addMenu);
+  document.body.append(layer, tray, editor, addMenu);
+  const settingsButton = document.querySelector('aside .glow-side-settings');
+  if (settingsButton) {
+    const toolbar = element('div', undefined, 'dashboard-utility-bar');
+    settingsButton.before(toolbar);
+    const timer = button('Timer', () => go('Focus timer'));
+    timer.className = 'secondary';
+    toolbar.append(settingsButton, launcher, timer);
+  }
+  window.DashboardStickyNotes = {open:()=>launcher.click()};
 
   const mobile = matchMedia('(max-width: 760px)');
   const notes = () => Array.isArray(state.stickyNotes) ? state.stickyNotes : [];

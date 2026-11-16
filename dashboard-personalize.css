@@ -120,13 +120,66 @@ body.glow-redesign #content .little-joys .joy-hero { padding:clamp(1rem,3vw,2rem
 }
 body.glow-redesign #content .glow-overview > .glow-tasks .glow-task-row > div { grid-column:2/-1; }
 body.glow-redesign #content .calendar .calendar-date-number { font-variant-numeric:tabular-nums; }
-body.glow-redesign #appSettings .dashboard-appearance { margin-block-start:.7rem; }
-@media(max-width:750px) {
-  body.glow-redesign #appSettings .theme-preview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  body.glow-redesign #appSettings .theme-studio-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
+#appSettings {
+  --settings-surface: color-mix(in srgb, var(--theme-background, #151a30) 85%, var(--theme-header, #22273f));
+  --settings-ink: var(--theme-light-text, #eef1fc);
+  --settings-line: color-mix(in srgb, var(--settings-ink) 24%, transparent);
+  --settings-tile: color-mix(in srgb, var(--settings-surface) 91%, var(--settings-ink));
+  background: var(--settings-surface);
+  color: var(--settings-ink);
+  border-color: var(--settings-line);
+  color-scheme: dark;
 }
-.custom-theme-swatches label { flex-wrap:wrap; }
-.custom-theme-swatches input[type="text"] { min-width:0;max-width:8ch;margin:0; }
+#appSettings .priss-settings-tabs { margin-block: .8rem 1rem; gap: .35rem; }
+#appSettings .priss-settings-tabs button { border-radius: 999px; }
+#appSettings .priss-settings-tabs button[aria-pressed="true"] {
+  background: var(--settings-ink);
+  color: var(--settings-surface);
+}
+#appSettings .dashboard-appearance { border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+#appSettings .dashboard-appearance > legend { padding: 0; margin-bottom: .6rem; }
+#appSettings .appearance-group,
+#appSettings .appearance-page-colors,
+#appSettings .custom-theme-palette {
+  background: var(--settings-tile);
+  border: 1px solid var(--settings-line);
+  border-radius: 12px;
+  margin: 0 0 .65rem;
+  padding: .75rem;
+  min-inline-size: 0;
+}
+#appSettings summary { cursor: pointer; }
+#appSettings .appearance-theme-name { float: inline-end; margin-inline-start: .5rem; font-size: .85em; }
+#appSettings .theme-preview-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 126px), 1fr));
+  gap: .55rem;
+  margin: .65rem 0 0;
+}
+#appSettings .theme-preview-option { margin: 0; border-color: var(--settings-line); }
+#appSettings .theme-preview-sample { height: 36px; grid-template: 8px 1fr / 16px 1fr; }
+#appSettings .theme-studio-controls { margin-top: .65rem; }
+#appSettings .appearance-save { display: grid; justify-content: start; gap: .2rem; margin-top: .8rem; }
+#appSettings .appearance-save p:empty { display: none; }
+.custom-theme-swatches {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+}
+.custom-theme-swatches label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px 70px;
+  gap: .45rem;
+}
+.custom-theme-swatches input[type="color"] { width: 36px; height: 36px; }
+.custom-theme-swatches input[type="text"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding-inline: .25em;
+  font: 13px ui-monospace, monospace;
+}
+body.glow-redesign[data-dashboard-theme="custom"] #appMobileHeader .digital-clock {
+  color: var(--theme-clock, #80defa);
+}
 .cf-cushion-overview { margin:.55rem 0;padding:.6rem .75rem;border:1px solid #88729470;border-radius:10px;background:#f5edf8;color:#382c49; }
 .cf-cushion-overview[data-low] { background:#fff1d1;color:#633c19;border-color:#c38e4a; }
 .cf-cushion-overview small { display:block;margin-top:.25rem; }

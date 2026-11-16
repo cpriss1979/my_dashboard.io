@@ -202,9 +202,27 @@
     const total=el('p',undefined,'inventory-total');
     total.setAttribute('aria-live','polite');
     const list=el('div',undefined,'inventory-list');
-    panel.append(header,filters,total,list);
+    const archive=el('details',undefined,'list-side-panel');
+    const archiveHeading=el('summary');
+    const archiveRows=el('div');
+    archive.append(archiveHeading,archiveRows);
+    panel.append(header,filters,total,list,archive);
     function draw(){
-      const records=items(definition);
+      const all=items(definition);
+      const records=all.filter(item=>!item.archived);
+      const archived=all.filter(item=>item.archived);
+      archiveHeading.textContent='Archive ('+archived.length+')';
+      archiveRows.replaceChildren();
+      for(const item of archived){
+        const row=el('div',undefined,'list-archived-record');
+        row.append(el('strong',item.title),button('Restore',()=>{delete item.archived;save();draw()}),button('Delete',()=>{
+          if(!confirm('Permanently delete '+item.title+'?'))return;
+          state[definition.key]=items(definition).filter(record=>record.id!==item.id);
+          save();draw();
+        }));
+        archiveRows.append(row);
+      }
+      if(!archived.length)archiveRows.append(el('p','No archived collectibles.'));
       const selected=group.value;
       group.replaceChildren(new Option('All collections',''),...[...new Set(records.map(item=>item.category?.trim()||'Uncategorized'))].sort().map(name=>new Option(name,name)));
       if([...group.options].some(option=>option.value===selected))group.value=selected;
@@ -247,10 +265,8 @@
           row.append(el('dt',label),el('dd',formatted));detail.append(row);
         }
         const actions=el('div',undefined,'inventory-actions');
-        actions.append(button('Edit',()=>editor(definition,item,draw)),button('Delete',()=>{
-          if(!confirm('Delete '+item.title+'?'))return;
-          state[definition.key]=items(definition).filter(record=>record.id!==item.id);
-          save();draw();
+        actions.append(button('Edit',()=>editor(definition,item,draw)),button('Archive',()=>{
+          item.archived=true;save();draw();
         }));
         const count=itemPhotos(item).length;
         if(count)actions.prepend(button(count+' '+(count===1?'photo':'photos'),()=>viewPhotos(item),'secondary collection-photo-button'));
@@ -310,7 +326,12 @@
     const archived=el('details',undefined,'list-side-panel list-archive');
     const archiveTitle=el('summary');
     const archiveList=el('div',undefined,'list-archive-content');
-    archived.append(archiveTitle,archiveList);
+    const clearArchive=button('Clear archive',()=>{
+      if(!confirm('Permanently delete every item in this archive?'))return;
+      state[definition.key]=items(definition).filter(item=>!item.flagged);
+      save();draw();
+    });
+    archived.append(archiveTitle,clearArchive,archiveList);
 
     const personalize=el('details',undefined,'list-side-panel');
     const settings=el('div',undefined,'list-style-options');
@@ -425,6 +446,7 @@
           el('p',query?'Try a different search.':wish?'Add a gift idea or something you’d like to buy.':'Add your first item above to get started.'));
         active.append(empty);
       }
+      clearArchive.disabled=!completed.length;
       archiveTitle.textContent=definition.flag+' archive ('+completed.length+')';
       archiveList.replaceChildren();
       const archivedMatches=completed.filter(matches);
