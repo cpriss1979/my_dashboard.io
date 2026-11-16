@@ -151,14 +151,21 @@ body.glow-redesign #content .journal-notebook .journal-memory-grid button:disabl
   transform: translateX(-50%);
 }
 
-#content .meal-board{overflow-x:auto;margin-top:16px;background:#2c2837;border-radius:18px;padding:10px}
+
+body.glow-redesign #content .meal-board{overflow-x:auto;margin-top:16px;background:#f4eaf5;border:1px solid #d9c4e0;border-radius:16px;padding:8px}
 #content .meal-board table{min-width:1000px;width:100%;border-collapse:separate;border-spacing:6px}
-#content .meal-board :is(th,td){padding:8px;vertical-align:top;text-align:left;border:0;border-radius:9px;color:#281f35;background:#fffafc}
-#content .meal-board thead th{background:#f1bcca;text-align:center}
-#content .meal-board thead th:nth-child(3n){background:#ffd68c}
-#content .meal-board thead th:nth-child(3n+1){background:#b9dfdb}
-#content .meal-board tbody th,#content .meal-board tfoot th{background:#e5d3f2;min-width:7.25rem}
-#content .meal-board td :is(input,select){box-sizing:border-box;width:100%;min-width:0;margin:0 0 5px}
-#content .meal-board td :is(input,select,button){font-size:.85rem}
-#content .meal-board td button{min-height:30px;padding:3px 7px}
+body.glow-redesign #content .meal-board :is(th,td){padding:8px;vertical-align:top;text-align:left;border:1px solid #e4d5e9;border-radius:9px;color:#30223e!important;background:#fffafd!important}
+body.glow-redesign #content .meal-board thead th{background:#eadbf2!important;text-align:center}
+body.glow-redesign #content .meal-board :is(tbody,tfoot) th{background:#f2e2ec!important;min-width:7.25rem}
+body.glow-redesign #content .meal-board td input{box-sizing:border-box;width:100%;min-width:0;margin:0;background:#fff!important;color:#30223e!important;border:1px solid #d3bfdc!important}
+#content .meal-board td :is(input,button){font-size:.85rem}
+#content .meal-board td button{min-height:32px;padding:3px 7px}
 #content .meal-board :is(button,small)[hidden]{display:none!important}
+.meal-food-list,.meal-food-item{display:grid;gap:5px}
+.meal-food-item{padding-block-end:7px}
+.meal-food-item + .meal-food-item{padding-block-start:7px;border-top:1px solid #e4d5e9}
+.meal-food-calories,.meal-food-tools{display:flex;align-items:center;gap:5px}
+.meal-food-tools{flex-wrap:wrap}
+#content .meal-food-add{font-size:1.1rem;min-width:32px}
+.food-calculator small{display:block;margin-top:12px}
+.food-calculator select{width:100%;margin-bottom:8px}
