@@ -51,7 +51,12 @@
     const archive=el('details',undefined,'chores-archive');
     const archiveTitle=el('summary');
     const archiveItems=el('div');
-    archive.append(archiveTitle,archiveItems);
+    const deleteArchived=button('Delete all archived',()=>{
+      if(!confirm('Permanently delete all archived chores in this view?'))return;
+      state.chores=chores().filter(item=>item.period!==period||!item.archived);
+      save();draw();
+    });
+    archive.append(archiveTitle,deleteArchived,archiveItems);
     const clear=button('Clear completed',()=>{
       const current=cycle(period);
       for(const item of chores()){
@@ -85,6 +90,7 @@
       }
       const archived=chores().filter(item=>item.period===period&&item.archived);
       archiveTitle.textContent='Archive ('+archived.length+')';
+      deleteArchived.hidden=!archived.length;
       archiveItems.replaceChildren();
       for(const item of archived){
         const row=el('div',undefined,'household-chore-row');

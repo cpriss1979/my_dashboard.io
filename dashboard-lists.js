@@ -15,7 +15,7 @@
     'Shopping List': {
       key:'shoppingList', singular:'shopping item', flag:'Purchased',
       fields:[
-        ['title','Item name','text',true], ['emoji','Emoji sticker','text'], ['category','Category','text'], ['store','Store','text'],
+        ['title','Item name','text',true], ['category','Category','text'], ['store','Store','text'],
         ['quantity','Quantity','count',true,'1'], ['price','Estimated price per item ($)','money'],
         ['notes','Notes','textarea']
       ]
@@ -23,7 +23,7 @@
     'Wish List': {
       key:'wishList', singular:'wish list item', flag:'Acquired',
       fields:[
-        ['title','Item name','text',true], ['emoji','Emoji sticker','text'], ['category','Category','text'], ['recipient','For whom','text'],
+        ['title','Item name','text',true], ['category','Category','text'],
         ['priority','Priority','priority',false,'Normal'], ['price','Target price ($)','money'],
         ['url','Product link','url'], ['notes','Notes','textarea']
       ]
@@ -112,7 +112,6 @@
         field.type='number';field.min=type==='count'?'1':'0';field.step=type==='count'?'1':'.01';
         field.max=type==='count'?'1000000':'1000000000';
       }else{field.type=type;field.maxLength=type==='url'?1200:200}
-      if(key==='emoji')field.maxLength=24;
       field.value=existing?.[key]??fallback;
       wrapper.append(field);
       form.append(wrapper);
@@ -207,13 +206,19 @@
     const archive=el('details',undefined,'list-side-panel');
     const archiveHeading=el('summary');
     const archiveRows=el('div');
-    archive.append(archiveHeading,archiveRows);
+    const deleteArchived=button('Delete all archived',()=>{
+      if(!confirm('Permanently delete every archived collectible?'))return;
+      state[definition.key]=items(definition).filter(item=>!item.archived);
+      save();draw();
+    });
+    archive.append(archiveHeading,deleteArchived,archiveRows);
     panel.append(header,filters,total,list,archive);
     function draw(){
       const all=items(definition);
       const records=all.filter(item=>!item.archived);
       const archived=all.filter(item=>item.archived);
       archiveHeading.textContent='Archive ('+archived.length+')';
+      deleteArchived.hidden=!archived.length;
       archiveRows.replaceChildren();
       for(const item of archived){
         const row=el('div',undefined,'list-archived-record');
@@ -291,17 +296,14 @@
   function paintPlanner(pageName){
     const definition=definitions[pageName];
     const wish=definition.key==='wishList';
-    const icon=wish?'🎁':'🛍️';
     const defaultPaper=wish?'#f1e7ff':'#e1f5e9';
     const style=state.listPaper?.[definition.key]||{};
     const panel=el('section',undefined,'list-planner'+(wish?' list-planner-wish':''));
     panel.setAttribute('aria-label',pageName);
     const hero=el('header',undefined,'list-hero');
-    const decoration=el('span',style.emoji||icon,'list-seal');
-    decoration.setAttribute('aria-hidden','true');
     const heroText=el('div');
-    heroText.append(el('h2',pageName),el('p',wish?'Keep gift ideas, links, and little things you’d love.':'Add what you need, then check it off as you shop.'));
-    hero.append(decoration,heroText);
+    heroText.append(el('h2',pageName),el('p',wish?'Save the things you want for yourself.':'Add what you need, then check it off as you shop.'));
+    hero.append(heroText);
     const layout=el('div',undefined,'list-layout');
     const paper=el('section',undefined,'list-sheet');
     const rail=el('div',undefined,'list-rail');
@@ -324,7 +326,7 @@
     const summary=el('section',undefined,'list-summary');
     const amountNode=el('strong');
     const amountHelp=el('p');
-    summary.append(el('h3',wish?'Target total':'Estimated total'),amountNode,amountHelp);
+    summary.append(el('h3',wish?'Wish List value':'Cart estimate'),amountNode,amountHelp);
     const archived=el('details',undefined,'list-side-panel list-archive');
     const archiveTitle=el('summary');
     const archiveList=el('div',undefined,'list-archive-content');
@@ -338,15 +340,12 @@
     const personalize=el('details',undefined,'list-side-panel');
     const settings=el('div',undefined,'list-style-options');
     const color=el('input');color.type='color';color.value=paperHex(style.color)?style.color:defaultPaper;
-    const sticker=el('input');sticker.placeholder=icon;sticker.maxLength=24;sticker.value=style.emoji||'';
     const colorLabel=el('label','Paper color');colorLabel.append(color);
-    const stickerLabel=el('label','List emoji');stickerLabel.append(sticker);
     function paintStyle(){
       panel.style.setProperty('--list-paper',color.value);
-      decoration.textContent=sticker.value.trim()||icon;
     }
     function commitStyle(){
-      (state.listPaper??={})[definition.key]={color:color.value,emoji:sticker.value.trim()};
+      (state.listPaper??={})[definition.key]={color:color.value};
       paintStyle();save();
     }
     const swatches=el('div',undefined,'list-swatches');
@@ -355,11 +354,11 @@
       swatch.title=label;swatch.setAttribute('aria-label',label);swatch.style.backgroundColor=hex;
       swatches.append(swatch);
     }
-    color.oninput=paintStyle;color.onchange=commitStyle;sticker.onchange=commitStyle;
-    settings.append(colorLabel,swatches,stickerLabel,button('Reset style',()=>{
-      color.value=defaultPaper;sticker.value='';commitStyle();
+    color.oninput=paintStyle;color.onchange=commitStyle;
+    settings.append(colorLabel,swatches,button('Reset style',()=>{
+      color.value=defaultPaper;commitStyle();
     },'list-text'));
-    personalize.append(el('summary','Paper & emoji'),settings);
+    personalize.append(el('summary','Paper color'),settings);
     const status=el('p',undefined,'list-feedback');status.setAttribute('role','status');
     paper.append(heading,quick,tools,active,status);
     rail.append(summary,archived,personalize);
@@ -377,8 +376,8 @@
       const tile=el('article',undefined,'list-record');
       tile.dataset.inventoryId=item.id;
       const details=el('div',undefined,'list-record-details');
-      const title=el('h4',[item.emoji,item.title].filter(Boolean).join(' '));
-      const tags=[item.category,wish?(item.recipient?'For '+item.recipient:''):item.store,
+      const title=el('h4',item.title);
+      const tags=[item.category,wish?'':item.store,
         !wish&&Number(item.quantity)>1?'Qty '+item.quantity:''].filter(Boolean);
       details.append(title);
       if(tags.length)details.append(el('p',tags.join(' · '),'list-record-meta'));
@@ -431,7 +430,7 @@
       const current=records.filter(item=>!item.flagged);
       const completed=records.filter(item=>item.flagged);
       const query=search.value.trim().toLowerCase();
-      const matches=item=>[item.title,item.emoji,item.category,item.store,item.recipient,item.notes]
+      const matches=item=>[item.title,item.category,item.store,item.notes]
         .join(' ').toLowerCase().includes(query);
       const shown=current.filter(matches);
       const priced=current.filter(item=>item.price!==''&&item.price!=null&&Number.isFinite(Number(item.price)));
@@ -445,7 +444,7 @@
         const empty=el('div',undefined,'list-empty');
         const emptyMark=el('span',wish?'♡':'✓','list-empty-mark');emptyMark.setAttribute('aria-hidden','true');
         empty.append(emptyMark,el('h4',query?'No matching items':wish?'Room for a little wish':completed.length?'All checked off':'Your list is ready'),
-          el('p',query?'Try a different search.':wish?'Add a gift idea or something you’d like to buy.':'Add your first item above to get started.'));
+          el('p',query?'Try a different search.':wish?'Add something you’d like to buy for yourself.':'Add your first item above to get started.'));
         active.append(empty);
       }
       clearArchive.disabled=!completed.length;
@@ -454,7 +453,7 @@
       const archivedMatches=completed.filter(matches);
       for(const item of archivedMatches){
         const row=el('div',undefined,'list-archived-record');
-        row.append(el('strong',[item.emoji,item.title].filter(Boolean).join(' ')));
+        row.append(el('strong',item.title));
         const actions=el('div',undefined,'list-record-controls');
         actions.append(button('Restore',()=>{
           item.flagged=false;save();draw();archiveTitle.focus();

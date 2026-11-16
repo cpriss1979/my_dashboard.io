@@ -2,6 +2,26 @@
   'use strict';
   const routes = ['Meal Planner', 'Recipes', 'Packing Checklist'];
   const meals = ['Breakfast', 'Lunch', 'Dinner'];
+  const ideas = {
+    Breakfast: {
+      Oats:['Berry yogurt oats','Oats, plain yogurt, berries, and nuts','Cook the oats. Top with yogurt, berries, and nuts.'],
+      Eggs:['Egg and spinach toast','Eggs, spinach, whole-grain toast, and fruit','Cook the eggs and spinach. Serve with toast and fruit.'],
+      Yogurt:['Yogurt and apple bowl','Plain yogurt, apple, oats, and pumpkin seeds','Chop the apple and layer with yogurt, oats, and seeds.'],
+      Savory:['Black bean breakfast wrap','Black beans, salsa, spinach, whole-grain tortilla, and fruit','Warm the beans, fold into a tortilla with spinach and salsa, and serve with fruit.']
+    },
+    Lunch: {
+      Salads:['Chickpea crunch salad','Chickpeas, cucumber, greens, whole-grain pita, and lemon','Toss vegetables and chickpeas with lemon and serve with pita.'],
+      Wraps:['Turkey and hummus wrap','Turkey, hummus, lettuce, whole-grain tortilla, and fruit','Spread hummus on the tortilla, add turkey and lettuce, and roll. Serve with fruit.'],
+      Soups:['White bean vegetable soup','White beans, carrots, greens, broth, and whole-grain bread','Simmer vegetables and beans in broth until tender. Serve with bread.'],
+      Bowls:['Chicken and quinoa bowl','Cooked chicken, quinoa, peppers, spinach, and yogurt dressing','Combine cooked chicken and quinoa with vegetables and dressing.']
+    },
+    Dinner: {
+      Chicken:['Lemon chicken and broccoli','Chicken, broccoli, brown rice, and lemon','Cook chicken through and serve with steamed broccoli, cooked brown rice, and lemon.'],
+      Fish:['Salmon, potatoes, and green beans','Salmon, baby potatoes, green beans, and lemon','Cook the salmon and roast the potatoes. Serve with steamed green beans and lemon.'],
+      Vegetarian:['Lentil and spinach bowl','Cooked lentils, brown rice, carrots, spinach, and lemon','Warm lentils and cooked rice. Serve with sautéed carrots and spinach and dress with lemon.'],
+      Pasta:['Tomato and white bean pasta','Whole-grain pasta, white beans, tomatoes, and spinach','Toss cooked pasta with warmed beans, tomatoes, and spinach.']
+    }
+  };
   const weekday = new Intl.DateTimeFormat(undefined, {weekday:'short', month:'short', day:'numeric'});
   const presets = {
     short:['ID and wallet','Keys','Phone and charger','Medications','Toothbrush and toiletries','Underwear and socks','Outfits','Pajamas','Shoes'],
@@ -33,6 +53,7 @@
     data.recipes ??= [];
     data.meals ??= {};
     data.trips ??= [];
+    data.mealTargets ??= {};
     return data;
   }
   function section(title) {
@@ -89,6 +110,20 @@
   }
   function recipesPage() {
     const [panel, bar] = section('Recipe box');
+    bar.append(button('Save recipe link',()=>{
+      const value=prompt('Paste the recipe page URL');
+      if(!value)return;
+      let url;
+      try{url=new URL(value);}catch{alert('Enter a valid recipe URL.');return;}
+      if(!['http:','https:'].includes(url.protocol)){alert('Use an HTTP or HTTPS recipe link.');return;}
+      if(model().recipes.some(recipe=>recipe.source===url.href)){alert('This link is already in the Recipe box.');return;}
+      const part=url.pathname.split('/').filter(Boolean).at(-1)||url.hostname;
+      let title=part;
+      try{title=decodeURIComponent(part);}catch{}
+      title=title.replace(/[-_]+/g,' ').trim().slice(0,150)||url.hostname;
+      model().recipes.unshift({id:crypto.randomUUID(),title,source:url.href});
+      save();render();
+    }));
     bar.append(button('Add recipe', () => recipeEditor()), link('Browse free recipes ↗', 'https://www.budgetbytes.com/index/'), button('Meal Planner', () => go('Meal Planner')));
     const [label, search] = field('Find a recipe','search');
     const list = el('div', undefined, 'planning-records');
@@ -134,6 +169,50 @@
       button('Recipe box', () => go('Recipes'))
     );
     panel.append(el('p', weekday.format(start) + ' – ' + weekday.format(end)));
+    const setup=el('details');
+    setup.append(el('summary','Plan meals by food preference'));
+    const form=el('form');
+    const prefs=model().mealPreferences||{};
+    const [targetLabel,target]=field('Daily calorie target (optional)','number',prefs.target||'');
+    target.min=1;target.max=10000;target.step=1;
+    form.append(targetLabel,el('p','Use your own daily target. Meal numbers are portion targets. Use recipe nutrition or food labels to check actual servings.'));
+    const pick={};
+    for(const meal of meals){
+      const group=el('fieldset');
+      group.append(el('legend',meal));
+      pick[meal]=Object.keys(ideas[meal]).map(category=>{
+        const label=el('label',category),box=el('input');
+        box.type='checkbox';box.value=category;box.checked=(prefs[meal]||Object.keys(ideas[meal])).includes(category);
+        label.prepend(box);group.append(label);return box;
+      });
+      form.append(group);
+    }
+    form.append(el('button','Fill empty meals','primary'));
+    const status=el('p');status.setAttribute('role','status');form.append(status);
+    form.onsubmit=event=>{
+      event.preventDefault();
+      const data=model(),selected=Object.fromEntries(meals.map(meal=>[meal,pick[meal].filter(box=>box.checked).map(box=>box.value)]));
+      if(meals.some(meal=>!selected[meal].length)){status.textContent='Choose at least one type of food for each meal.';return;}
+      const daily=Number(target.value),breakfast=Math.round(daily*.25),lunch=Math.round(daily*.35);
+      const portions=[breakfast,lunch,daily-breakfast-lunch];
+      data.mealPreferences={...selected,target:target.value};
+      let filled=0;
+      for(let day=0;day<7;day++){
+        const date=new Date(start);date.setDate(start.getDate()+day);
+        const key=localDate(date);
+        meals.forEach((meal,index)=>{
+          if(data.meals[key]?.[meal])return;
+          const categories=selected[meal];
+          (data.meals[key]??={})[meal]=ideas[meal][categories[day%categories.length]][0];
+          if(daily)(data.mealTargets[key]??={})[meal]=portions[index];
+          filled++;
+        });
+      }
+      save();render();
+      const refreshed=document.querySelector('.planning-page details');
+      if(refreshed){refreshed.open=true;refreshed.querySelector('[role=status]').textContent=filled?filled+' meals added.':'This week already has a full plan.';}
+    };
+    setup.append(form);panel.append(setup);
     const grid = el('div', undefined, 'meal-week');
     const recipeNames = el('datalist');
     recipeNames.id = 'meal-recipe-names';
@@ -152,6 +231,7 @@
         input.onchange = () => {
           const plan = model().meals;
           const value = input.value.trim();
+          if(model().mealTargets[key])delete model().mealTargets[key][meal];
           if (value) (plan[key] ??= {})[meal] = value;
           else if (plan[key]) {
             delete plan[key][meal];
@@ -160,6 +240,14 @@
           save();
         };
         column.append(label);
+        const kcal=model().mealTargets[key]?.[meal];
+        if(Number.isFinite(kcal))column.append(el('small','Portion target · '+kcal+' cal'));
+        const suggested=Object.values(ideas[meal]).find(entry=>entry[0]===input.value);
+        if(suggested)column.append(button('Save to Recipe box',event=>{
+          if(model().recipes.some(record=>record.title===suggested[0])){event.currentTarget.textContent='In Recipe box';return;}
+          model().recipes.unshift({id:crypto.randomUUID(),title:suggested[0],ingredients:suggested[1],instructions:suggested[2]});
+          save();event.currentTarget.textContent='In Recipe box';
+        }));
       }
       grid.append(column);
     }
@@ -178,7 +266,14 @@
     const create = el('button','Create checklist','primary');
     form.append(nameLabel,type,create);
     const list = el('div', undefined, 'planning-records');
-    panel.append(form,list);
+    const archive=el('details');
+    const archivedRows=el('div',undefined,'planning-records');
+    archive.append(el('summary','Archived checklists'),button('Delete all archived checklists',()=>{
+      if(!model().trips.some(trip=>trip.archived)||!confirm('Delete every archived checklist?'))return;
+      model().trips=model().trips.filter(trip=>!trip.archived);
+      save();render();
+    }),archivedRows);
+    panel.append(form,list,archive);
     form.onsubmit = event => {
       event.preventDefault();
       if (!name.value.trim()) return;
@@ -219,11 +314,17 @@
           label.prepend(check);
           const remove = button('Remove',()=>{trip.items.splice(index,1);save();drawItems();});
           remove.setAttribute('aria-label','Remove '+item.title);
-          line.append(label,remove);
+          check.disabled=Boolean(trip.archived);
+          line.append(label);if(!trip.archived)line.append(remove);
           checklist.append(line);
         });
       }
-      row.append(summary,checklist,addForm,button('Delete checklist',()=>{
+      row.append(summary,checklist);
+      if(!trip.archived)row.append(addForm);
+      row.append(button(trip.archived?'Restore checklist':'Archive checklist',()=>{
+        trip.archived=!trip.archived;save();render();
+        if(trip.archived)document.querySelector('.packing-archive-marker')?.closest('details')?.setAttribute('open','');
+      }),button('Delete checklist',()=>{
         if (!confirm('Permanently delete the checklist for '+trip.title+'?')) return;
         model().trips = model().trips.filter(item=>item.id!==trip.id);
         save(); row.remove();
@@ -231,7 +332,8 @@
       drawItems();
       return row;
     }
-    for (const trip of model().trips) list.append(tripRow(trip,false));
+    archivedRows.classList.add('packing-archive-marker');
+    for (const trip of model().trips) (trip.archived?archivedRows:list).append(tripRow(trip,false));
     return panel;
   }
   const previousJournal = renderJournalPage;
@@ -258,6 +360,27 @@
   const previous = render;
   render = function () {
     const target = page;
+    if(target==='Projects'){
+      previous();
+      const archived=state.projects.filter(project=>project.archived);
+      if(!archived.length)return;
+      const [panel]=section('Project Archive');
+      const list=el('details');
+      list.append(el('summary',archived.length+' archived project'+(archived.length===1?'':'s')));
+      const remove=ids=>{
+        if(!confirm(ids.size===1?'Permanently delete this archived project?':'Permanently delete all archived projects?'))return;
+        state.projects=state.projects.filter(project=>!project.archived||!ids.has(project.id));
+        save();render();
+      };
+      for(const project of archived){
+        const row=el('div',undefined,'planning-toolbar');
+        row.append(el('span',project.title||project.name||'Untitled project'),button('Delete',()=>remove(new Set([project.id]))));
+        list.append(row);
+      }
+      list.append(button('Delete all archived projects',()=>remove(new Set(archived.map(project=>project.id)))));
+      panel.append(list);content.append(panel);
+      return;
+    }
     if (!routes.includes(target)) return previous();
     page = 'Quick notes';
     try { previous(); } finally { page = target; }

@@ -25,8 +25,18 @@
     const owner=state;
     const entries=()=>state.notes.filter(note=>(note.noteSection==='brain-dump')===brainDump);
     let editing=null;
+    const archived=()=>entries().filter(note=>note.noteArchived);
+    const clear=button('Delete all archived',()=>{
+      if(state!==owner||!confirm('Permanently delete all archived entries in this section?'))return;
+      const ids=new Set(archived().map(note=>note.id));
+      state.notes=state.notes.filter(note=>!ids.has(note.id));
+      if(editing&&ids.has(editing.id))edit(null,false);
+      save();draw();
+    });
+    header.append(clear);
 
     function draw(){
+      clear.hidden=filter.value!=='archive'||!archived().length;
       const query=search.value.trim().toLowerCase();
       const results=entries().map((note,index)=>({note,index})).filter(({note})=>
         Boolean(note.noteArchived)===(filter.value==='archive')&&(filter.value!=='pinned'||note.notePinned)&&[note.title,note.text].join(' ').toLowerCase().includes(query));
@@ -44,7 +54,7 @@
         const open=button('',()=>{
           const draft=editorHost.querySelector('form');
           const hasChanges=[...draft.querySelectorAll('input,textarea,select')].some(control=>control.value!==control.dataset.initial);
-          if(!hasChanges||confirm('Discard the unsaved changes in the editor?'))edit(note);
+          if((brainDump&&!editing)||!hasChanges||confirm('Discard the unsaved changes in the editor?'))edit(note);
         },'notes-open');
         open.append(el('h4',note.title||'Untitled note'),el('p',note.text||''));
         const actions=el('div',undefined,'notes-card-actions');
@@ -61,6 +71,12 @@
           draw();
           message.textContent=note.noteArchived?'Moved to Archive.':'Restored.';
         }));
+        if(note.noteArchived)actions.append(button('Delete permanently',()=>{
+          if(state!==owner||!confirm('Permanently delete this archived entry?'))return;
+          state.notes=state.notes.filter(item=>item.id!==note.id);
+          if(editing===note)edit(null,false);
+          save();draw();
+        }));
         card.append(open,actions);stack.append(card);
       }
     }
@@ -70,29 +86,47 @@
       const title=el('input');title.maxLength=200;title.value=note?.title||'';
       const text=el('textarea');text.rows=brainDump?8:4;text.value=note?.text||'';
       text.placeholder=brainDump?'Write whatever is on your mind…':'Write your note…';
+      const draft=brainDump&&!note?state.brainDumpDraft:null;
+      if(draft){title.value=draft.title||'';text.value=draft.text||'';}
       const color=el('select');
       color.setAttribute('aria-label','Paper color');
       for(const [value,name] of Object.entries(colors))color.add(new Option(name,value));
       color.value=note?tone(note,state.notes.indexOf(note)):Object.keys(colors)[entries().length%5];
-      form.dataset.paper=color.value;color.onchange=()=>form.dataset.paper=color.value;
+      if(draft&&Object.hasOwn(colors,draft.color))color.value=draft.color;
+      form.dataset.paper=color.value;
+      const draftStatus=el('p',draft?'Draft restored':'Draft saves as you type');
+      draftStatus.setAttribute('role','status');
+      function persistDraft(){
+        if(state!==owner||!brainDump||note)return;
+        state.brainDumpDraft={title:title.value,text:text.value,color:color.value};
+        save();
+        draftStatus.textContent='Draft saved';
+      }
+      color.onchange=()=>{form.dataset.paper=color.value;persistDraft();};
       const actions=el('div',undefined,'notes-tools');
       const submit=el('button','Save note','notes-primary');submit.type='submit';
       const close=()=>edit(null,false);
       actions.append(submit);
+      if(brainDump&&!note)actions.append(button('Delete draft',()=>{
+        if(state!==owner||!confirm('Delete this draft?'))return;
+        delete state.brainDumpDraft;save();edit(null,false);
+      }));
       if(note)actions.append(button('Cancel',close));
       if(note)actions.append(button('Delete note',()=>{
         if(!confirm('Delete '+(note.title||'this note')+'?'))return;
         state.notes=state.notes.filter(item=>item.id!==note.id);save();close();draw();message.textContent='Note deleted.';
       }));
       form.append(el('h3',note?'Edit entry':brainDump?'New brain dump':'New note'),field('Title (optional)',title),field(brainDump?'Thoughts':'Note',text),field('Paper color',color),actions);
+      if(brainDump&&!note)form.append(draftStatus);
       form.onsubmit=event=>{
         event.preventDefault();if(state!==owner)return;
         if(!title.value.trim()&&!text.value.trim()){text.setCustomValidity('Write something before saving.');text.reportValidity();return}
         const values={title:title.value.trim()||text.value.trim().split('\n')[0].slice(0,60),text:text.value,noteColor:color.value,noteUpdated:new Date().toISOString()};
         if(note)Object.assign(note,values);else state.notes.push({id:crypto.randomUUID(),...values,...(brainDump?{noteSection:'brain-dump'}:{})});
+        if(brainDump&&!note)delete state.brainDumpDraft;
         search.value='';filter.value=note?.noteArchived?'archive':'all';save();close();draw();message.textContent=brainDump?'Entry saved.':'Note saved.';
       };
-      title.oninput=text.oninput=()=>text.setCustomValidity('');
+      title.oninput=text.oninput=()=>{text.setCustomValidity('');persistDraft();};
       for(const control of [title,text,color])control.dataset.initial=control.value;
       editorHost.replaceChildren(form);if(focus)title.focus();
     }

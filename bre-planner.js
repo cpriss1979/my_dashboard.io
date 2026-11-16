@@ -18,21 +18,9 @@
     element.onclick = action;
     return element;
   }
-  function picker(label, name, value = '') {
-    const wrap = node('label', label);
-    const field = node('input');
-    field.name = name;
-    field.value = value;
-    field.maxLength = 24;
-    field.placeholder = '🌸';
-    wrap.append(field);
-    return wrap;
-  }
-
   const previousFields = fieldsFor;
   fieldsFor = function () {
     previousFields();
-    if (kind.value === 'events') fields.append(picker('Emoji sticker', 'emoji'));
     if (kind.value !== 'priorities') return;
     const label = node('label', 'Priority board');
     const select = node('select');
@@ -226,7 +214,6 @@
     const url=node('input');url.name='url';url.type='url';url.required=true;url.placeholder='https://www.youtube.com';
     const nameWrap=node('label','Label');nameWrap.append(label);
     const urlWrap=node('label','Website URL');urlWrap.append(url);
-    const emoji=picker('Icon emoji','emoji');
     const submit=node('button','Pin link','primary');
     const entries=node('div');
     const status=node('p');status.setAttribute('role','status');
@@ -235,14 +222,13 @@
       entries.replaceChildren();
       for(const pin of state.favoriteLinks||[]){
         const row=node('div',undefined,'bre-controls');
-        const link=node('a',[pin.emoji,pin.label].filter(Boolean).join(' '));
+        const link=node('a',pin.label);
         const safe=website(pin.url);
         if(safe){link.href=safe;link.target='_blank';link.rel='noopener noreferrer'}
         row.append(link,button('Edit',()=>{
           editing=pin.id;
           label.value=pin.label;
           url.value=pin.url;
-          form.elements.emoji.value=pin.emoji||'';
           submit.textContent='Save link';
           label.focus();
         }),button('Remove',()=>{
@@ -253,13 +239,13 @@
         entries.append(row);
       }
     };
-    form.append(nameWrap,urlWrap,emoji,submit);
+    form.append(nameWrap,urlWrap,submit);
     form.onsubmit=event=>{
       event.preventDefault();
       const address=website(url.value);
       if(state!==owner)return;
       if(!label.value.trim()||!address){status.textContent='Enter a label and an HTTP or HTTPS link.';return}
-      const pin={id:editing||crypto.randomUUID(),label:label.value.trim(),url:address,emoji:form.elements.emoji.value.trim()};
+      const pin={id:editing||crypto.randomUUID(),label:label.value.trim(),url:address};
       const links=state.favoriteLinks||[];
       state.favoriteLinks=editing?links.map(entry=>entry.id===editing?pin:entry):[...links,pin];
       editing='';form.reset();submit.textContent='Pin link';

@@ -427,7 +427,7 @@ function savings(root){
   const allocated=g.reserved||0;
   const n=e('article',undefined,'bre-fund');
   n.style.setProperty('--paper-color',/^#[a-f0-9]{6}$/i.test(g.color)?g.color:'#ffe9f2');
-  n.append(e('h3',[g.emoji,g.name].filter(Boolean).join(' ')),e('p',name(g.account)),
+  n.append(e('h3',g.name),e('p',name(g.account)),
    e('strong',dollars(allocated)+' set aside · '+dollars(g.target)+' goal'));
   const progress=e('progress');progress.max=g.target;progress.value=Math.min(g.target,allocated);
   progress.setAttribute('aria-label',g.name+' savings progress');
@@ -440,7 +440,12 @@ function savings(root){
  archive.append(e('summary','Archived funds ('+archived.length+')'));
  for(const g of archived)archive.append(row(e('span',g.name),b('Edit or restore',()=>goalForm(g)),
   b('Delete',()=>{if(confirm('Delete '+g.name+'?'))safeAction('Delete savings fund',()=>{g.deleted=true})},'link')));
- if(archived.length)goals.append(archive);
+ if(archived.length){
+  archive.append(b('Delete all archived funds',()=>{
+   if(confirm('Delete all archived savings funds in this account view?'))safeAction('Delete archived funds',()=>{for(const fund of archived)fund.deleted=true});
+  }));
+  goals.append(archive);
+ }
  root.append(goals);
  if(!selectedOwner()&&state.savingsEntries?.length){const old=e('details',undefined,'cf-old-savings');old.append(e('summary','Earlier savings records · '+state.savingsEntries.length),e('p','Preserved separately; not replayed into current balances.'));for(const x of [...state.savingsEntries].filter(x=>!m.overrides['legacy-savings|'+x.id]?.skipped).sort((a,b)=>(b.date||'').localeCompare(a.date||'')))old.append(record(dateLabel(x.date)+' · '+x.kind,(state.people?.find(p=>p.id===x.person)?.name||'')+' · '+money(Number(x.amount))+(x.note?' · '+x.note:''),b('Delete',()=>safeAction('Delete earlier savings entry',()=>{m.overrides['legacy-savings|'+x.id]={id:'legacy-savings|'+x.id,skipped:true,legacyId:x.id}}),'link')));root.append(old)}
 }
@@ -472,12 +477,11 @@ function goalForm(g){
   field('Target ($)',number('target',g?g.target/100:'',.01)),
   field('Starting amount set aside ($)',number('reserved',(g?.reserved||0)/100)),
   field('Card color',input('color','color',g?.color||'#ffe9f2')),
-  field('Emoji sticker',input('emoji','text',g?.emoji||'',false)),
   field('Archive fund and release its money',check('archived',g?.archived))
  ],f=>{
   const archived=f.archived.checked;
   const next={id:g?.id||uid(),name:reqName(f),account:f.account.value,target:cents(f.target.value),
-   reserved:archived?0:cents(f.reserved.value),color:f.color.value,emoji:f.emoji.value.trim().slice(0,24),archived};
+   reserved:archived?0:cents(f.reserved.value),color:f.color.value,archived};
   if(next.target<=0)throw Error('Enter a positive target.');
   if(!Number.isSafeInteger(next.reserved)||next.reserved<0)throw Error('Enter a valid amount to set aside.');
   if(next.reserved&&(next.account!==g?.account||next.reserved>(g?.reserved||0)))assertFundBalance(next.account,next.reserved,next.id);
@@ -1163,6 +1167,11 @@ function archive(root){
  const rules=m.bills.filter(rule=>rule.archived&&!rule.deleted&&matchesOwner(rule.account));
  panel.append(e('p','Archived bill schedules · '+rules.length));
  if(!rules.length){panel.append(e('p','No archived bill schedules.'));root.append(panel);return}
+ panel.append(b('Delete all archived schedules',()=>{
+  if(confirm('Delete all archived bill schedules in this account view? Recorded payments stay in Activity.')){
+   safeAction('Delete archived schedules',()=>{for(const rule of rules)rule.deleted=true});
+  }
+ }));
  const months=new Map();
  for(const rule of rules){
   const month=archiveMonth(rule);
