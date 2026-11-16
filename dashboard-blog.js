@@ -234,16 +234,38 @@
     if (!ordered.length) blog.append(element('p', 'Your posts will appear here.', 'card'));
     for (const [index, post] of ordered.entries()) {
       const article = element('article', undefined, 'card dashboard-blog-post');
-      article.dataset.postWidth = [2,3,4,6].includes(post.width) ? post.width : 6;
+      article.dataset.postWidth = [2,4,6].includes(post.width) ? post.width : post.width===3?4:2;
       if (arranging) {
         const controls = element('div', undefined, 'dashboard-layout-actions');
         const width = element('select');
         width.setAttribute('aria-label', 'Width of ' + post.title);
-        for (const [label,value] of [['One third',2],['Half',3],['Two thirds',4],['Full width',6]]) {
+        for (const [label,value] of [['One third',2],['Two thirds',4],['Full width',6]]) {
           width.add(new Option(label,value));
         }
         width.value = article.dataset.postWidth;
         width.onchange = () => change(ordered.map(item => item.id === post.id ? {...item,width:Number(width.value)} : item));
+        const edge=button('↔',()=>{},'blog-resize-edge');
+        edge.setAttribute('aria-label','Resize '+post.title+' by dragging the right edge');
+        let drag=null;
+        edge.onpointerdown=event=>{
+          if(event.button!==0)return;
+          const gridWidth=grid.getBoundingClientRect().width;
+          if(gridWidth<480)return;
+          edge.setPointerCapture(event.pointerId);
+          drag={pointer:event.pointerId,start:event.clientX,unit:gridWidth/3,span:Number(article.dataset.postWidth),next:Number(article.dataset.postWidth)};
+        };
+        edge.onpointermove=event=>{
+          if(drag?.pointer!==event.pointerId)return;
+          drag.next=2*Math.max(1,Math.min(3,drag.span/2+Math.round((event.clientX-drag.start)/drag.unit)));
+          article.dataset.postWidth=drag.next;
+        };
+        edge.onpointerup=event=>{
+          if(drag?.pointer!==event.pointerId)return;
+          const {span,next}=drag;drag=null;
+          if(span!==next)change(ordered.map(item=>item.id===post.id?{...item,width:next}:item));
+        };
+        edge.onlostpointercapture=()=>{if(drag){article.dataset.postWidth=drag.span;drag=null;}};
+        article.append(edge);
         const grip = button('⠿ Drag', () => {});
         grip.draggable = true;
         grip.setAttribute('aria-label', 'Drag ' + post.title);
