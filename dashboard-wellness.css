@@ -55,3 +55,19 @@ body.glow-redesign #content button.dashboard-control[aria-pressed="true"] {
   .dashboard-lane:not(:has(.dashboard-lane-label)) [data-card-gap] {margin-top:0!important;}
   .dashboard-post-grid :is([data-post-width="2"],[data-post-width="3"],[data-post-width="4"]) {grid-column:span 6;}
 }
+
+#content .dashboard-blog { max-width:none; }
+#content .dashboard-blog .dashboard-blog-post {position:relative}
+#content .blog-resize-edge {position:absolute;inset:7px 0 7px auto;width:22px;min-width:0;min-height:0;padding:0;border-radius:9px 0 0 9px;cursor:ew-resize;touch-action:none;font-size:.78rem;z-index:1}
+#content .dashboard-blog-post:has(.blog-resize-edge) {padding-inline-end:34px}
+@media(max-width:880px){#content .blog-resize-edge{display:none}}
+#content .workout-category{display:block;max-width:19rem;margin:16px 0 24px}
+#content .workout-category select{min-height:44px}
+#content .workout-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:16px}
+#content .workout-grid article{display:flex;flex-direction:column}
+#content .workout-grid article img{aspect-ratio:16/10;object-fit:contain}
+#content .workout-grid article ol{padding-inline-start:1.4em}
+#content .workout-grid article .dashboard-feature-actions{margin-top:auto;padding-top:12px}
+#content .habit-mode-choices,#content .habit-week{display:flex;flex-wrap:wrap;gap:.45rem;margin-block:.8rem}
+#content .habit-view-choices button[aria-pressed=true],#content .habit-week button[aria-pressed=true]{background:#604781;color:#fff}
+#content .habit-week button{padding-inline:.55rem}
