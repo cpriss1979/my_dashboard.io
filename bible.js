@@ -4,7 +4,7 @@
  const topics={Peace:['John 14:27','Philippians 4:6-7','2 Thessalonians 3:16'],Worry:['1 Peter 5:7','Matthew 6:25-34','Psalm 56:3'],Rest:['Matthew 11:28-30','Psalm 23','Hebrews 4'],Joy:['Psalm 118:24','Philippians 4:4','1 Thessalonians 5:16'],Hope:['Romans 15:13','Psalm 42:11','Isaiah 40:31'],Strength:['Philippians 4:13','Isaiah 41:10','Psalm 46:1'],Wisdom:['James 1:5','Proverbs 3:5-6','Proverbs 2'],Gratitude:['1 Thessalonians 5:18','Psalm 100','Colossians 3:15-17'],Forgiveness:['1 John 1:9','Ephesians 4:32','Psalm 103:8-12'],Family:['Colossians 3:12-21','Psalm 127','1 Corinthians 13'],Grief:['Psalm 34:18','Matthew 5:4','Revelation 21:4'],Faith:['Hebrews 11:1','Proverbs 3:5-6','Mark 9:24']};
  const teachings=[{name:'Casting Your Cares on God',topics:['Worry','Faith'],ref:'1 Peter 5:5-7',summary:'This teaching connects bringing worries to God with humility and dependence on Him.',url:'https://www.gty.org/blogs/print/B121129/casting-your-cares-on-god'},{name:'The Only Source of Peace',topics:['Peace','Hope'],ref:'2 Thessalonians 3:16, 18',summary:'MacArthur describes the peace in Paul’s prayer as a gracious gift from God, rather than something secured by easy circumstances.',url:'https://www.gty.org/blogs/print/B121204/the-only-source-of-peace'},{name:'Entering into God’s Rest',topics:['Rest','Faith'],ref:'Hebrews 4',summary:'This study distinguishes spiritual rest through faith in Christ from physical comfort or a trouble-free life.',url:'https://www.gty.org/resources/study-guides/print/1609/entering-into-gods-rest'}];
  const verses=[['Psalm 56:3','Whenever I am afraid, I will trust in You.'],['Philippians 4:13','I can do all things through Christ who strengthens me.'],['1 Thessalonians 5:16','Rejoice always,'],['Psalm 118:24','This is the day the LORD has made; We will rejoice and be glad in it.'],['Proverbs 17:22','A merry heart does good, like medicine, But a broken spirit dries the bones.'],['1 Peter 5:7','casting all your care upon Him, for He cares for you.']];
- let tab='Read',query='',result='',topic='',planDay=null,request=0,controller=null;
+ let tab='Read',query='',result='',topic='',planDay=null,controller=null;
  function model(){state.bible??={favorites:[],readChapters:[],topicsViewed:[],notes:{},awards:{},plan:{start:localDate(new Date()),mode:'mixed'}};const m=state.bible;m.favorites??=[];m.readChapters??=[];m.topicsViewed??=[];m.notes??={};m.awards??={};return m}
  function dayNumber(date){const [y,m,d]=date.split('-').map(Number);return Math.floor(Date.UTC(y,m-1,d)/86400000)}
  const planCache={};
@@ -17,7 +17,9 @@
  function button(label,fn,cls='secondary'){const b=el('button',label,cls);b.type='button';b.onclick=fn;return b}
  function panel(title){const p=el('section',undefined,'card bible-panel');p.append(el('h2',title));return p}
  function link(label,url){const a=el('a',label,'bible-link');a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a}
- function translation(){return ['NKJV','NLT','NIV'].includes(model().translation)?model().translation:'NKJV'}
+ const openTranslations={KJV:'kjv',WEB:'web',ASV:'asv',BSB:'bsb',BBE:'bbe'};
+ const readingTranslations=['NKJV',...Object.keys(openTranslations),'NLT','NIV'];
+ function translation(){return readingTranslations.includes(model().translation)?model().translation:'NKJV'}
  function passageURL(ref,version=translation()){return 'https://www.biblegateway.com/passage/?search='+encodeURIComponent(ref)+'&version='+version}
  function favorite(ref){const m=model();if(!m.favorites.some(f=>f.ref.toLowerCase()===ref.toLowerCase())){m.favorites.push({id:crypto.randomUUID(),ref,added:new Date().toISOString()});saveBible();notify('Passage saved to favorites')}else notify('Already in favorites')}
  function referenceRow(ref){const row=el('div',undefined,'bible-reference');row.append(button(ref,()=>openPassage(ref),'bible-ref-button'),button('♡ Save',()=>favorite(ref),'link'));return row}
@@ -25,18 +27,147 @@
  function configKey(){return 'bible-private-config:'+dashboardActivePrefix}
  function privateConfig(){try{return JSON.parse(localStorage.getItem(configKey())||'null')}catch{return null}}
  async function api(path,config,signal){const res=await fetch('https://rest.api.bible/v1/'+path,{headers:{'api-key':config.key},signal});if(!res.ok)throw Error(res.status===401?'The key was not accepted. Check your private connection.':res.status===403?'This account does not have access to the requested NKJV content.':res.status===429?'The Bible service request limit was reached. Try again later.':'The Bible service could not load this passage ('+res.status+').');return res.json()}
- async function openPassage(ref){result=ref;query=ref;tab='Read';go('Bible');const host=document.getElementById('biblePassage');if(!host)return;const version=translation();
- host.replaceChildren(el('h3',ref),link('Read full passage in '+version+' ↗',passageURL(ref)),button('♡ Save to favorites',()=>favorite(ref),'link'));
- if(version!=='NKJV'){controller?.abort();host.append(el('p',version+' opens in Bible Gateway.'));return}
- const local=verses.find(v=>v[0].toLowerCase()===ref.toLowerCase());if(local)host.append(el('blockquote',local[1]),el('small','NKJV © 1982 Thomas Nelson. All rights reserved.'));const config=privateConfig();if(!config){host.append(el('p','Full NKJV passages open at Bible Gateway. To display passages here, connect an eligible NKJV service in Private connection below.'));return}const token=++request;controller?.abort();controller=new AbortController();const loading=el('p','Loading NKJV…');host.append(loading);try{const response=await api('bibles/'+encodeURIComponent(config.bibleId)+'/search?query='+encodeURIComponent(ref)+'&limit=10',config,controller.signal);if(token!==request||page!=='Bible'||!host.isConnected)return;loading.remove();const data=response.data||{};const items=data.passages||data.verses||[];if(!items.length){host.append(el('p','No matching NKJV passage found. Try a reference such as John 3:16, or use the source link.'));return}for(const item of items){const block=el('article',undefined,'bible-passage-text');if(item.reference)block.append(el('h3',item.reference));block.append(el('p',textOnly(item.content||item.text)));host.append(block)}host.append(el('small',data.copyright?textOnly(data.copyright):'NKJV © 1982 Thomas Nelson. All rights reserved.'))}catch(e){if(e.name!=='AbortError'&&host.isConnected)loading.textContent=e.message+' The source link above is still available.'}}
+ function translationInput(label,choices,current){
+  const control=el('select');for(const name of choices)control.add(new Option(name||'Off',name));
+  control.value=current;const wrapper=el('label',label);wrapper.append(control);return [wrapper,control];
+ }
+ function studyEntry(book,chapter,verse=''){
+  return (model().study??={})[book+' '+chapter+(verse?':'+verse:'')];
+ }
+ function setStudy(book,chapter,verse,value){
+  const notes=model().study??={},key=book+' '+chapter+(verse?':'+verse:'');
+  if(value.text||value.color)notes[key]=value;else delete notes[key];
+  save();
+ }
+ function verseLine(verse){
+  const line=el('p',undefined,'bible-verse-line');
+  const book=({'Psalm':'Psalms','Song of Songs':'Song of Solomon','Revelation of John':'Revelation'})[verse.book_name]||verse.book_name,chapter=verse.chapter,number=verse.verse;
+  const content=el('span',number+' '+verse.text.trim());
+  const existing=studyEntry(book,chapter,number);
+  const highlight=button(existing?.color?'Unhighlight':'Highlight',()=>{
+   const saved=studyEntry(book,chapter,number)||{};
+   const color=saved.color?'':'Gold';
+   setStudy(book,chapter,number,{...saved,color});
+   if(color)line.dataset.highlight=color;else delete line.dataset.highlight;
+   highlight.textContent=color?'Unhighlight':'Highlight';
+   highlight.setAttribute('aria-pressed',String(Boolean(color)));
+  },'link');
+  highlight.setAttribute('aria-label','Toggle highlight for '+book+' '+chapter+':'+number);
+  highlight.setAttribute('aria-pressed',String(Boolean(existing?.color)));
+  if(existing?.color)line.dataset.highlight=existing.color;
+  line.append(content,highlight);return line;
+ }
+ async function loadVersion(host,ref,version,signal){
+  host.replaceChildren(el('h3',version),link('Open in Bible Gateway ↗',passageURL(ref,version)));
+  if(openTranslations[version]){
+   const status=el('p','Loading passage…');host.append(status);
+   try{
+    const response=await fetch('https://bible-api.com/'+encodeURIComponent(ref)+'?translation='+openTranslations[version],{signal});
+    if(!response.ok)throw Error(response.status===429?'Too many passage requests. Try again shortly.':'Passage unavailable. Try a reference like John 3:16.');
+    const data=await response.json();
+    if(signal.aborted||!host.isConnected)return;
+    if(!data.verses?.length)throw Error('No verses were returned for this reference.');
+    status.remove();host.append(...data.verses.map(verseLine),el('small',(data.translation_name||version)+' · Bible API'));
+   }catch(error){if(!signal.aborted&&host.isConnected)status.textContent=error.message;}
+   return;
+  }
+  if(version!=='NKJV'){host.append(el('p','Open this translation at Bible Gateway.'));return;}
+  const local=verses.find(v=>v[0].toLowerCase()===ref.toLowerCase());
+  const config=privateConfig();
+  if(!config){
+   if(local)host.append(el('blockquote',local[1]),el('small','NKJV © 1982 Thomas Nelson. All rights reserved.'));
+   else host.append(el('p','To read NKJV here, set up the private NKJV connection below.'));
+   return;
+  }
+  const status=el('p','Loading NKJV…');host.append(status);
+  try{
+   const response=await api('bibles/'+encodeURIComponent(config.bibleId)+'/search?query='+encodeURIComponent(ref)+'&limit=10',config,signal);
+   if(signal.aborted||!host.isConnected)return;
+   const data=response.data||{},items=data.passages||data.verses||[];
+   if(!items.length)throw Error('No matching NKJV passage found.');
+   status.remove();
+   for(const item of items)host.append(el('h4',item.reference||ref),el('p',textOnly(item.content||item.text)));
+   host.append(el('small',data.copyright?textOnly(data.copyright):'NKJV © 1982 Thomas Nelson. All rights reserved.'));
+  }catch(error){if(!signal.aborted&&host.isConnected)status.textContent=error.message;}
+ }
+ function showPassage(host,ref){
+  controller?.abort();controller=new AbortController();const signal=controller.signal;
+  const alternate=model().compare||'';
+  const primary=translation();
+  const versions=alternate&&alternate!==primary?[primary,alternate]:[primary];
+  host.replaceChildren(el('h3',ref),button('Save to favorites',()=>favorite(ref),'link'));
+  const columns=el('div',undefined,'bible-compare-grid');
+  host.append(columns);
+  for(const version of versions){const column=el('section');columns.append(column);void loadVersion(column,ref,version,signal)}
+ }
+ function openPassage(ref){result=ref;query=ref;tab='Read';go('Bible')}
+ function studyPage(root){
+  const p=panel('Study notebook');
+  const book=el('select'),chapter=el('select'),verse=el('input'),notes=el('textarea'),color=el('select');
+  for(const [name] of books)book.add(new Option(name,name));
+  book.value=studySelection.book;
+  verse.type='number';verse.min=1;verse.max=176;verse.step=1;
+  verse.value=studySelection.verse;
+  for(const option of ['','Gold','Rose','Blue','Green'])color.add(new Option(option||'No highlight',option));
+  notes.rows=5;notes.maxLength=12000;
+  const labelled=(label,control)=>{const wrap=el('label',label);wrap.append(control);return wrap};
+  const message=el('p');message.setAttribute('role','status');
+  const controls=el('div',undefined,'bible-study-controls');
+  controls.append(labelled('Book',book),labelled('Chapter',chapter),labelled('Verse (optional)',verse),labelled('Highlight',color));
+  function loadNote(){
+   const data=studyEntry(book.value,chapter.value,verse.value)||{};
+   notes.value=data.text||'';color.value=data.color||'';message.textContent='';
+  }
+  function setChapters(selected){
+   chapter.replaceChildren();
+   const max=books.find(([name])=>name===book.value)[1];
+   for(let n=1;n<=max;n++)chapter.add(new Option(String(n),String(n)));
+   chapter.value=String(Math.min(max,Number(selected)||1));
+  }
+  function change(){
+   studySelection={book:book.value,chapter:chapter.value,verse:verse.value};loadNote();
+  }
+  setChapters(studySelection.chapter);loadNote();
+  chapter.onchange=verse.onchange=change;
+  book.onchange=()=>{verse.value='';setChapters(1);change()};
+  const actions=el('div',undefined,'bible-actions');
+  actions.append(button('Save study note',()=>{
+   if(!verse.reportValidity())return;
+   setStudy(book.value,chapter.value,verse.value,{text:notes.value.trim(),color:color.value});
+   message.textContent='Study note saved.';drawSaved();
+  }),button('Delete study note',()=>{
+   if(!confirm('Delete the note and highlight for this passage?'))return;
+   setStudy(book.value,chapter.value,verse.value,{});loadNote();drawSaved();
+  }),button('Open passage',()=>{
+   if(verse.reportValidity())openPassage(book.value+' '+chapter.value+(verse.value?':'+verse.value:''));
+  }));
+  const saved=el('details');saved.append(el('summary','Saved notes and highlights'));
+  const list=el('div');saved.append(list);
+  function drawSaved(){
+   list.replaceChildren();
+   for(const key of Object.keys(model().study||{})){
+    const match=/^(.+) (\d+)(?::(\d+))?$/.exec(key);
+    if(!match||!books.some(([name])=>name===match[1]))continue;
+    list.append(button(key,()=>{book.value=match[1];setChapters(match[2]);verse.value=match[3]||'';change();notes.focus()},'link'));
+   }
+   if(!list.children.length)list.append(el('p','No study notes or highlights yet.'));
+  }
+  drawSaved();
+  p.append(controls,labelled('Study notes',notes),actions,message,saved);root.append(p);
+ }
+ let studySelection={book:'Genesis',chapter:'1',verse:''};
  function daily(root){const n=((dayNumber(localDate(new Date()))%verses.length)+verses.length)%verses.length,[ref,text]=verses[n],p=panel('A verse for today');p.classList.add('bible-daily');p.append(el('blockquote',text),el('p',ref+' · NKJV'),button('♡ Save verse',()=>favorite(ref),'link'),link('Read in '+translation()+' ↗',passageURL(ref)),el('small','NKJV © 1982 Thomas Nelson. All rights reserved.'));root.append(p)}
  function teaching(root){const p=panel('John MacArthur · study notes');p.append(el('p','Short source-based summaries, not quotations or a complete verse-by-verse commentary. Open the original teaching for context.'));const list=topic?teachings.filter(t=>t.topics.includes(topic)):teachings;for(const t of list.length?list:teachings){const a=el('article',undefined,'bible-study');a.append(el('h3',t.name),el('small',t.ref),el('p',t.summary),link('Read original at Grace to You ↗',t.url));p.append(a)}p.append(link('Browse more John MacArthur teaching ↗','https://www.gty.org/'),link('MacArthur Study Bible resources ↗','https://studybible.org/'));root.append(p)}
  function connection(root){const details=el('details',undefined,'bible-connection');details.append(el('summary','Private NKJV connection (optional)'));const f=el('form'),key=el('input');key.type='password';key.autocomplete='off';key.required=true;const label=el('label','API.Bible key');label.append(key);const status=el('p');status.setAttribute('role','status');f.append(el('p','An API.Bible account with NKJV access is required. This key stays in this browser under your dashboard profile; it is not included in dashboard sync or backups. Never put it in GitHub.'),label);const submit=el('button','Connect NKJV');submit.type='submit';f.append(submit,button('Remove connection',()=>{localStorage.removeItem(configKey());status.textContent='Private connection removed. Source links still work.'}),status,link('API.Bible translation access ↗','https://www.api.bible/bibles'));f.onsubmit=async e=>{e.preventDefault();submit.disabled=true;status.textContent='Checking available translations…';try{const config={key:key.value.trim()},response=await api('bibles',config);const matches=(response.data||[]).filter(b=>/\bNKJV\b/i.test(b.abbreviation||'')||/New King James Version/i.test(b.name||''));if(!matches.length)throw Error('No NKJV translation is available to this key. Check the account’s translation access.');config.bibleId=matches[0].id;localStorage.setItem(configKey(),JSON.stringify(config));key.value='';status.textContent='NKJV connected on this browser. Search for a passage to read it here.'}catch(e){status.textContent=e.message}finally{submit.disabled=false}};details.append(f);root.append(details)}
- function readPage(root){daily(root);const p=panel('Find a passage or explore a topic');const version=el('select');
- for(const name of ['NKJV','NLT','NIV'])version.add(new Option(name,name));
- version.value=translation();version.onchange=()=>{controller?.abort();model().translation=version.value;save();paint()};
- const preference=el('label','Reading translation');preference.append(version);p.append(preference);
- const f=el('form',undefined,'bible-search');const search=el('input');search.type='search';search.required=true;search.maxLength=160;search.value=query;search.placeholder='John 3:16, Psalm 23, peace, hope…';search.setAttribute('aria-label','Bible reference or topic');const submit=el('button','Search');submit.type='submit';f.append(search,submit);f.onsubmit=e=>{e.preventDefault();const q=search.value.trim();if(!q)return;query=q;const alias={anxiety:'Worry',stress:'Rest',love:'Family',thankful:'Gratitude',sadness:'Grief'};const match=alias[q.toLowerCase()]||Object.keys(topics).find(t=>t.toLowerCase()===q.toLowerCase());if(match){topic=match;const m=model();if(!m.topicsViewed.includes(match))m.topicsViewed.push(match);saveBible();paint()}else{topic='';openPassage(q)}};p.append(f);const chips=el('div',undefined,'bible-actions');for(const t of Object.keys(topics))chips.append(button(t,()=>{topic=t;query=t;const m=model();if(!m.topicsViewed.includes(t))m.topicsViewed.push(t);saveBible();paint()},t===topic?'primary':'secondary'));p.append(chips);if(topic){p.append(el('h3',topic+' · passages to explore'));topics[topic].forEach(ref=>p.append(referenceRow(ref)))}const reader=el('section');reader.id='biblePassage';if(result){reader.append(el('h3',result),link('Read in '+translation()+' ↗',passageURL(result)),...(translation()==='NKJV'?[button('Load passage here',()=>openPassage(result))]:[]),button('♡ Save',()=>favorite(result),'link'))}p.append(reader);root.append(p);teaching(root);connection(root)}
+ function readPage(root){daily(root);const p=panel('Find a passage or explore a topic');const [preference,version]=translationInput('Reading translation',readingTranslations,translation());
+ const [compareLabel,compare]=translationInput('Compare with',['',...['NKJV',...Object.keys(openTranslations)].filter(name=>name!==translation())],model().compare||'');
+ version.onchange=()=>{model().translation=version.value;if(model().compare===version.value)model().compare='';save();paint()};
+ compare.onchange=()=>{model().compare=compare.value;save();paint()};
+ const translations=el('div',undefined,'bible-study-controls');translations.append(preference,compareLabel);p.append(translations,el('small','KJV, WEB, ASV, BSB and BBE read here. Full NKJV uses your private connection. NLT and NIV open at Bible Gateway.'));
+ const f=el('form',undefined,'bible-search');const search=el('input');search.type='search';search.required=true;search.maxLength=160;search.value=query;search.placeholder='John 3:16, Psalm 23, peace, hope…';search.setAttribute('aria-label','Bible reference or topic');const submit=el('button','Search');submit.type='submit';f.append(search,submit);f.onsubmit=e=>{e.preventDefault();const q=search.value.trim();if(!q)return;query=q;const alias={anxiety:'Worry',stress:'Rest',love:'Family',thankful:'Gratitude',sadness:'Grief'};const match=alias[q.toLowerCase()]||Object.keys(topics).find(t=>t.toLowerCase()===q.toLowerCase());if(match){topic=match;const m=model();if(!m.topicsViewed.includes(match))m.topicsViewed.push(match);saveBible();paint()}else{topic='';openPassage(q)}};p.append(f);const chips=el('div',undefined,'bible-actions');for(const t of Object.keys(topics))chips.append(button(t,()=>{topic=t;query=t;const m=model();if(!m.topicsViewed.includes(t))m.topicsViewed.push(t);saveBible();paint()},t===topic?'primary':'secondary'));p.append(chips);if(topic){p.append(el('h3',topic+' · passages to explore'));topics[topic].forEach(ref=>p.append(referenceRow(ref)))}const reader=el('section');reader.id='biblePassage';p.append(reader);root.append(p);
+ if(result)showPassage(reader,result);
+ studyPage(root);
+ teaching(root);connection(root)}
  function planPage(root){const m=model(),p=panel('Read the Bible in 365 days'),f=el('form',undefined,'bible-plan-settings'),date=el('input');date.type='date';date.required=true;date.value=m.plan.start;const mode=el('select');mode.add(new Option('Old & New Testament mix','mixed'));mode.add(new Option('Straight through Genesis to Revelation','straight'));mode.value=m.plan.mode;const dl=el('label','Start date');dl.append(date);const ml=el('label','Reading order');ml.append(mode);const submit=el('button','Save plan settings');submit.type='submit';f.append(dl,ml,submit);f.onsubmit=e=>{e.preventDefault();m.plan={start:date.value,mode:mode.value};planDay=null;saveBible();paint()};p.append(el('p','Start any day. Confirm chapters after reading; opening a link never marks it complete. Change the schedule without losing confirmed chapters. The mix distributes New Testament chapters across the year; some days contain only Old Testament chapters.'),f);const progressData=progress();p.append(el('p',progressData.read.size+' / 1,189 chapters · '+progressData.days+' / 365 reading days · '+progressData.finished+' / 66 books'));const progressBar=el('progress');progressBar.max=1189;progressBar.value=progressData.read.size;progressBar.setAttribute('aria-label','Bible chapters read');p.append(progressBar);const today=dayNumber(localDate(new Date()))-dayNumber(m.plan.start),day=planDay??Math.max(0,Math.min(364,today));const selector=el('select');selector.setAttribute('aria-label','Choose reading day');for(let i=0;i<365;i++)selector.add(new Option('Day '+(i+1),i));selector.value=day;selector.onchange=()=>{planDay=Number(selector.value);paint()};const actions=el('div',undefined,'bible-actions');actions.append(button('← Previous',()=>{planDay=Math.max(0,day-1);paint()}),selector,button('Next →',()=>{planDay=Math.min(364,day+1);paint()}),button('Today',()=>{planDay=null;paint()}));p.append(actions);if(today<0)p.append(el('p','Your plan starts '+displayUSDate(m.plan.start)+'. You can explore the readings now.'));for(const chapter of plan(m.plan.mode)[day]){const row=el('div',undefined,'bible-chapter'),check=el('input');check.type='checkbox';check.checked=progressData.read.has(chapter.id);check.setAttribute('aria-label','I read '+chapter.ref);check.onchange=()=>{const set=new Set(m.readChapters);if(check.checked)set.add(chapter.id);else set.delete(chapter.id);m.readChapters=[...set];saveBible();paint()};const label=el('label','I read '+chapter.ref);label.prepend(check);row.append(label,button('Open NKJV',()=>openPassage(chapter.ref),'link'));p.append(row)}root.append(p);const booksPanel=panel('Your Bible bookshelf');const grid=el('div',undefined,'bible-books');books.forEach(([name,total],book)=>{const read=chapters.filter(c=>c.book===book&&progressData.read.has(c.id)).length;const b=button(name+' · '+read+'/'+total,()=>{tab='Plan';const first=plan(m.plan.mode).findIndex(day=>day.some(c=>c.book===book&&!progressData.read.has(c.id)));planDay=first>=0?first:plan(m.plan.mode).findIndex(day=>day.some(c=>c.book===book));paint()});if(read===total)b.classList.add('bible-book-done');grid.append(b)});booksPanel.append(grid);root.append(booksPanel)}
  function favoritesPage(root){const m=model(),p=panel('Favorite passages');const f=el('form',undefined,'bible-search'),ref=el('input');ref.required=true;ref.maxLength=160;ref.placeholder='Add a reference, e.g. Romans 8:28';ref.setAttribute('aria-label','Favorite Bible reference');const submit=el('button','Save favorite');submit.type='submit';f.append(ref,submit);f.onsubmit=e=>{e.preventDefault();if(ref.value.trim()){favorite(ref.value.trim());paint()}};p.append(f);if(!m.favorites.length)p.append(el('p','Save a verse or passage to keep it here.'));for(const item of m.favorites){const a=el('article',undefined,'bible-study'),note=el('textarea');note.rows=3;note.value=m.notes[item.id]||'';note.placeholder='What does this passage mean to you?';note.setAttribute('aria-label','Note for '+item.ref);a.append(el('h3',item.ref),button('Read NKJV',()=>openPassage(item.ref)),button('Remove favorite',()=>{if(confirm('Remove this favorite and its note?')){m.favorites=m.favorites.filter(f=>f.id!==item.id);delete m.notes[item.id];saveBible();paint()}},'link'),note,button('Save note',()=>{m.notes[item.id]=note.value;saveBible();notify('Note saved')}));p.append(a)}root.append(p)}
  function heroCard(home=false){const hero=panel('A quiet place in the Word');hero.classList.add('bible-hero');if(home){const [ref,text]=verses[((dayNumber(localDate(new Date()))%verses.length)+verses.length)%verses.length];hero.append(el('blockquote',text),el('small',ref+' · NKJV'));}else hero.append(el('p','Read, reflect, keep favorite passages, and grow at your own pace.'));const tabs=el('div',undefined,'bible-tabs');for(const t of ['Read','Plan','Favorites']){const b=button(t,()=>{tab=t;if(home)go('Bible');else paint()});b.setAttribute('aria-pressed',String(!home&&t===tab));tabs.append(b)}hero.append(tabs);return hero}

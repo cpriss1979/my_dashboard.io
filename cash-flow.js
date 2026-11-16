@@ -6,12 +6,19 @@ let tab=widgetSavings?'Savings':'Overview',horizon=0,m=null,filters={frequency:'
 const today=()=>localDate(new Date()), dollars=n=>n===null||n===undefined?'Not set':money(n/100), name=accountName, uid=()=>crypto.randomUUID();
 const minDate='1900-01-01',maxDate='2199-12-31';
 function e(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
+function viewOwner(account){
+ if(!account)return '';
+ if(m.groups.some(group=>group.id===account.ownerId))return account.ownerId;
+ const name=account.name.trim().replace(/(?:\s*[-–—]\s*|\s+)(?:checking|savings)$/i,'').replace(/[’']s$/i,'').trim().toLowerCase();
+ const candidates=m.groups.filter(group=>group.name.trim().toLowerCase()===name);
+ return candidates.length===1?candidates[0].id:'';
+}
 function ownerOptions(){
  const accounts=activeAccounts();
- const groups=m.groups.filter(group=>accounts.some(account=>account.ownerId===group.id));
+ const groups=m.groups.filter(group=>accounts.some(account=>viewOwner(account)===group.id));
  return [['','All accounts'],
   ...groups.map(group=>['group:'+group.id,group.name+'’s accounts']),
-  ...accounts.filter(account=>!groups.some(group=>group.id===account.ownerId)).map(account=>[accountView(account),accountLabel(account)])];
+  ...(accounts.some(account=>!viewOwner(account))?[['unassigned','Unassigned accounts']]:[])];
 }
 function accountView(account){return account?'account:'+account.id:''}
 function accountLabel(account){
@@ -33,7 +40,7 @@ function selectedOwner(){
   const saved=ownerPreferences.has(key)?ownerPreferences.get(key):localStorage.getItem(key);
   const legacy=activeAccounts().find(account=>accountView(account)===saved);
   const view=['crystal','rick'].includes(saved)?'group:'+saved:
-   legacy?.ownerId?'group:'+legacy.ownerId:saved;
+   legacy?(viewOwner(legacy)?'group:'+viewOwner(legacy):'unassigned'):saved;
   return ownerOptions().some(([id])=>id===view)?view:'';
  }catch{return ''}
 }
@@ -45,7 +52,7 @@ function selectOwner(id){
 function matchesOwner(id){
  const owner=selectedOwner();
  const account=m.accounts.find(a=>a.id===id);
- return !owner||(owner.startsWith('group:')?account?.ownerId===owner.slice(6):accountView(account)===owner);
+ return !owner||(owner.startsWith('group:')?viewOwner(account)===owner.slice(6):Boolean(account)&&!viewOwner(account));
 }
 function matchesTransaction(item){
  return item.kind==='transfer'?matchesOwner(item.from)||matchesOwner(item.to):matchesOwner(item.account);
@@ -549,6 +556,7 @@ function banner(){const p=card('Accounts');
  }
  if(!owner.children.length){const all=b('All accounts',()=>changeView(''));all.setAttribute('aria-pressed','true');owner.append(all)}
  p.append(owner);
+ if(!selectedOwner())return p;
  const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{
   if(x==='Bills'&&tab!=='Bills'){billView='All bills';billSearch='';filters.frequency='';calendarDay='';}
   if(x==='Forecast'&&tab!=='Forecast')horizon=0;

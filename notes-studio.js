@@ -6,7 +6,7 @@
   function field(label,control){const wrap=el('label',label);wrap.append(control);return wrap}
   function tone(note,index){return Object.hasOwn(colors,note.noteColor)?note.noteColor:Object.keys(colors)[index%5]}
   function paint(root, brainDump=false){
-    const workspace=el('div',undefined,'notes-studio');
+    const workspace=el('div',undefined,'notes-studio '+(brainDump?'brain-dump-page':'lined-notebook'));
     const library=el('section',undefined,'notes-library');
     const header=el('div',undefined,'notes-tools');
     const search=el('input');search.type='search';
@@ -116,19 +116,24 @@
         if(!confirm('Delete '+(note.title||'this note')+'?'))return;
         state.notes=state.notes.filter(item=>item.id!==note.id);save();close();draw();message.textContent='Note deleted.';
       }));
-      form.append(el('h3',note?'Edit entry':brainDump?'New brain dump':'New note'),field('Title (optional)',title),field(brainDump?'Thoughts':'Note',text),field('Paper color',color),actions);
+      if(brainDump){
+        text.setAttribute('aria-label','Brain dump');
+        form.append(text,actions);
+      }else{
+        form.append(el('h3','Notes'),field('Title (optional)',title),field('Note',text),field('Paper color',color),actions);
+      }
       if(brainDump&&!note)form.append(draftStatus);
       form.onsubmit=event=>{
         event.preventDefault();if(state!==owner)return;
-        if(!title.value.trim()&&!text.value.trim()){text.setCustomValidity('Write something before saving.');text.reportValidity();return}
-        const values={title:title.value.trim()||text.value.trim().split('\n')[0].slice(0,60),text:text.value,noteColor:color.value,noteUpdated:new Date().toISOString()};
+        if((brainDump||!title.value.trim())&&!text.value.trim()){text.setCustomValidity('Write something before saving.');text.reportValidity();return}
+        const values={title:(!brainDump&&title.value.trim())||text.value.trim().split('\n')[0].slice(0,60),text:text.value,noteColor:color.value,noteUpdated:new Date().toISOString()};
         if(note)Object.assign(note,values);else state.notes.push({id:crypto.randomUUID(),...values,...(brainDump?{noteSection:'brain-dump'}:{})});
         if(brainDump&&!note)delete state.brainDumpDraft;
         search.value='';filter.value=note?.noteArchived?'archive':'all';save();close();draw();message.textContent=brainDump?'Entry saved.':'Note saved.';
       };
       title.oninput=text.oninput=()=>{text.setCustomValidity('');persistDraft();};
       for(const control of [title,text,color])control.dataset.initial=control.value;
-      editorHost.replaceChildren(form);if(focus)title.focus();
+      editorHost.replaceChildren(form);if(focus)(brainDump?text:title).focus();
     }
     search.oninput=draw;filter.onchange=draw;edit(null,false);draw();
   }

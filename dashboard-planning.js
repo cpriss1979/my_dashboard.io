@@ -54,6 +54,8 @@
     data.meals ??= {};
     data.trips ??= [];
     data.mealTargets ??= {};
+    data.mealCalories ??= {};
+    data.mealCategories ??= {};
     return data;
   }
   function section(title) {
@@ -203,7 +205,9 @@
         meals.forEach((meal,index)=>{
           if(data.meals[key]?.[meal])return;
           const categories=selected[meal];
-          (data.meals[key]??={})[meal]=ideas[meal][categories[day%categories.length]][0];
+          const category=categories[day%categories.length];
+          (data.meals[key]??={})[meal]=ideas[meal][category][0];
+          (data.mealCategories[key]??={})[meal]=category;
           if(daily)(data.mealTargets[key]??={})[meal]=portions[index];
           filled++;
         });
@@ -213,44 +217,85 @@
       if(refreshed){refreshed.open=true;refreshed.querySelector('[role=status]').textContent=filled?filled+' meals added.':'This week already has a full plan.';}
     };
     setup.append(form);panel.append(setup);
-    const grid = el('div', undefined, 'meal-week');
-    const recipeNames = el('datalist');
-    recipeNames.id = 'meal-recipe-names';
-    for (const recipe of model().recipes) recipeNames.append(new Option(recipe.title));
-    grid.append(recipeNames);
-    for (let offset = 0; offset < 7; offset++) {
-      const day = new Date(start);
-      day.setDate(start.getDate() + offset);
-      const key = localDate(day);
-      const column = el('section', undefined, 'meal-day');
-      column.append(el('h3', weekday.format(day)));
-      for (const meal of meals) {
-        const [label, input] = field(meal,'text',model().meals[key]?.[meal] || '');
-        input.maxLength = 150;
-        input.setAttribute('list', recipeNames.id);
-        input.onchange = () => {
-          const plan = model().meals;
-          const value = input.value.trim();
-          if(model().mealTargets[key])delete model().mealTargets[key][meal];
-          if (value) (plan[key] ??= {})[meal] = value;
-          else if (plan[key]) {
-            delete plan[key][meal];
-            if (!Object.keys(plan[key]).length) delete plan[key];
-          }
-          save();
-        };
-        column.append(label);
-        const kcal=model().mealTargets[key]?.[meal];
-        if(Number.isFinite(kcal))column.append(el('small','Portion target · '+kcal+' cal'));
-        const suggested=Object.values(ideas[meal]).find(entry=>entry[0]===input.value);
-        if(suggested)column.append(button('Save to Recipe box',event=>{
-          if(model().recipes.some(record=>record.title===suggested[0])){event.currentTarget.textContent='In Recipe box';return;}
-          model().recipes.unshift({id:crypto.randomUUID(),title:suggested[0],ingredients:suggested[1],instructions:suggested[2]});
-          save();event.currentTarget.textContent='In Recipe box';
-        }));
-      }
-      grid.append(column);
+    const grid=el('div',undefined,'meal-board');
+    grid.setAttribute('role','region');grid.setAttribute('aria-label','Weekly meal plan');grid.tabIndex=0;
+    const table=el('table');
+    const dates=Array.from({length:7},(_,offset)=>{const d=new Date(start);d.setDate(d.getDate()+offset);return d});
+    const weekdayHead=el('tr');weekdayHead.append(el('th','Meal'));
+    for(const d of dates){const head=el('th',weekday.format(d));head.scope='col';weekdayHead.append(head)}
+    const header=el('thead');header.append(weekdayHead);table.append(header);
+    const body=el('tbody');
+    const names=el('datalist');names.id='meal-recipe-names';
+    for(const recipe of model().recipes)names.append(new Option(recipe.title));
+    table.append(body);grid.append(names,table);
+    const totals=new Map();
+    function dailyTotal(key){
+     const data=model(),values=Object.values(data.mealCalories[key]||{});
+     const target=Object.values(data.mealTargets[key]||{}).reduce((sum,n)=>sum+n,0);
+     totals.get(key).textContent=(values.length?'≈ '+values.reduce((sum,n)=>sum+n,0).toLocaleString()+' cal entered':'—')+
+       (target?' · '+target.toLocaleString()+' target':'');
     }
+    for(const meal of ['Breakfast','Morning snack','Lunch','Afternoon snack','Dinner']){
+     const row=el('tr'),heading=el('th',meal);heading.scope='row';row.append(heading);
+     for(const d of dates){
+      const key=localDate(d),data=model(),cell=el('td'),named=weekday.format(d)+' '+meal;
+      const category=el('select');
+      for(const label of ['',...Object.keys(ideas[meal]||{}),'Fruit','Vegetables','Protein','Grains','Dairy','Other']){
+       category.add(new Option(label||'Category',label));
+      }
+      category.value=data.mealCategories[key]?.[meal]||'';
+      category.setAttribute('aria-label',named+' category');
+      category.onchange=()=>{
+       if(category.value)(data.mealCategories[key]??={})[meal]=category.value;
+       else if(data.mealCategories[key])delete data.mealCategories[key][meal];
+       const suggestion=ideas[meal]?.[category.value];
+       if(suggestion&&!input.value.trim()){input.value=suggestion[0];input.onchange();}
+       save();
+      };
+      const input=el('input');input.type='text';input.maxLength=150;input.placeholder='Add meal';input.value=data.meals[key]?.[meal]||'';
+      input.setAttribute('aria-label',named);input.setAttribute('list',names.id);
+      const kcal=el('input');kcal.type='number';kcal.min=0;kcal.max=10000;kcal.step=1;kcal.placeholder='Approx. cal';
+      kcal.value=data.mealCalories[key]?.[meal]??'';kcal.setAttribute('aria-label',named+' approximate calories');
+      const target=el('small');
+      const recipe=button('Save recipe',()=>{
+       const idea=Object.values(ideas[meal]||{}).find(entry=>entry[0]===input.value.trim());
+       if(!idea)return;
+       if(!data.recipes.some(item=>item.title===idea[0])){
+        data.recipes.unshift({id:crypto.randomUUID(),title:idea[0],ingredients:idea[1],instructions:idea[2]});
+        names.append(new Option(idea[0]));save();
+       }
+       recipe.textContent='In Recipe box';
+      });
+      function details(){
+       const portion=data.mealTargets[key]?.[meal];
+       target.hidden=!Number.isFinite(portion);
+       target.textContent=target.hidden?'':'Target '+portion+' cal';
+       recipe.hidden=!Object.values(ideas[meal]||{}).some(entry=>entry[0]===input.value.trim());
+       recipe.textContent=data.recipes.some(item=>item.title===input.value.trim())?'In Recipe box':'Save recipe';
+      }
+      input.onchange=()=>{
+       const name=input.value.trim();
+       if(data.meals[key]?.[meal]===name)return;
+       if(data.mealTargets[key])delete data.mealTargets[key][meal];
+       if(data.mealCalories[key])delete data.mealCalories[key][meal];
+       kcal.value='';
+       if(name)(data.meals[key]??={})[meal]=name;
+       else if(data.meals[key])delete data.meals[key][meal];
+       details();dailyTotal(key);save();
+      };
+      kcal.onchange=()=>{
+       if(!kcal.reportValidity())return;
+       if(kcal.value!=='')(data.mealCalories[key]??={})[meal]=kcal.valueAsNumber;
+       else if(data.mealCalories[key])delete data.mealCalories[key][meal];
+       dailyTotal(key);save();
+      };
+      details();cell.append(category,input,kcal,target,recipe);row.append(cell);
+     }
+     body.append(row);
+    }
+    const totalRow=el('tr'),totalLabel=el('th','Daily calories');totalLabel.scope='row';totalRow.append(totalLabel);
+    for(const d of dates){const key=localDate(d),total=el('td');totals.set(key,total);dailyTotal(key);totalRow.append(total)}
+    const foot=el('tfoot');foot.append(totalRow);table.append(foot);
     panel.append(grid);
     return panel;
   }
