@@ -477,12 +477,12 @@
         for(const name of categories)select.add(new Option(name,name));
         select.value=category;
         select.onchange=()=>{category=select.value;draw();root.querySelector('[aria-label="Workout category"]').focus();};
-        const label=el('label','Workout category');label.append(select);routine.append(label);
+        const label=el('label','Workout category','workout-category');label.append(select);routine.append(label);
       }
       const display = tab==='routine'?selected.map(id=>workouts.find(item=>item.id===id)).filter(Boolean):
         workouts.filter(workout=>workout.categories.includes(category));
       if(!display.length) routine.append(el('p','Choose exercises in the Workout library to build your routine.'));
-      const cards = el('div',undefined,'dashboard-feature-grid');
+      const cards = el('div',undefined,'dashboard-feature-grid workout-grid');
       for(const workout of display){
         const card = el('article',undefined,'card');
         card.append(el('h3',workout.name));
