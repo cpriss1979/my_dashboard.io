@@ -8,8 +8,10 @@ const minDate='1900-01-01',maxDate='2199-12-31';
 function e(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
 function ownerOptions(){
  const accounts=activeAccounts();
+ const groups=m.groups.filter(group=>accounts.some(account=>account.ownerId===group.id));
  return [['','All accounts'],
-  ...accounts.map(account=>[accountView(account),accountLabel(account)])];
+  ...groups.map(group=>['group:'+group.id,group.name+'’s accounts']),
+  ...accounts.filter(account=>!groups.some(group=>group.id===account.ownerId)).map(account=>[accountView(account),accountLabel(account)])];
 }
 function accountView(account){return account?'account:'+account.id:''}
 function accountLabel(account){
@@ -18,10 +20,6 @@ function accountLabel(account){
  const owner=label.match(/^(Crystal|Rick)(?:[’']?s)?$/i)?.[1];
  const base=owner?owner[0].toUpperCase()+owner.slice(1).toLowerCase():label;
  return base.toLowerCase()===type.toLowerCase()?type:base+' '+type;
-}
-function selectedAccount(){
- const view=selectedOwner();
- return activeAccounts().find(account=>accountView(account)===view);
 }
 function scopedChecking(){
  const checking=activeAccounts().filter(a=>a.type==='checking'&&matchesOwner(a.id));
@@ -33,11 +31,9 @@ function selectedOwner(){
  const key=preferenceKey();
  try{
   const saved=ownerPreferences.has(key)?ownerPreferences.get(key):localStorage.getItem(key);
-  const view=['crystal','rick'].includes(saved)?'group:'+saved:saved;
-  if(view?.startsWith('group:')){
-   const accounts=activeAccounts().filter(account=>account.ownerId===view.slice(6));
-   return accountView(accounts.find(account=>account.type==='checking')||accounts[0]);
-  }
+  const legacy=activeAccounts().find(account=>accountView(account)===saved);
+  const view=['crystal','rick'].includes(saved)?'group:'+saved:
+   legacy?.ownerId?'group:'+legacy.ownerId:saved;
   return ownerOptions().some(([id])=>id===view)?view:'';
  }catch{return ''}
 }
@@ -48,7 +44,8 @@ function selectOwner(id){
 }
 function matchesOwner(id){
  const owner=selectedOwner();
- return !owner||accountView(m.accounts.find(a=>a.id===id))===owner;
+ const account=m.accounts.find(a=>a.id===id);
+ return !owner||(owner.startsWith('group:')?account?.ownerId===owner.slice(6):accountView(account)===owner);
 }
 function matchesTransaction(item){
  return item.kind==='transfer'?matchesOwner(item.from)||matchesOwner(item.to):matchesOwner(item.account);
@@ -158,7 +155,7 @@ function value(f,key){return f[key].value.trim()}
 function ensureChecking(id){if(!activeAccounts().some(a=>a.id===id&&a.type!=='savings'))throw Error('Choose a checking account for bills and income rules.');}
 function reqName(f){const v=value(f,'name');if(!v)throw Error('Enter a name.');return v}
 function accountForm(a,kind='checking',suggested='',afterSave){form(a?'Edit account':'Add bank account',[
- field('Account name',input('name','text',a?.name||suggested)),field('Account group (optional)',select('owner',[['','No group'],...m.groups.map(g=>[g.id,g.name])],a?.ownerId??(selectedAccount()?.ownerId||''))),field('New group name (optional)',input('group','text','',false)),field('Account accent',input('accent','color',accountAccent(a))),field('Account type',select('type',[['checking','Checking'],['savings','Savings']],a?.type||kind)),field('Cleared starting balance ($)',number('opening',a?.opening==null?'':a.opening/100,-1e9)),field('Balance as of (end of day)',input('asOf','date',a?.asOf||today())),field('Minimum balance cushion ($)',number('cushion',(a?.cushion||0)/100))
+ field('Account name',input('name','text',a?.name||suggested)),field('Account group (optional)',select('owner',[['','No group'],...m.groups.map(g=>[g.id,g.name])],a?.ownerId??(selectedOwner().startsWith('group:')?selectedOwner().slice(6):''))),field('New group name (optional)',input('group','text','',false)),field('Account accent',input('accent','color',accountAccent(a))),field('Account type',select('type',[['checking','Checking'],['savings','Savings']],a?.type||kind)),field('Cleared starting balance ($)',number('opening',a?.opening==null?'':a.opening/100,-1e9)),field('Balance as of (end of day)',input('asOf','date',a?.asOf||today())),field('Minimum balance cushion ($)',number('cushion',(a?.cushion||0)/100))
  ],f=>{if(value(f,'asOf')>today())throw Error('Use today or a past date.');if(a&&f.type.value==='savings'&&[...m.bills,...m.income].some(r=>!r.deleted&&!r.archived&&r.account===a.id))throw Error('Reassign or archive active income/bill rules before changing this account to Savings.');const accountName=reqName(f),groupName=value(f,'group');
  let ownerId=f.owner.value;
  if(groupName){
@@ -526,7 +523,7 @@ function budgetNameForm() {
  dialog.showModal();
  budgetName.select();
 }
-function banner(){const p=card(m.budgetName||'My budget');
+function banner(){const p=card('Accounts');
  if(!activeAccounts().length){
   p.append(e('p','Add a checking account to start your budget. Then add your income, bills, and savings goals.'),
    b('Start my budget',()=>accountForm(null,'checking','My checking'),'primary'));
@@ -535,9 +532,7 @@ function banner(){const p=card(m.budgetName||'My budget');
  const choices=ownerOptions();
  function changeView(id){
   selectOwner(id);
-  const account=selectedAccount();
-  if(account?.type==='savings')tab='Savings';
-  else if(account&&tab==='Savings')tab='Accounts';
+  tab='Overview';
   historyLimit=24;calendarDay='';render();
  }
  const owner=row();owner.classList.add('cf-owner-switch');
@@ -552,17 +547,14 @@ function banner(){const p=card(m.budgetName||'My budget');
    control.setAttribute('aria-pressed',String(selectedOwner()===id));owner.append(control);
   }
  }
- if(owner.children.length)p.append(owner);
- const householdEvents=C.events(m,C.add(today(),90));
- const actionable=householdEvents.filter(matchesTransaction);const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{
+ if(!owner.children.length){const all=b('All accounts',()=>changeView(''));all.setAttribute('aria-pressed','true');owner.append(all)}
+ p.append(owner);
+ const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{
   if(x==='Bills'&&tab!=='Bills'){billView='All bills';billSearch='';filters.frequency='';calendarDay='';}
   if(x==='Forecast'&&tab!=='Forecast')horizon=0;
   tab=x;render();
  }); 
- const count=x==='Bills'?actionable.filter(item=>item.kind==='bill'&&needsBill(item)).length:
-  x==='Income'?actionable.filter(item=>item.kind==='income'&&item.status==='pending').length:
-  x==='Overview'?householdEvents.filter(item=>item.status==='pending'||item.kind==='bill'&&needsBill(item)).length:0;
- if(count)btn.append(e('span',' · '+count,'cf-tab-count'));btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);const tools=e('details');tools.append(e('summary','Budget settings & help'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Every change has a conflict-checked undo in Activity.'));p.append(tools);return p}
+ btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);const tools=e('details');tools.append(e('summary','Budget settings'),e('p',m.budgetName||'My budget'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Every change has a conflict-checked undo in Activity.'));p.append(tools);return p}
 function visiblePlans(report){
  return report.accounts.filter(account=>matchesOwner(account.id)).map(account=>({
   account,plan:T.paydayPlan(account,today(),C.add(today(),30))
@@ -633,11 +625,15 @@ function beforePaydayEstimate(plan){
  if(plan.firstShort)estimate.append(e('p','First projected shortfall '+dateLabel(plan.firstShort)+' · '+dollars(-plan.firstShortBalance),'cf-shortfall'));
  return estimate;
 }
-function savingsBalanceCard(account){
+function savingsBalanceCard(account,summaryOnly=false){
  const item=e('article',undefined,'cf-payday-focus');
  const available=account.current===null?null:Math.max(0,account.current-(account.cushion||0));
- item.append(e('h3',name(account.id)),e('p','Available above cushion'),
-  e('strong',dollars(available),'cf-payday-amount'));
+ item.append(e('h3',name(account.id)),e('strong',dollars(account.current),'cf-payday-amount'),e('p','Full cleared balance'));
+ if(summaryOnly){
+  item.append(balanceFooter('Available above cushion',available));
+  return item;
+ }
+ item.append(balanceFooter('Available above cushion',available));
  const math=e('div',undefined,'cf-payday-math');
  for(const [label,amount] of [['Cleared savings',account.current],['Pending change',account.pending],['Projected savings',account.projected]]){
   const line=e('div',undefined,'cf-payday-line');
@@ -683,6 +679,11 @@ function cushionOverview(account,plan){
  }
  return note;
 }
+function balanceFooter(label,amount){
+ const footer=e('div',undefined,'cf-payday-line cf-balance-footer');
+ footer.append(e('span',label),e('strong',dollars(amount)));
+ return footer;
+}
 function overview(root,report){
  if(!activeAccounts().length){
   const setup=card('Set up your finances');
@@ -692,9 +693,9 @@ function overview(root,report){
   root.append(setup);
   if(!m.bills.length&&!Object.keys(m.overrides).length)return;
  }
- const p=card('Before payday'),grid=e('div',undefined,'cf-payday-grid');
+ const p=card('Account balances'),grid=e('div',undefined,'cf-payday-grid');
  const plans=visiblePlans(report);
- const savings=report.savings.filter(account=>matchesOwner(account.id)||plans.some(({account:checking})=>savingsForChecking(checking,report.savings).includes(account)));
+ const savings=report.savings.filter(account=>matchesOwner(account.id));
  const placed=new Set();
  const available=[];
  const events=new Map([...C.events(m,report.end,{byDue:true}),...C.events(m,report.end)].map(item=>[item.id,item]));
@@ -708,9 +709,11 @@ function overview(root,report){
   const title=e('h3',name(account.id));
   const headline=e('strong',dollars(billBalance),'cf-payday-amount');
   if(billBalance<0)headline.classList.add('cf-shortfall');
-  item.append(title,e('p',plan.hasPayday?'Left after bills, before payday':'Left after bills over the next 30 days'),headline);
+  const expanded=e('details',undefined,'cf-overview-breakdown');
+  expanded.append(e('summary','Balance and payday details'),e('p',plan.hasPayday?'Left after bills, before payday':'Left after bills over the next 30 days'),headline);
+  item.append(title,e('strong',dollars(account.current),'cf-payday-amount'),e('p','Full cleared balance'),expanded);
   const cushion=cushionOverview(account,plan);
-  if(cushion)item.append(cushion);
+  if(cushion)expanded.append(cushion);
   const math=e('div',undefined,'cf-payday-math');
   function mathLine(label,amount,entry){
    const line=e('div',undefined,'cf-payday-line');
@@ -721,7 +724,7 @@ function overview(root,report){
   math.append(mathLine('Cleared balance in dashboard',account.current));
   for(const entry of billRows)math.append(mathLine(dateLabel(entry.date)+' · '+entry.name,entry.delta,entry));
   if(!billRows.length)math.append(e('p',plan.hasPayday?'No bills scheduled before the deposit.':'No bills scheduled in this period.'));
-  item.append(math);
+  expanded.append(math);
   if(otherRows.length){
    const moves=e('details',undefined,'cf-payday-other');
    moves.append(e('summary','With other planned activity · '+dollars(fullBalance)));
@@ -732,7 +735,7 @@ function overview(root,report){
    }
    moves.open=fullBalance<0;
    moves.append(movement);
-   item.append(moves);
+   expanded.append(moves);
   }
   if(plan.firstShort||fullBalance<0){
    let balance=account.current;
@@ -740,24 +743,25 @@ function overview(root,report){
    const trigger=balance>=0?beforeDeposit.find(entry=>(balance+=entry.delta)<0):null;
    const source=trigger&&events.get(trigger.id);
    const message=dollars(-balance)+' short on '+dateLabel(trigger?.date||today())+(trigger?' after '+trigger.name:' · cleared balance');
-   item.append(source?b(message,()=>editEvent(source),'cf-payday-edit cf-shortfall'):e('p',message,'cf-shortfall'));
+   expanded.append(source?b(message,()=>editEvent(source),'cf-payday-edit cf-shortfall'):e('p',message,'cf-shortfall'));
   }
-  item.append(e('p',account.nextDeposit?'Next deposit · '+dateLabel(account.nextDeposit.date)+' · '+dollars(account.nextDeposit.amount):'No expected deposit entered'));
+  expanded.append(e('p',account.nextDeposit?'Next deposit · '+dateLabel(account.nextDeposit.date)+' · '+dollars(account.nextDeposit.amount):'No expected deposit entered'));
   const details=e('details',undefined,'cf-forecast-details');
   details.append(e('summary','Payday details'),paydayBreakdown(account,plan));
-  item.append(details);
+  expanded.append(details);
   const spendable=plan.preDeposit===null?null:Math.max(0,Math.min(plan.lowest,plan.preDeposit)-(account.cushion||0));
   available.push(spendable);
+  item.append(balanceFooter('Available to spend',spendable));
   const column=e('div',undefined,'cf-account-column');
   column.append(item);
   for(const saving of savingsForChecking(account,savings)){
    if(placed.has(saving.id))continue;
    placed.add(saving.id);
-   column.append(savingsBalanceCard(saving));
+   column.append(savingsBalanceCard(saving,true));
   }
   grid.append(column);
  }
- for(const saving of savings)if(!placed.has(saving.id))grid.append(savingsBalanceCard(saving));
+ for(const saving of savings)if(!placed.has(saving.id))grid.append(savingsBalanceCard(saving,true));
  if(!plans.length&&activeAccounts().length)p.append(e('p','No checking accounts in this view.'));
  p.append(grid);
  if(available.length){
@@ -795,7 +799,7 @@ function deleteAccount(id){
 }
 function accounts(root){
  const report=C.forecast(m,today(),horizon),p=card('Accounts');
- p.append(row(b('Add account',()=>accountForm(),'primary'),b('Loan amortization',()=>go('Amortization'))));
+ p.append(row(b('Add account',()=>accountForm(),'primary')));
  const help=e('details');
  help.append(e('summary','Account help'),e('p','Deleting an account pauses its scheduled activity and removes its balance from forecasts. Restore it through Activity → Undo.'));
  p.append(help);
@@ -1213,14 +1217,10 @@ function paint(){
   for(const key of Object.keys(historyFilters))historyFilters[key]='';
   backupText='';backupProblem='';actionNotice='';paymentJustSaved=false;backupOwner=null;
  }
- const scopeChanged=lastScope!==scope;
  lastScope=scope;
- const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());if(scopeChanged&&selectedAccount()?.type==='savings')tab='Savings';billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
- if(tab==='Accounts')accounts(content);else if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else overview(content,report);for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
-window.dashboardFinanceView=()=>{
- const account=selectedAccount();
- return account?.ownerId?'group:'+account.ownerId:accountView(account);
-};
+ const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
+ if(tab==='Accounts')accounts(content);else if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);const tools=card('Loan tools');tools.append(b('Loan amortization',()=>go('Amortization')));content.append(tools)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
+window.dashboardFinanceView=()=>m?selectedOwner():'';
 window.dashboardFinanceActions=()=>{
  const chosen=scopedChecking();
  return [

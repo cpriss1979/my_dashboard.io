@@ -47,21 +47,27 @@
   const tray = element('dialog', undefined, 'sticky-dialog');
   const editor = element('dialog', undefined, 'sticky-dialog');
   const addMenu = element('dialog', undefined, 'sticky-dialog');
-  const launcher = button('Sticky Notes', () => {
+  const launcher = button('▤', () => {
     renderTray();
     tray.showModal();
   });
   launcher.className = 'secondary';
-  launcher.title='Sticky notes';
-  launcher.setAttribute('aria-label','Sticky notes');
+  launcher.title='Sticky Notes';
+  launcher.setAttribute('aria-label','Sticky Notes');
   let trayTab='active';
   document.body.append(layer, tray, editor, addMenu);
   const settingsButton = document.querySelector('aside .glow-side-settings');
   if (settingsButton) {
     const toolbar = element('div', undefined, 'dashboard-utility-bar');
     settingsButton.before(toolbar);
-    const timer = button('Timer', () => go('Focus timer'));
+    const timer = button('◷', () => go('Focus timer'));
     timer.className = 'secondary';
+    timer.title='Timer';
+    timer.setAttribute('aria-label','Timer');
+    for(const [control, symbol] of [[launcher,'notes'],[timer,'timer']]){
+      window.DashboardNavIcon?.(control,'',symbol);
+      control.querySelector('.app-nav-label')?.remove();
+    }
     toolbar.append(settingsButton, launcher, timer);
   }
   window.DashboardStickyNotes = {open:()=>launcher.click()};

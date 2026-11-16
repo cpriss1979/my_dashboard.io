@@ -3,7 +3,7 @@
 
   const sections = [
     ['Calendar','Calendar'], ['Daily priorities','Tasks'], ['Projects','Projects'],
-    ['Quick notes','Notes'], ['Bookmarks','Bookmarks'], ['Finances','Balances'], ['Amortization','Amortization'],
+    ['Quick notes','Notes'], ['Bookmarks','Bookmarks'], ['Finances','Balances'],
     ['Collections','Collections'], ['Shopping List','Shopping List'], ['Wish List','Wish List'], ['Time for You','Little Joys'], ['Habit Tracker','Habit Tracker'], ['Journal','Journal'],
     ['Games','Games'], ['Badges','Badges'], ['Bible','Scripture']
   ];

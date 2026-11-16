@@ -6,8 +6,10 @@
   ['Household',[['Chores','Chores','chores'],['Shopping List','Shopping List','tasks']]],
   ['Kitchen',[['Meal Planner','Meal Planner','calendar'],['Recipes','Recipes','bible']]],
   ['Travel',[['Packing Checklist','Packing Checklist','tasks']]],
-  ['Money',[['Finances','Finances','finances'],['Amortization','Amortization','calendar']]],
-  ['Personal',[['Wish List','Wish List','bookmarks'],['Collections','Collections','projects'],['Journal','Journal','journal'],['Habit Tracker','Habit Tracker','habit'],['Bible','Bible','bible'],['Time for You','Little Joys','sun'],['Games','Games','games'],['Badges','Badges','badges']]],
+  ['Money',[['Finances','Finances','finances']]],
+  ['Journal & Faith',[['Journal','Journal','journal'],['Habit Tracker','Habit Tracker','habit'],['Bible','Bible','bible']]],
+  ['Hobbies',[['Wish List','Wish List','bookmarks'],['Collections','Collections','projects']]],
+  ['Relax & Play',[['Time for You','Little Joys','sun'],['Games','Games','games'],['Badges','Badges','badges']]],
   ['Links',[['Bookmarks','Bookmarks','bookmarks']]]
  ];
  const entries=groups.flatMap(([,links])=>links);

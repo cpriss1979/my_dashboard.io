@@ -202,3 +202,20 @@ body.glow-redesign main #content .cf-bill-cells h3 { margin:0!important;font-siz
 #content .cf-payday-edit.cf-shortfall { color: #8f1740; }
 .cf-payday-other { border-top: 1px solid #dcc5dc; padding-block: 8px; }
 .cf-payday-other summary { cursor: pointer; }
+
+.cf-toolbar .cf-owner-switch {
+  display: flex;
+  background: transparent;
+  gap: .5rem;
+  padding: 0;
+}
+.cf-toolbar .cf-owner-switch button { border-radius: 999px; }
+.cf-toolbar .cf-tabs { border-top: 1px solid #80708d44; padding-top: .65rem; }
+.cf-toolbar > details { margin-top: .7rem; }
+.cf-balance-footer {
+  margin-top: .9rem;
+  padding-top: .65rem;
+  border-top: 1px solid #80708d44;
+  font-weight: 650;
+}
+.cf-overview-breakdown > summary { cursor: pointer; }

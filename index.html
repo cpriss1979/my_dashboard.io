@@ -4263,25 +4263,33 @@ let journalPromptOffset=0,journalOnlyFavorites=false,journalMemoryFilter='',jour
 function journalDailyPrompt(date=localDate(new Date()),offset=0){return journalPrompts[(Math.floor(Date.parse(date+'T12:00:00Z')/86400000)+offset)%journalPrompts.length]}
 function toggleJournalFavorite(id){const entry=state.journal.find(x=>x.id===id);if(!entry)return;entry.favorite=!entry.favorite;save();journalList();refreshJournalFavoriteButton()}
 function refreshJournalFavoriteButton(){const b=document.getElementById('journalFavoriteEntry');if(!b)return;const favorite=state.journal.find(x=>x.id===state.journalDraft.id)?.favorite===true;b.textContent=favorite?'★ Favorited':'☆ Favorite page';b.setAttribute('aria-pressed',String(favorite))}
+let journalBrowseAll=false;
 journalList=function(){
  const list=document.getElementById('journalEntries');if(!list)return;const query=(document.getElementById('journalSearch').value||'').toLowerCase();
+ list.hidden=!journalMemoryFilter&&!query&&!journalOnlyFavorites&&!journalBrowseAll;
  const entries=[...state.journal].filter(x=>(!journalOnlyFavorites||x.favorite===true)&&(!journalMemoryFilter||x.date===journalMemoryFilter)&&(x.title+' '+x.text+' '+journalDateText(x.date)).toLowerCase().includes(query)).sort((a,b)=>b.date.localeCompare(a.date)||(b.updatedAt||'').localeCompare(a.updatedAt||''));
- list.innerHTML=entries.map(x=>`<div class="journal-entry-tile"><button type="button" class="journal-entry-link ${state.journalDraft.id===x.id?'chosen':''}" data-journal-open="${esc(x.id)}"><small>${esc(journalDateText(x.date))}${x.mood?' · '+esc(x.mood):''}</small><strong>${esc([x.emoji,x.title||'Untitled entry'].filter(Boolean).join(' '))}</strong><span>${esc(x.text.slice(0,85))}${x.text.length>85?'…':''}</span></button><button class="journal-star" type="button" aria-label="${x.favorite?'Unfavorite':'Favorite'} ${esc(x.title||'entry')}" aria-pressed="${x.favorite===true}" data-journal-star="${esc(x.id)}">${x.favorite?'★':'☆'}</button></div>`).join('')||'<p class="empty">No entries match this view. Try All pages or another date.</p>';
+ list.innerHTML=entries.map(x=>`<div class="journal-entry-tile"><button type="button" class="journal-entry-link ${state.journalDraft.id===x.id?'chosen':''}" data-journal-open="${esc(x.id)}"><small>${esc(journalDateText(x.date))}${x.mood?' · '+esc(x.mood):''}</small><strong>${esc([x.emoji,x.title||'Untitled entry'].filter(Boolean).join(' '))}</strong><span>${esc(journalMemoryFilter?x.text:x.text.slice(0,85))}${!journalMemoryFilter&&x.text.length>85?'…':''}</span></button><button class="journal-star" type="button" aria-label="${x.favorite?'Unfavorite':'Favorite'} ${esc(x.title||'entry')}" aria-pressed="${x.favorite===true}" data-journal-star="${esc(x.id)}">${x.favorite?'★':'☆'}</button></div>`).join('')||'<p class="empty">No entries match this view. Try All pages or another date.</p>';
  list.querySelectorAll('[data-journal-open]').forEach(b=>b.onclick=()=>openJournalEntry(b.dataset.journalOpen));list.querySelectorAll('[data-journal-star]').forEach(b=>b.onclick=()=>toggleJournalFavorite(b.dataset.journalStar));
  const filters=document.getElementById('journalFilterStatus');if(filters)filters.textContent=(journalOnlyFavorites?'Favorite pages':'All pages')+(journalMemoryFilter?' · '+journalDateText(journalMemoryFilter):'');
  const fav=document.getElementById('journalFavoriteFilter');if(fav){fav.setAttribute('aria-pressed',String(journalOnlyFavorites));fav.textContent=journalOnlyFavorites?'★ Favorites only':'☆ Favorite pages'}
 };
 function journalMemoryCalendar(){const container=document.getElementById('journalMemory');if(!container)return;const [year,month]=journalMemoryMonth.split('-').map(Number),first=new Date(year,month-1,1),count=new Date(year,month,0).getDate();const tally={};state.journal.forEach(x=>tally[x.date]=(tally[x.date]||0)+1);
- let cells='<span></span>'.repeat(first.getDay());for(let d=1;d<=count;d++){const date=journalMemoryMonth+'-'+String(d).padStart(2,'0');cells+=`<button type="button" data-memory-date="${date}" class="${tally[date]?'has-memory ':''}${date===journalMemoryFilter?'selected':''}" aria-label="${journalDateText(date)}, ${tally[date]||0} entries" ${tally[date]?'':'disabled'}>${d}</button>`}
+ let cells='<span></span>'.repeat(first.getDay());for(let d=1;d<=count;d++){const date=journalMemoryMonth+'-'+String(d).padStart(2,'0');cells+=`<button type="button" data-memory-date="${date}" class="${tally[date]?'has-memory ':''}${date===journalMemoryFilter?'selected':''}" aria-label="${journalDateText(date)}, ${tally[date]||0} entries" ${tally[date]?'':'disabled'}>${d}${tally[date]?'<span class="memory-entry-dot" aria-hidden="true"></span>':''}</button>`}
  container.innerHTML=`<div class="journal-memory-heading"><button type="button" id="journalMemoryPrev" aria-label="Previous memory month">‹</button><strong>${first.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</strong><button type="button" id="journalMemoryNext" aria-label="Next memory month">›</button></div><div class="journal-memory-grid">${['S','M','T','W','T','F','S'].map(d=>'<small>'+d+'</small>').join('')}${cells}</div><p>Colored dates hold memories. Select one to see its entries.</p>`;
- function move(n){journalMemoryMonth=localDate(new Date(year,month-1+n,1)).slice(0,7);journalMemoryCalendar()}document.getElementById('journalMemoryPrev').onclick=()=>move(-1);document.getElementById('journalMemoryNext').onclick=()=>move(1);
- container.querySelectorAll('[data-memory-date]').forEach(b=>b.onclick=()=>{journalMemoryFilter=b.dataset.memoryDate;journalMemoryCalendar();journalList()});
+ function move(n){journalMemoryMonth=localDate(new Date(year,month-1+n,1)).slice(0,7);journalMemoryFilter='';journalMemoryCalendar();journalList()}document.getElementById('journalMemoryPrev').onclick=()=>move(-1);document.getElementById('journalMemoryNext').onclick=()=>move(1);
+ container.querySelectorAll('[data-memory-date]').forEach(b=>b.onclick=()=>{journalMemoryFilter=b.dataset.memoryDate;
+  journalBrowseAll=false;
+  journalOnlyFavorites=false;
+  document.getElementById('journalSearch').value='';
+  journalMemoryCalendar();journalList();
+  container.querySelector('.selected')?.focus({preventScroll:true});
+  document.getElementById('journalEntries')?.scrollIntoView({block:'nearest'});});
 }
 function decorateJournal(){
  const layout=document.querySelector('.journal-layout');if(!layout)return;layout.classList.toggle('journal-focus',journalFocus);layout.dataset.journalTheme=state.journalTheme||'lavender';
  const library=layout.querySelector('.journal-library'),editor=layout.querySelector('.journal-editor'),form=document.getElementById('journalForm');
  const filters=document.createElement('div');filters.className='journal-filter-tools';filters.innerHTML='<button type="button" id="journalAllPages">All pages</button><button type="button" id="journalFavoriteFilter">☆ Favorite pages</button><small id="journalFilterStatus"></small>';document.getElementById('journalEntries').before(filters);
- document.getElementById('journalAllPages').onclick=()=>{journalOnlyFavorites=false;journalMemoryFilter='';journalList();journalMemoryCalendar()};document.getElementById('journalFavoriteFilter').onclick=()=>{journalOnlyFavorites=!journalOnlyFavorites;journalList()};
+ document.getElementById('journalAllPages').onclick=()=>{journalOnlyFavorites=false;journalBrowseAll=true;journalMemoryFilter='';document.getElementById('journalSearch').value='';journalList();journalMemoryCalendar()};document.getElementById('journalFavoriteFilter').onclick=()=>{journalOnlyFavorites=!journalOnlyFavorites;journalList()};
  const memory=document.createElement('section');memory.className='journal-memory-box';memory.innerHTML='<h3>Memory calendar</h3><div id="journalMemory"></div>';library.querySelector('.cardhead').after(memory);
  const tools=document.createElement('div');tools.className='journal-pretty-tools';tools.innerHTML='<button type="button" id="journalFocusButton">'+(journalFocus?'Exit focus':'Focus mode')+'</button><label>Page color<select id="journalColorPicker"><option value="lavender">Lavender</option><option value="rose">Rose</option><option value="mint">Mint</option><option value="peach">Peach</option><option value="sky">Sky blue</option><option value="buttercream">Buttercream</option><option value="teal">Sea glass</option><option value="orchid">Orchid</option><option value="coral">Coral</option><option value="cream">Warm cream</option><option value="periwinkle">Periwinkle</option><option value="sage">Sage</option></select></label>'+(state.journalDraft.id?'<button type="button" id="journalFavoriteEntry">☆ Favorite page</button>':'');form.querySelector('.cardhead').after(tools);
  document.getElementById('journalFocusButton').onclick=()=>{journalFocus=!journalFocus;layout.classList.toggle('journal-focus',journalFocus);document.getElementById('journalFocusButton').textContent=journalFocus?'Exit focus':'Focus mode'};
@@ -4568,7 +4576,7 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
  }
  function journalLayout(){
   const layout=content.querySelector('.journal-layout');if(!layout)return;layout.classList.add('glow-journal-layout');layout.classList.toggle('glow-entries-open',entriesOpen);
-  if(!layout.querySelector('.glow-journal-browse')){const browse=button(entriesOpen?'Back to writing':'Entries',()=>{entriesOpen=!entriesOpen;if(entriesOpen&&journalFocus){journalFocus=false;layout.classList.remove('journal-focus');const focus=$('journalFocusButton');if(focus)focus.textContent='Focus mode'}layout.classList.toggle('glow-entries-open',entriesOpen);browse.textContent=entriesOpen?'Back to writing':'Entries'},'secondary glow-journal-browse');layout.prepend(browse)}
+  if(!layout.querySelector('.glow-journal-browse')){const browse=button(entriesOpen?'Back to writing':'Entries',()=>{entriesOpen=!entriesOpen;if(entriesOpen){journalBrowseAll=false;journalMemoryFilter='';journalOnlyFavorites=false;$('journalSearch').value='';journalMemoryCalendar();journalList()}if(entriesOpen&&journalFocus){journalFocus=false;layout.classList.remove('journal-focus');const focus=$('journalFocusButton');if(focus)focus.textContent='Focus mode'}layout.classList.toggle('glow-entries-open',entriesOpen);browse.textContent=entriesOpen?'Back to writing':'Entries'},'secondary glow-journal-browse');layout.prepend(browse)}
  }
  const libraryPositions=new Map();let libraryFocus='';
  function categoryKey(){return dashboardActivePrefix+'|'+(state.glowActivities?._settings?.category||'play')}
@@ -4967,17 +4975,17 @@ dialog.tfy-dialog.app-action-dialog {
 </style>
 <script src="./time-for-you.js?v=compact-ideas"></script>
 <link rel="stylesheet" href="./navigation-sparkles.css?v=sidebar-groups">
-<script src="./navigation-sparkles.js?v=planning-update"></script>
+<script src="./navigation-sparkles.js?v=owner-tabs"></script>
 <link rel="stylesheet" href="./peaceful-polish.css?v=20261104">
 <script src="./welcome-verse.js?noPopups=1&v=20261104"></script>
 <link rel="stylesheet" href="./chess-themes.css?v=20261104">
 <link rel="stylesheet" href="./bible.css?v=20261105">
 <script src="./bible.js?v=reading-translations"></script>
 <style id="bill-notes-style">main.finance-rgb #content .table-scroll tr>.bill-notes-cell{background:#d9eeea!important}main.finance-rgb #content .table-scroll tr>.bill-status-cell{background:#f9dfe7!important}td.bill-notes-cell{white-space:pre-wrap!important;overflow-wrap:anywhere;max-width:26rem}#expenseForm textarea[name=billNotes]{display:block;width:100%;box-sizing:border-box;min-height:80px;font-size:16px}</style>
-<link rel="stylesheet" href="./cash-flow.css?v=payday-sticky-notes">
+<link rel="stylesheet" href="./cash-flow.css?v=owner-tabs">
 <script src="./cash-flow-core.js?v=weekday-rules"></script>
 <script src="./finance-tools.js?v=personal-finance-1"></script>
-<script src="./cash-flow.js?v=account-totals"></script>
+<script src="./cash-flow.js?v=owner-tabs"></script>
 <link rel="stylesheet" href="./glitter-colors.css?v=glitter-page-settings">
 <script src="./glitter-colors.js?v=settings-layout"></script>
 <link rel="stylesheet" href="./profile.css?v=home-greeting">
@@ -4995,13 +5003,13 @@ dialog.tfy-dialog.app-action-dialog {
 <link rel="stylesheet" href="./widgets/focus.css">
 <script src="./widgets/focus.js?v=savings-bible"></script>
 <link rel="stylesheet" href="./sticky-notes.css?v=2">
-<script src="./sticky-notes.js?v=planning-update"></script>
+<script src="./sticky-notes.js?v=icon-tools"></script>
 <link rel="stylesheet" href="./dashboard-colors.css?v=1">
 <script src="./dashboard-colors.js?v=emoji-stickers"></script>
 <link rel="stylesheet" href="./dashboard-personalize.css?v=settings-layout">
 <script src="./amortization.js?v=1"></script>
 <script src="./dashboard-lists.js?v=planning-update"></script>
-<script src="./dashboard-personalize.js?v=settings-layout"></script>
+<script src="./dashboard-personalize.js?v=owner-tabs"></script>
 <link rel="stylesheet" href="./bre-planner.css?v=matrix">
 <link rel="stylesheet" href="./dashboard-lists.css?v=stationery-2">
 <script src="./bre-planner.js?v=planning-update"></script>
@@ -5010,8 +5018,8 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./household.js?v=planning-update"></script>
 <link rel="stylesheet" href="./notes-studio.css?v=1">
 <script src="./notes-studio.js?v=1"></script>
-<link rel="stylesheet" href="./dashboard-planning.css?v=1">
-<script src="./dashboard-planning.js?v=1"></script>
+<link rel="stylesheet" href="./dashboard-planning.css?v=calendar-first">
+<script src="./dashboard-planning.js?v=calendar-first"></script>
 <script>render()</script>
 <link rel="stylesheet" href="./windows-wallpaper.css?v=1">
 <script src="./windows-wallpaper.js?v=1"></script>

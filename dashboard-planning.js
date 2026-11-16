@@ -252,7 +252,8 @@
     }
     fold('Writing options',editor.querySelector('.journal-pretty-tools'),editor.querySelector('.journal-custom-paper'));
     fold('Need a prompt?',editor.querySelector('.journal-prompt-box'));
-    fold('Browse by date',library.querySelector('.journal-memory-box'));
+    const search=library.querySelector('label:has(#journalSearch)');
+    fold('Search and favorites',search,library.querySelector('.journal-filter-tools'));
   };
   const previous = render;
   render = function () {
