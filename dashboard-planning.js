@@ -499,12 +499,21 @@
       previous();
       const archived=state.projects.filter(project=>project.archived);
       if(!archived.length)return;
-      const archive=content.querySelector('.glow-project-archive');
-      archive?.append(button('Delete all archived projects',()=>{
-        if(!confirm('Permanently delete all archived projects?'))return;
-        state.projects=state.projects.filter(project=>!project.archived);
+      const [panel]=section('Project Archive');
+      const list=el('details');
+      list.append(el('summary',archived.length+' archived project'+(archived.length===1?'':'s')));
+      const remove=ids=>{
+        if(!confirm(ids.size===1?'Permanently delete this archived project?':'Permanently delete all archived projects?'))return;
+        state.projects=state.projects.filter(project=>!project.archived||!ids.has(project.id));
         save();render();
-      }));
+      };
+      for(const project of archived){
+        const row=el('div',undefined,'planning-toolbar');
+        row.append(el('span',project.title||project.name||'Untitled project'),button('Delete',()=>remove(new Set([project.id]))));
+        list.append(row);
+      }
+      list.append(button('Delete all archived projects',()=>remove(new Set(archived.map(project=>project.id)))));
+      panel.append(list);content.append(panel);
       return;
     }
     if (!routes.includes(target)) return previous();
