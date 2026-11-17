@@ -1,131 +1,52 @@
-PAID / DELETE / ONE-TIME BILLS — November 8, 2026
-
-Mark Paid now records the payment immediately, with no additional Save step.
-The bill shows Paid — Awaiting clearance. Mark Cleared records bank processing.
-These are intentionally separate: Paid alone does not mean the bank has cleared
-it. History now displays that distinction instead of just saying Pending.
-Edit remains available for changing the actual payment or posting date.
-
-Bills offers Add one-time bill (no rule) and Set up bill rule. One-time entries
-appear in Bills, the bill calendar and forecasts without a recurring schedule.
-
-Delete is available for individual bill occurrences, deposits, direct money
-entries, transfers, savings goals, reconciliation records and earlier savings
-entries. Deleting a recurring occurrence does not delete its rule or other months.
-Use Delete under Bill rules / Income rules to stop future generation.
-Deletion excludes the entry from calculations; undo restores it. Source values
-remain in the audit trail so accidental deletion can be corrected in History.
-Balances already included in a starting-balance snapshot are not silently rebased.
-
-Upload ALL extracted files, replacing matching files.
-Existing Bible sidebar/Home cards and the no-popup behavior are preserved.
-
-BIBLE ON HOME — November 7, 2026
-Sidebar groups: Start here, Plan & organize, Keep & manage, Personal Time, Bible.
-Home includes A quiet place in the Word, with Read, Plan and Favorites links.
-Existing Bible data, plans, favorites, achievements and no-popup behavior remain.
-Upload all extracted contents, replacing matching files.
-
-BIBLE SIDEBAR TAB — November 7, 2026
-Bible has its own link under Personal time, above Time for You.
-Expand Personal time using its heading if the group is collapsed.
-Updated navigation asset version ensures the current sidebar file loads.
-Bible features/progress and the no-popup update are preserved.
-Upload ALL extracted files, replacing matching files.
-
-NO POPUPS UPDATE — November 7, 2026
-
-Automatic welcome verse and Time for You reminder popups are removed.
-Finance confirmations are removed; Add/Edit/payment forms open inline.
-Finance audit and conflict-checked Undo remain in History.
-Explicitly opened backup/account tools remain available.
-Other saved settings, activities and records are preserved.
-Upload ALL files, replacing matching files.
-
-GLOWCODE DASHBOARD — PASTEL FINANCES
-Updated November 7, 2026
+POKEMON COLLECTION ADD-ON
 
 INSTALL
-Extract the ZIP. Upload ALL extracted contents to your existing GitHub repository,
-replacing matching files. Keep index.html and its assets in the same directory.
-This package does not contain your private browser records. Use the same website
-address and account as before to retain access to those records.
+1. Unzip this download.
+2. Upload dashboard-lists.js to the same GitHub repository folder as index.html,
+   replacing the existing dashboard-lists.js. Commit the change.
+3. Reload your dashboard after GitHub Pages finishes updating.
+   On a Mac browser, Command+Shift+R reloads without the usual cache.
+4. Open Collections > Pokémon cards.
 
-BACKUP & DATA SAFETY
-The previous complete source package is retained in the workspace at:
-work/pastel-finance/before-redesign.zip
-On first opening Finances, a pre-update dashboard-data snapshot is saved in local
-storage, scoped to the active dashboard user. It is not overwritten on reload.
-Backup & help > View pre-update safety copy offers Download, Copy and Select all.
-The JSON works with the existing Restore backup control. Export a current backup
-before restoring; restore replaces your dashboard data. If the safety copy cannot
-be saved because storage is unavailable/full, changes are blocked with a message.
-The normal Export dashboard backup and account/sync controls remain available.
+Only dashboard-lists.js needs uploading. No index.html edits are required for
+existing dashboards that already load dashboard-lists.js. This version was
+built against your My-Dashboard-Family-Lists-and-Profile package. Your existing
+Collections, Shopping List and Wish List remain in the file. Regular collections
+are under Other collectibles. Existing collectibles are not converted to cards.
 
-LAYOUT
-Money available retains its existing layout. Other finance records use stable
-full-background lavender, blue, mint, peach and rose cards. Grids use 3 columns on
-wide screens, 2 on medium screens, and 1 on phones; savings uses at most 2 columns.
-Sections can collapse and retain their choices while the dashboard is open.
+FEATURES
+Front/back photos, card identity, owner labels, quantities, condition and grade,
+purchase cost, location, asking/sold prices, selling status, search and filters,
+price-search links, dated value history, editing, duplication and deletion.
+Unsold value totals exclude Sold records and use the latest dated estimate.
+Values and sale prices are per card in USD. Use separate records for copies in
+different conditions or when only some copies are sold.
 
-BILLS
-Due Soon: overdue unpaid bills and unpaid bills due within the next 7 days.
-Later This Month: other unpaid bills for the selected month (current by default).
-Paid: paid/pending or cleared bills whose obligation falls in the selected month.
-Upcoming: other unpaid dated bills generated through the next 90 days or selected
-month end, whichever is later. Choose any month to see its generated bills.
-Due date unknown: scheduled occurrences with no verified/estimated due date.
-Bill rules remain available below the calendar, including unscheduled/archived
-rules. Rules sort by next due date; individual bills sort by due date.
-Click a calendar date to view and edit all matching bills. Filters also apply to
-the calendar. Paid bills remain editable and pending until bank clearance.
-Mark Paid records the sent date; Mark Cleared records the bank posting date.
-Each refers to the SAME occurrence, so a payment is never generated twice.
-An optional Estimated amount checkbox flags variable bills for attention within
-7 days. Enter the actual amount and uncheck the box in Edit when it is known.
-Recurring bills generate by stable rule/date IDs when viewed. History is retained;
-unpaid occurrences carry over. No rollover job, destructive reset or duplicate
-monthly copy is created. Saved occurrence edits do not change recurring rules.
+PRICE LOOKUP
+Check / record value opens searches for sold listings and card prices. Confirm
+the exact printing and condition yourself, then enter the value, date and source.
+Prices are not automatically fetched, verified or updated. A saved $0 is valid;
+a card with no recorded value is counted as unvalued.
 
-MONEY & SAVINGS
-Add Money and Subtract Money record actual account activity. Select the existing
-scheduled bill/deposit when recording one to avoid creating a second transaction.
-Move Money records one movement FROM one account TO another. Completed moves
-update both sides but are never household income or expenses. It does not send
-money through a bank. Existing planned/pending/completed moves stay editable.
-Savings is excluded from everyday spending, bill coverage and safe-to-spend until
-a completed move brings money into checking. Existing savings is not silently
-split: set up Crystal’s Savings and Rick’s Savings using their actual balances.
-Existing generic savings accounts and earlier savings entries remain intact.
-Savings goals display the linked account’s balance against a target. They do not
-reserve, divide, or move funds; multiple goals for one account show the same funds.
-Who Pays What compares each checking account, its bills before payday, upcoming
-income and projected available money. Expand a card to see its bill/deposit list.
-Needs Attention shows overdue/near-due bills, estimates and pending transactions.
+SAVING AND SHARING
+Card records use your dashboard's existing account/save system. This add-on does
+not add authentication or a new cloud service. Existing cloud sync behavior and
+limits still apply. Owner labels do not make another person's account accessible.
 
-RECONCILIATION & CORRECTIONS
-Accounts > Compare bank balance compares a dated CLEARED bank balance with the
-recorded cleared balance on that date. It saves the discrepancy and a snapshot of
-reviewed activity. Pending transactions are not part of a cleared balance.
-No reconciliation result adjusts opening balances or transaction history.
-Review discrepancies using History/Edit and compare bank statements yourself.
-Finance changes save without confirmation. History > Corrections & undo retains
-original/new values and can undo a change if its touched records have not changed
-since. Conflicting later edits block undo; use Edit instead. Undo only corrects
-dashboard records, not actual bank payments. Audit records stay saved and synced.
+Photos are compressed JPEGs stored in this browser's IndexedDB on this device.
+They do NOT cloud-sync. Use Export Pokémon backup to download card records and
+available photos together. This separate export is needed for photos; the main
+dashboard backup may include card metadata but does not include these photos.
+Keep the exported JSON file before clearing browser data or changing devices.
+Import Pokémon backup restores the cards/photos to the selected dashboard
+account. Matching card IDs are updated after confirmation; other cards stay.
+You can choose to send a backup to Bre; the app does not share it automatically.
+Photos missing on this device cannot be included in its export.
+JPG, PNG and WebP uploads up to 20 MB each are supported. Convert HEIC to JPG.
+Backups up to 150 MB can be imported.
 
-BALANCE RULES PRESERVED
-Starting balance represents cleared activity through the end of its as-of date.
-New same-day recorded payments/moves are tagged to that balance snapshot. Rebasing
-an account does not replay those entries. Pending payments are projected once;
-cleared items are booked once. Transfers never become household income/expenses.
-No existing dates, amounts, account assignments or schedules are auto-corrected.
-Income calendar rules, account cushions, and 30/60/90-day forecasts remain intact.
-
-VERIFICATION
-Passed engine regression tests, bill grouping/rollover tests, conflict-safe undo
-checks, simulated interactions across all tabs, calendar editing, Paid/Cleared,
-reconciliation, savings goals, duplicate-submit and failed-backup protection.
-Original Journal, games, Firebase/auth/sync code and other dashboard assets are
-unchanged. Physical-phone rendering and live cloud sync were not exercised in
-this update; desktop/tablet/phone CSS is responsive but not device-verified.
+VALIDATION
+JavaScript syntax check passed. Automated core checks passed for backup
+validation, unsafe URL rejection, valuation ordering, account scope and storage
+failure rollback. The environment blocked Chromium from starting, so interactive
+browser behavior and real Firebase synchronization could not be verified here.
