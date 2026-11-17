@@ -71,3 +71,81 @@ body.glow-redesign #content button.dashboard-control[aria-pressed="true"] {
 #content .habit-mode-choices,#content .habit-week{display:flex;flex-wrap:wrap;gap:.45rem;margin-block:.8rem}
 #content .habit-view-choices button[aria-pressed=true],#content .habit-week button[aria-pressed=true]{background:#604781;color:#fff}
 #content .habit-week button{padding-inline:.55rem}
+
+/* Theme surfaces and shared spacing for planning, writing and finance. */
+body.glow-redesign {
+  --dashboard-surface:var(--theme-page-panel,#e3edf8);
+  --dashboard-finance-surface:var(--theme-finance-panel,var(--dashboard-surface));
+  --dashboard-ink:var(--theme-panel-text,#233149);
+  --dashboard-accent:var(--theme-active-start,#763caa);
+  --dashboard-inset:color-mix(in srgb,var(--dashboard-surface) 75%,white);
+  --dashboard-finance-inset:color-mix(in srgb,var(--dashboard-finance-surface) 73%,white);
+  --dashboard-edge:color-mix(in srgb,var(--dashboard-surface) 65%,var(--dashboard-accent));
+}
+body.glow-redesign main #content :is(.habit-intro,.habit-card,.dashboard-blog-post,.planning-page,.notes-library,.bible-panel,.wellness-plan-part,.dashboard-feature>.card,.household-checklist,.list-sheet,.list-summary,.list-side-panel) {
+  background:var(--dashboard-surface)!important;
+  border-color:var(--dashboard-edge)!important;
+  color:var(--dashboard-ink)!important;
+}
+body.glow-redesign main #content :is(.habit-intro,.habit-card,.dashboard-blog-post,.planning-page,.notes-library,.bible-panel,.wellness-plan-part,.dashboard-feature>.card,.household-checklist,.list-sheet,.list-summary,.list-side-panel) :is(h2,h3,h4,p,small,label,summary) {
+  color:inherit!important;
+}
+body.glow-redesign main #content :is(.cf-card,.cf-old-savings,.cf-inline-form) {
+  background:var(--dashboard-finance-surface)!important;
+  border-color:var(--dashboard-edge)!important;
+  color:var(--dashboard-ink)!important;
+}
+body.glow-redesign main #content :is(.cf-payday-focus,.cf-record,.bre-fund,.cf-funds-inside) {
+  background:var(--dashboard-finance-inset)!important;
+  border-color:var(--dashboard-edge)!important;
+  color:var(--dashboard-ink)!important;
+}
+body.glow-redesign main #content :is(.cf-card,.cf-inline-form) :is(h2,h3,.cf-amount,.cf-record p,.cf-payday-amount,.cf-savings-balance,summary) {
+  color:inherit!important;
+}
+body.glow-redesign[data-dashboard-theme="custom"] {
+  --dashboard-inset:color-mix(in srgb,var(--dashboard-surface) 91%,var(--dashboard-ink));
+  --dashboard-finance-inset:color-mix(in srgb,var(--dashboard-finance-surface) 91%,var(--dashboard-ink));
+}
+body.glow-redesign main #content .cf-inline-feedback {margin:.65rem 0;color:var(--dashboard-ink)!important}
+#content .cf-funds-inside {
+  margin-top:18px;padding:16px;border:1px solid var(--dashboard-edge);border-radius:14px;
+}
+body.glow-redesign main #content :is(.habit-saved,.habit-clock>div,.notes-card,.meal-board td,.bible-study,.bible-compare-grid>section) {
+  background-color:var(--dashboard-inset)!important;
+  border-color:var(--dashboard-edge)!important;
+  color:var(--dashboard-ink)!important;
+}
+body.glow-redesign main #content :is(.cf-card,.cf-inline-form,.planning-page,.dashboard-feature,.notes-library,.habit-intro,.habit-card,.bible-panel,.dashboard-blog) :is(input:not([type=checkbox],[type=radio],[type=range],[type=color]),select,textarea) {
+  color:var(--dashboard-ink)!important;
+  background-color:var(--dashboard-inset)!important;
+  border-color:var(--dashboard-edge)!important;
+}
+body.glow-redesign main #content :is(button.secondary,.ambient-sound-controls select):not([aria-pressed="true"]) {
+  border-color:var(--dashboard-edge);
+}
+#content :is(.cf-actions,.planning-toolbar,.dashboard-feature-actions,.habit-form-actions,.habit-mode-choices,.dashboard-blog-actions,.dashboard-layout-actions,.bible-actions,.bible-tabs,.notes-tools) {
+  display:flex;align-items:center;flex-wrap:wrap;gap:10px;
+}
+#content :is(.cf-funds-inside,.wellness-plan-part,.dashboard-feature article) > details {margin-block:12px}
+#content .dashboard-blog-bottom {justify-content:flex-end;margin-top:12px;padding:12px 0;border-top:1px solid var(--dashboard-edge)}
+#content .dashboard-blog-post[data-post-new-row="true"] {grid-column-start:1}
+.ambient-sound-controls {
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:fit-content;
+  margin:0 0 14px;padding:8px 10px;border:1px solid var(--dashboard-edge);
+  border-radius:12px;color:var(--dashboard-ink);background:var(--dashboard-inset);
+}
+.ambient-sound-controls select{min-height:40px;font-size:inherit;margin:0}
+.ambient-sound-controls input[type=range]{width:100px;margin:0;accent-color:var(--dashboard-accent)}
+.ambient-sound-controls small:empty {display:none}
+.bible-hero .ambient-sound-controls{margin:12px 0 0}
+.wellness-plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px}
+.wellness-plan-part textarea{width:100%;box-sizing:border-box;margin:0 0 10px;min-height:8rem;resize:vertical}
+#content .wellness-plan-part{border-top:4px solid var(--dashboard-edge)!important}
+#content .wellness-plan-part:nth-child(2n){border-top-color:var(--dashboard-accent)!important}
+body.glow-redesign #content :is(.cf-card,.cf-payday-focus,.cf-funds-inside,.planning-page,.dashboard-feature>.card,.bible-panel) > :is(button,select,details) + :is(button,select,details) {
+  margin-block-start:10px;
+}
+#content .wellness-plan-grid .wellness-plan-part:nth-child(3n+2) {
+  background:color-mix(in srgb,var(--dashboard-surface) 84%,var(--dashboard-inset))!important;
+}

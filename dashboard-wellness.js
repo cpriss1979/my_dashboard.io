@@ -364,7 +364,15 @@
         const purchased=priced.filter(item=>['Purchased','Wrapped','Given'].includes(item.status)).reduce((sum,item)=>sum+cents(item),0);
         saved.append(el('p','Group budget · '+usd(selectedGroup.limit)),el('p','Left after planned gifts · '+usd((Math.round(selectedGroup.limit*100)-planned)/100)),
           el('p','Left after purchased gifts · '+usd((Math.round(selectedGroup.limit*100)-purchased)/100)),
-          button('Edit group',()=>{editingGroup=selectedGroup;draw();root.querySelector('input[name=groupName]').focus();}));
+          button('Edit group',()=>{editingGroup=selectedGroup;draw();root.querySelector('input[name=groupName]').focus();}),
+          button('Delete group',()=>{
+            if(!confirm('Delete this group? Its gifts will stay in All gifts.'))return;
+            state[key]=list(key).map(gift=>gift.groupId===selectedGroup.id?{...gift,groupId:''}:gift);
+            if(editing?.groupId===selectedGroup.id)editing={...editing,groupId:''};
+            if(editingGroup?.id===selectedGroup.id)editingGroup=undefined;
+            groupView='';
+            updateList('giftGroups',list('giftGroups').filter(group=>group.id!==selectedGroup.id),draw);
+          }));
       }
       if(!records.length) saved.append(el('p','No gifts saved yet.'));
       for(const record of records){
@@ -396,7 +404,7 @@
       editor.append(picker);
       const form = el('form');
       const food = field(form,'food','Food or drink','text',editing?.food,{required:true,maxLength:120});
-      const meal = choice(form,'meal','Meal',['Breakfast','Lunch','Dinner','Snack','Other'],editing?.meal);
+      const meal = choice(form,'meal','Meal',['Breakfast','Morning snack','Lunch','Afternoon snack','Dinner','Snack','Other'],editing?.meal);
       const kcal = field(form,'kcal','Calories per serving','number',editing?.kcal,{required:true,min:0,step:'0.01'});
       const servings = field(form,'servings','Servings','number',editing?.servings??1,{required:true,min:0.01,step:'0.01'});
       submit(form,editing?'Save entry':'Log food',()=>{
@@ -406,12 +414,31 @@
         editing=undefined;
         updateList(key,next,draw);
       },editing?()=>{editing=undefined;draw();}:undefined);
+      const planner=window.DashboardMealPlanner;
+      if(planner)editor.append(button('Food calorie calculator',()=>planner.openCalculator(item=>{
+        food.value=item.name.slice(0,food.maxLength);
+        kcal.value=item.calories;
+        servings.value=1;
+        food.focus();
+      })));
       editor.append(form);
       const records = list(key).filter(item=>item.date===date);
+      const planned=planner?.calorieEntries(date)||[];
       const total = records.reduce((sum,item)=>sum+item.kcal*item.servings,0);
-      const summary = panel(amount(total)+' calories logged');
+      const plannedTotal=planned.reduce((sum,item)=>sum+item.calories,0);
+      const summary = panel(amount(plannedTotal+total)+' cal · planned + manual');
+      summary.append(el('p',amount(plannedTotal)+' cal from Meal Planner · '+amount(total)+' cal entered manually'));
+      const plannerSection=panel('From Meal Planner');
+      if(!planned.length)plannerSection.append(el('p','No foods with calorie amounts for this date.'));
+      else {
+        const foods=el('ul');
+        for(const item of planned)foods.append(el('li',item.meal+' · '+item.name+' · '+amount(item.calories)+' cal'));
+        plannerSection.append(foods);
+      }
+      plannerSection.append(button('Open Meal Planner',()=>go('Meal Planner')));
+      const manual=panel('Manual entries');
       const meals = el('div',undefined,'dashboard-feature-grid');
-      if(!records.length) summary.append(el('p','No food logged on this date.'));
+      if(!records.length) manual.append(el('p','No manual entries for this date.'));
       for(const item of records){
         const card = el('article',undefined,'card');
         card.append(el('h3',item.food),el('p',item.meal+' · '+amount(item.servings)+' serving(s) · '+amount(item.kcal*item.servings)+' cal'),
@@ -419,8 +446,8 @@
             drop(item.food,()=>{if(editing?.id===item.id)editing=undefined;updateList(key,list(key).filter(record=>record.id!==item.id),draw);})));
         meals.append(card);
       }
-      summary.append(meals);
-      root.replaceChildren(editor,summary);
+      manual.append(meals);
+      root.replaceChildren(editor,summary,plannerSection,manual);
     }
     draw();
   }
@@ -457,7 +484,15 @@
         const history = el('details');
         history.append(el('summary','Weight history'));
         const rows = el('ul');
-        for(const item of data.history) rows.append(el('li',item.date+' · '+amount(item.weight)+' lb'));
+        for(const item of data.history){
+          const line=el('li',item.date+' · '+amount(item.weight)+' lb');
+          line.append(drop('the '+item.date+' check-in',()=>{
+            const history=data.history.filter(entry=>entry.date!==item.date);
+            state.exercisePlanner={...data,history,current:history.length?String(history[0].weight):''};
+            save();draw();
+          }));
+          rows.append(line);
+        }
         history.append(rows);
         profile.append(history);
       }
@@ -512,7 +547,44 @@
     draw();
   }
 
-  const pages = {'Gift Planner':gifts,'Calorie Log':calories,Exercise:exercise};
+  function wellnessPlan(root){
+    const parts=[
+      ['toolbox','Wellness toolbox'],['daily','Daily maintenance'],
+      ['triggers','Triggers'],['warning','Early warning signs'],
+      ['support','Crisis and support plan'],['aftercare','Aftercare']
+    ];
+    const owner=state;
+    const heading=panel('My wellness plan');
+    const status=el('p');status.setAttribute('role','status');
+    const board=el('div',undefined,'wellness-plan-grid');
+    const inputs=new Map();
+    for(const [key,title] of parts){
+      const card=panel(title);card.classList.add('wellness-plan-part');
+      const field=el('textarea');field.rows=6;field.maxLength=12000;
+      field.value=state.wellnessPlan?.[key]||'';
+      field.setAttribute('aria-label',title);
+      field.oninput=()=>{
+        if(state!==owner)return;
+        (state.wellnessPlan??={})[key]=field.value;
+        save();status.textContent='Plan saved';
+      };
+      const clear=button('Clear section',()=>{
+        if(state!==owner||!field.value||!confirm('Clear '+title+'?'))return;
+        field.value='';delete state.wellnessPlan[key];save();status.textContent='Section cleared';
+      });
+      inputs.set(key,field);
+      card.append(field,actions(clear));board.append(card);
+    }
+    heading.append(actions(button('Clear whole plan',()=>{
+      if(state!==owner||!Object.keys(state.wellnessPlan||{}).length||!confirm('Clear every section of your wellness plan?'))return;
+      delete state.wellnessPlan;
+      for(const field of inputs.values())field.value='';
+      save();status.textContent='Plan cleared';
+    })),status);
+    root.replaceChildren(heading,board);
+  }
+
+  const pages = {'Gift Planner':gifts,'Calorie Log':calories,Exercise:exercise,'Wellness Plan':wellnessPlan};
   const previous = render;
   render = function () {
     const target = page;
