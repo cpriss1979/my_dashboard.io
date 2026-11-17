@@ -2,7 +2,7 @@
 'use strict';
 const C=window.CashFlowCore,T=window.FinanceTools,frequencies={once:'One time',weekly:'Weekly',biweekly:'Every two weeks',monthly:'Monthly',bimonthly:'Every two months',quarterly:'Quarterly',annually:'Annually'},tabs=['Overview','Accounts','Income','Bills','Savings','Activity','Forecast','Archive'];
 const widgetSavings=new URLSearchParams(location.search).get('widget')==='money-tracker';
-let tab=widgetSavings?'Savings':'Overview',horizon=0,m=null,filters={frequency:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='';
+let tab=widgetSavings?'Savings':'Overview',horizon=0,m=null,filters={frequency:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='',backupProblem='',actionNotice='',paymentJustSaved=false;
 const today=()=>localDate(new Date()), dollars=n=>n===null||n===undefined?'Not set':money(n/100), name=accountName, uid=()=>crypto.randomUUID();
 const minDate='1900-01-01',maxDate='2199-12-31';
 function e(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
@@ -98,15 +98,9 @@ function b(label,fn,cls='secondary'){
  n.onclick=event=>{
   const previous=financeTrigger;
   financeTrigger=n;
-  try{return fn(event)}catch(error){financeError(error.message)}finally{financeTrigger=previous}
+  try{return fn(event)}finally{financeTrigger=previous}
  };
  return n;
-}
-function financeError(message){
- const error=e('p',message,'cf-error cf-inline-feedback');
- document.querySelector('#content .cf-inline-feedback')?.remove();
- const anchor=financeTrigger?.closest('.cf-actions,.cf-payday-line')||financeTrigger;
- if(anchor?.isConnected)anchor.after(error);else document.querySelector('#content .cf-toolbar')?.after(error);
 }
 function placeFinanceEditor(editor,host){
  const content=document.getElementById('content');
@@ -152,15 +146,15 @@ function check(key,value){const n=input(key,'checkbox','',false);n.checked=!!val
 function note(key,value=''){const n=e('textarea');n.name=key;n.value=value;n.rows=3;n.maxLength=2000;return n}
 function cents(v){return Math.round(Number(v)*100)}
 function snapshot(){const x=T.copy(m);delete x.audit;return x}
-function safetyBackup(){if(backupOwner===state)return;try{const key=(typeof dashboardActivePrefix==='string'?dashboardActivePrefix:'')+'finance-before-pastel-v1';const saved=localStorage.getItem(key);if(saved)JSON.parse(saved);const text=saved||JSON.stringify(state,null,2);if(!saved)localStorage.setItem(key,text);backupText=text;backupOwner=state}catch(err){throw Error('The safety backup could not be stored. Use Export dashboard backup, free device storage, then try again. No change has been saved.')}}
-function commit(label='Finance update'){if(baselineOwner!==state)throw Error('Account changed. Reopen Finances.');const delta=T.changes(baseline,snapshot());if(delta.length&&!undoing){m.audit??=[];m.audit.push({id:uid(),at:new Date().toISOString(),label,changes:delta})}state.cashFlow=m;save();redrawFinanceInPlace()}
+function safetyBackup(){if(backupOwner===state)return;try{const key=(typeof dashboardActivePrefix==='string'?dashboardActivePrefix:'')+'finance-before-pastel-v1';const saved=localStorage.getItem(key);if(saved)JSON.parse(saved);const text=saved||JSON.stringify(state,null,2);if(!saved)localStorage.setItem(key,text);backupText=text;backupOwner=state;backupProblem=''}catch(err){throw Error('The safety backup could not be stored. Use Export dashboard backup, free device storage, then try again. No change has been saved.')}}
+function commit(label='Finance update'){paymentJustSaved=label==='Mark bill Paid'||label==='Mark bill Cleared';actionNotice=label==='Mark bill Paid'?'✓ Payment saved.':label==='Mark bill Cleared'?'✓ Paid and cleared.':label+' saved.';if(baselineOwner!==state)throw Error('Account changed. Reopen Finances.');const delta=T.changes(baseline,snapshot());if(delta.length&&!undoing){m.audit??=[];m.audit.push({id:uid(),at:new Date().toISOString(),label,changes:delta})}state.cashFlow=m;save();redrawFinanceInPlace()}
 function safeAction(label,fn){safetyBackup();fn();commit(label)}
 function group(title,items,open=true){const d=e('details',undefined,'cf-group'),key=tab+'|'+title;d.open=folded.has(key)?folded.get(key):open;d.append(e('summary',title+' · '+items.length));d.addEventListener('toggle',()=>folded.set(key,d.open));const grid=e('div',undefined,'cf-record-grid');items.forEach(n=>grid.append(n));if(!items.length)grid.append(e('p','Nothing here.'));d.append(grid);return d}
 function tint(n,key){const account=m.accounts.find(a=>a.id===key);if(account){n.dataset.cfOwner=accountOwner(account);if(account.accent)n.style?.setProperty('--cf-account-accent',accountAccent(account));}let h=0;for(const ch of String(key))h=(h*31+ch.charCodeAt(0))>>>0;n.dataset.pastel=String(h%5);return n}
 function tile(title,amount,lines,actions=[],key=title){const n=record(title,'',...actions);n.children[0].append(e('strong',dollars(amount),'cf-amount'));for(const text of lines.filter(Boolean))n.children[0].append(e('p',text));return tint(n,key)}
 function statusLabel(x){return x.status==='cleared'?'Paid · Cleared':x.status==='pending'?'Paid · Awaiting clearance':'Unpaid'}
 function dateLabel(d){return d?d.slice(5,7)+'/'+d.slice(8,10)+'/'+d.slice(0,4):'Unknown'}
-function form(title,fields,submit,host,afterSave){const owner=state,model=m,d=e('section',undefined,'cf-dialog cf-inline-form'),f=e('form'),error=e('p',undefined,'cf-error');error.setAttribute('aria-live','polite');const grid=e('div',undefined,'cf-fields');grid.append(...fields);const s=e('button','Save','primary');s.type='submit';let submitted=false;f.append(grid,error,row(s,b('Cancel',()=>d.close())));d.append(e('h2',title),f);d.addEventListener('close',()=>d.remove(),{once:true});d.close=()=>d.remove();placeFinanceEditor(d,host);
+function form(title,fields,submit,host,afterSave){const owner=state,model=m,d=e('section',undefined,'cf-dialog cf-inline-form'),f=e('form'),error=e('p',undefined,'cf-error');error.setAttribute('role','alert');const grid=e('div',undefined,'cf-fields');grid.append(...fields);const s=e('button','Save','primary');s.type='submit';let submitted=false;f.append(grid,error,row(s,b('Cancel',()=>d.close())));d.append(e('h2',title),f);d.addEventListener('close',()=>d.remove(),{once:true});d.close=()=>d.remove();placeFinanceEditor(d,host);
  const first=f.querySelector('input:not([type="checkbox"]):not([type="hidden"]),select,textarea');
  first?.focus({preventScroll:true});
  f.onsubmit=ev=>{ev.preventDefault();if(submitted)return;if(owner!==state||model!==m){error.textContent='The dashboard changed. Close this form and reopen it.';return}try{safetyBackup();submit(f.elements);submitted=true;s.disabled=true;d.close();commit(title);afterSave?.()}catch(err){error.textContent=err.message}};return f}
@@ -427,8 +421,8 @@ function savings(root){
   accountCard.append(savingsActivity(account,events));
   grid.append(accountCard);
  }
- p.append(grid,row(b('Create savings account',()=>accountForm(null,'savings'))));root.append(p);
- const goals=e('section',undefined,'cf-funds-inside');goals.append(e('h3','Savings funds'));
+ p.append(grid,b('Create savings account',()=>accountForm(null,'savings')));root.append(p);
+ const goals=card('Savings funds');
  goals.append(e('p','Set aside parts of a savings account for different purchases.'),b('＋ Add fund',()=>goalForm()));
  for(const account of selected){
   const unassigned=account.current-reservedFor(account.id);
@@ -441,10 +435,10 @@ function savings(root){
   const n=e('article',undefined,'bre-fund');
   n.style.setProperty('--paper-color',/^#[a-f0-9]{6}$/i.test(g.color)?g.color:'#ffe9f2');
   n.append(e('h3',[g.emoji,g.name].filter(Boolean).join(' ')),e('p',name(g.account)),
-   e('strong',dollars(allocated)+' of '+dollars(g.target)));
+   e('strong',dollars(allocated)+' set aside · '+dollars(g.target)+' goal'));
   const progress=e('progress');progress.max=g.target;progress.value=Math.min(g.target,allocated);
   progress.setAttribute('aria-label',g.name+' savings progress');
-  n.append(progress,row(b('＋ Add',()=>fundAmount(g,false)),b('Release',()=>fundAmount(g,true)),b('Edit',()=>goalForm(g)),b('Delete fund',()=>deleteFund(g),'link')));
+  n.append(progress,row(b('＋ Add',()=>fundAmount(g,false)),b('Release',()=>fundAmount(g,true)),b('Edit',()=>goalForm(g))));
   fundList.append(n);
  }
  if(!funds.length)fundList.append(e('p','Create a fund for Christmas, the car, or anything you’re saving for.'));
@@ -452,12 +446,11 @@ function savings(root){
  const archive=e('details');const archived=(m.goals||[]).filter(g=>g.archived&&!g.deleted&&matchesOwner(g.account));
  archive.append(e('summary','Archived funds ('+archived.length+')'));
  for(const g of archived)archive.append(row(e('span',g.name),b('Edit or restore',()=>goalForm(g)),
-  b('Delete',()=>{deleteFund(g)},'link')));
+  b('Delete',()=>{if(confirm('Delete '+g.name+'?'))safeAction('Delete savings fund',()=>{g.deleted=true})},'link')));
  if(archived.length)goals.append(archive);
- p.append(goals);
+ root.append(goals);
  if(!selectedOwner()&&state.savingsEntries?.length){const old=e('details',undefined,'cf-old-savings');old.append(e('summary','Earlier savings records · '+state.savingsEntries.length),e('p','Preserved separately; not replayed into current balances.'));for(const x of [...state.savingsEntries].filter(x=>!m.overrides['legacy-savings|'+x.id]?.skipped).sort((a,b)=>(b.date||'').localeCompare(a.date||'')))old.append(record(dateLabel(x.date)+' · '+x.kind,(state.people?.find(p=>p.id===x.person)?.name||'')+' · '+money(Number(x.amount))+(x.note?' · '+x.note:''),b('Delete',()=>safeAction('Delete earlier savings entry',()=>{m.overrides['legacy-savings|'+x.id]={id:'legacy-savings|'+x.id,skipped:true,legacyId:x.id}}),'link')));root.append(old)}
 }
-function deleteFund(goal){safeAction('Delete savings fund',()=>{goal.deleted=true})}
 function reservedFor(account,except){
  return (m.goals||[]).filter(g=>!g.archived&&!g.deleted&&g.account===account&&g.id!==except)
   .reduce((total,g)=>total+(g.reserved||0),0);
@@ -478,8 +471,8 @@ function fundAmount(goal,release){
  });
 }
 function goalForm(g){
- const choices=activeAccounts().filter(a=>a.type==='savings'&&(a.id===g?.account||matchesOwner(a.id))).map(a=>[a.id,name(a.id)]);
- if(!choices.length){accountForm(null,'savings');return}
+ const choices=activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,name(a.id)]);
+ if(!choices.length){alert('Create a savings account first.');return}
  form(g?'Edit savings fund':'Add savings fund',[
   field('Fund name',input('name','text',g?.name)),
   field('Savings account',select('account',choices,g?.account||choices[0][0])),
@@ -510,7 +503,7 @@ function budgetNameForm() {
  const budgetName=input('budgetName','text',originalName||'My budget');
  budgetName.autofocus=true;
  const error=e('p',undefined,'cf-error');
- error.setAttribute('aria-live','polite');
+ error.setAttribute('role','alert');
  const submit=e('button','Save name','primary');
  submit.type='submit';
  editor.append(field('Budget name',budgetName),error,row(submit,b('Cancel',()=>dialog.close())));
@@ -611,7 +604,7 @@ function paydayBreakdown(account,plan){
   if(item.kind==='bill'&&original){
    const timing=select('paydayTiming',paydayTimings,item.paydayTiming||'unknown');
    const error=e('small',undefined,'cf-shortfall');
-   error.setAttribute('aria-live','polite');
+   error.setAttribute('role','alert');
    timing.onchange=()=>{
     try{safeAction('Bill timing',()=>{m.overrides[item.id]={...original,paydayTiming:timing.value}})}
     catch(err){timing.value=item.paydayTiming||'unknown';error.textContent=err.message}
@@ -655,7 +648,7 @@ function savingsBalanceCard(account,summaryOnly=false){
   line.append(e('span',label),e('strong',dollars(amount)));
   math.append(line);
  }
- item.append(math,moneyActions(account.id),row(b('Edit account',()=>accountForm(m.accounts.find(entry=>entry.id===account.id))),b('Delete account',()=>deleteAccount(account.id),'link')));
+ item.append(math,moneyActions(account.id),b('Edit account',()=>accountForm(m.accounts.find(entry=>entry.id===account.id))));
  return item;
 }
 function accountPairLabel(account){
@@ -1188,7 +1181,7 @@ function archive(root){
   const cards=items.map(rule=>{
    const item=compactRow(rule.name,rule.amount,[name(rule.account),frequencies[rule.frequency],rule.archivedOn?'Archived '+dateLabel(rule.archivedOn):'Archived'],
     [b('Restore',()=>toggleArchive(rule)),b('Delete schedule',()=>{
-     removeRule(rule);
+     if(confirm('Delete the archived schedule for '+rule.name+'? Recorded payments will stay in your history. You can undo this in Activity.'))removeRule(rule);
     },'link')],rule.account);
    item.classList.add('cf-archived-row');
    return item;
@@ -1197,8 +1190,8 @@ function archive(root){
  }
  root.append(panel);
 }
-function showSafetyCopy(){if(backupOwner!==state||!backupText){financeError('No safety copy is available yet. Export a dashboard backup first.');return}const d=e('dialog',undefined,'cf-dialog'),area=note('backup',backupText),message=e('p');area.readOnly=true;d.append(e('h2','Pre-update safety copy'),e('p','Save this JSON file to use with the existing dashboard Restore backup control. Restoring replaces the dashboard data; export your current copy first.'),area,row(b('Download',()=>{const url=URL.createObjectURL(new Blob([backupText],{type:'application/json'})),a=e('a');a.href=url;a.download='dashboard-before-pastel-'+today()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}),b('Copy',async()=>{try{await navigator.clipboard.writeText(backupText);message.textContent='Copied.'}catch{area.focus();area.select();message.textContent='Selected. Use your device’s Copy command.'}}),b('Select all',()=>{area.focus();area.select()}),b('Close',()=>d.close())),message);document.body.append(d);d.addEventListener('close',()=>d.remove(),{once:true});d.showModal()}
-function undoChange(entry){try{safetyBackup();T.undo(m,entry);undoing=true;commit('Undo');}catch(err){financeError(err.message)}finally{undoing=false}}
+function showSafetyCopy(){if(backupOwner!==state||!backupText){alert('No safety copy is available yet. Export a dashboard backup first.');return}const d=e('dialog',undefined,'cf-dialog'),area=note('backup',backupText),message=e('p');area.readOnly=true;d.append(e('h2','Pre-update safety copy'),e('p','Save this JSON file to use with the existing dashboard Restore backup control. Restoring replaces the dashboard data; export your current copy first.'),area,row(b('Download',()=>{const url=URL.createObjectURL(new Blob([backupText],{type:'application/json'})),a=e('a');a.href=url;a.download='dashboard-before-pastel-'+today()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}),b('Copy',async()=>{try{await navigator.clipboard.writeText(backupText);message.textContent='Copied.'}catch{area.focus();area.select();message.textContent='Selected. Use your device’s Copy command.'}}),b('Select all',()=>{area.focus();area.select()}),b('Close',()=>d.close())),message);document.body.append(d);d.addEventListener('close',()=>d.remove(),{once:true});d.showModal()}
+function undoChange(entry){try{safetyBackup();T.undo(m,entry);undoing=true;commit('Undo');}catch(err){alert(err.message)}finally{undoing=false}}
 function attention(root,report){
  const p=card('Needs Attention');
  const events=C.events(m,C.add(today(),90)).filter(matchesTransaction).filter(item=>item.status==='pending'||item.kind==='bill'&&needsBill(item));
@@ -1230,10 +1223,10 @@ function paint(){
   tab=widgetSavings?'Savings':'Overview';horizon=0;billMonth='';billView='All bills';billSearch='';calendarDay='';
   filters.frequency='';historyLimit=24;showAllAttention=false;folded.clear();
   for(const key of Object.keys(historyFilters))historyFilters[key]='';
-  backupText='';backupOwner=null;
+  backupText='';backupProblem='';actionNotice='';paymentJustSaved=false;backupOwner=null;
  }
  lastScope=scope;
- const content=document.getElementById('content');try{safetyBackup()}catch{}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
+ const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
  if(tab==='Accounts')accounts(content);else if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);const tools=card('Loan tools');tools.append(b('Loan amortization',()=>go('Amortization')));content.append(tools)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
 window.dashboardFinanceView=()=>m?selectedOwner():'';
 window.dashboardFinanceActions=()=>{

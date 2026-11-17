@@ -45,27 +45,3 @@ body.glow-redesign > aside .dashboard-profile-caption {
   cursor: pointer;
   font-weight: 650;
 }
-
-body.glow-redesign > aside button.dashboard-profile-avatar {
-  grid-template-columns:minmax(0,1fr) !important;
-  justify-items:center;
-  align-content:center;
-  gap:.45rem;
-  padding:.35rem .35rem .75rem;
-  text-align:center;
-}
-body.glow-redesign > aside button.dashboard-profile-avatar .dashboard-profile-caption {
-  font-size:.82rem !important;
-  line-height:1.25;
-  color:var(--theme-light-text,#eef1fc);
-  text-align:center;
-}
-body.glow-redesign > aside .dashboard-utility-bar button {
-  background:#363941 !important;
-  color:#fff !important;
-  border-color:#727680 !important;
-}
-body.glow-redesign > aside .dashboard-utility-bar button:nth-child(2) {background:#41444c !important}
-body.glow-redesign > aside .dashboard-utility-bar button:nth-child(3) {background:#303239 !important}
-body.glow-redesign > aside .dashboard-utility-bar .app-nav-icon {color:inherit!important}
-body.glow-redesign > aside .dashboard-utility-bar button:hover {background:#50545e !important}

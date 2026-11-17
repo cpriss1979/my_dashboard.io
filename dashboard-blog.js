@@ -176,7 +176,6 @@
         date: existing?.date || new Date().toISOString(),
         title: title.value.trim(),
         width: existing?.width,
-        newRow: existing?.newRow,
         blocks: clean
       };
       const current = posts();
@@ -206,7 +205,7 @@
     toolbar.append(button('New post', () => edit(), 'primary'));
     const status = element('p', '', 'dashboard-blog-status');
     status.setAttribute('role', 'status');
-    blog.append(status);
+    blog.append(toolbar, status);
     const ordered = posts().filter(post => post && Array.isArray(post.blocks));
     const grid = element('div', undefined, 'dashboard-post-grid');
     const arrange = button(arranging ? 'Done arranging' : 'Arrange posts', () => {
@@ -236,7 +235,6 @@
     for (const [index, post] of ordered.entries()) {
       const article = element('article', undefined, 'card dashboard-blog-post');
       article.dataset.postWidth = [2,4,6].includes(post.width) ? post.width : post.width===3?4:2;
-      article.dataset.postNewRow=String(Boolean(post.newRow));
       if (arranging) {
         const controls = element('div', undefined, 'dashboard-layout-actions');
         const width = element('select');
@@ -289,11 +287,7 @@
         const later = button('Later', () => move(post.id, ordered[index+1]?.id, true));
         earlier.disabled = index === 0;
         later.disabled = index === ordered.length-1;
-        const startRow=button(post.newRow?'Keep in flow':'Start new row',()=>{
-          change(ordered.map(item=>item.id===post.id?{...item,newRow:!item.newRow}:item));
-        });
-        startRow.setAttribute('aria-pressed',String(Boolean(post.newRow)));
-        controls.append(grip,width,earlier,later,startRow);
+        controls.append(grip, width, earlier, later);
         article.append(controls);
       }
       const date = new Date(post.date);
@@ -323,8 +317,7 @@
       article.append(actions);
       grid.append(article);
     }
-    toolbar.classList.add('dashboard-blog-bottom');
-    blog.append(grid,toolbar);
+    blog.append(grid);
     document.getElementById('content').replaceChildren(blog);
   }
 

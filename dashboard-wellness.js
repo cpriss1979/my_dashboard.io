@@ -396,7 +396,7 @@
       editor.append(picker);
       const form = el('form');
       const food = field(form,'food','Food or drink','text',editing?.food,{required:true,maxLength:120});
-      const meal = choice(form,'meal','Meal',['Breakfast','Morning snack','Lunch','Afternoon snack','Dinner','Snack','Other'],editing?.meal);
+      const meal = choice(form,'meal','Meal',['Breakfast','Lunch','Dinner','Snack','Other'],editing?.meal);
       const kcal = field(form,'kcal','Calories per serving','number',editing?.kcal,{required:true,min:0,step:'0.01'});
       const servings = field(form,'servings','Servings','number',editing?.servings??1,{required:true,min:0.01,step:'0.01'});
       submit(form,editing?'Save entry':'Log food',()=>{
@@ -406,31 +406,12 @@
         editing=undefined;
         updateList(key,next,draw);
       },editing?()=>{editing=undefined;draw();}:undefined);
-      const planner=window.DashboardMealPlanner;
-      if(planner)editor.append(button('Food calorie calculator',()=>planner.openCalculator(item=>{
-        food.value=item.name.slice(0,food.maxLength);
-        kcal.value=item.calories;
-        servings.value=1;
-        food.focus();
-      })));
       editor.append(form);
       const records = list(key).filter(item=>item.date===date);
-      const planned=planner?.calorieEntries(date)||[];
       const total = records.reduce((sum,item)=>sum+item.kcal*item.servings,0);
-      const plannedTotal=planned.reduce((sum,item)=>sum+item.calories,0);
-      const summary = panel(amount(plannedTotal+total)+' cal · planned + manual');
-      summary.append(el('p',amount(plannedTotal)+' cal from Meal Planner · '+amount(total)+' cal entered manually'));
-      const plannerSection=panel('From Meal Planner');
-      if(!planned.length)plannerSection.append(el('p','No foods with calorie amounts for this date.'));
-      else {
-        const foods=el('ul');
-        for(const item of planned)foods.append(el('li',item.meal+' · '+item.name+' · '+amount(item.calories)+' cal'));
-        plannerSection.append(foods);
-      }
-      plannerSection.append(button('Open Meal Planner',()=>go('Meal Planner')));
-      const manual=panel('Manual entries');
+      const summary = panel(amount(total)+' calories logged');
       const meals = el('div',undefined,'dashboard-feature-grid');
-      if(!records.length) manual.append(el('p','No manual entries for this date.'));
+      if(!records.length) summary.append(el('p','No food logged on this date.'));
       for(const item of records){
         const card = el('article',undefined,'card');
         card.append(el('h3',item.food),el('p',item.meal+' · '+amount(item.servings)+' serving(s) · '+amount(item.kcal*item.servings)+' cal'),
@@ -438,8 +419,8 @@
             drop(item.food,()=>{if(editing?.id===item.id)editing=undefined;updateList(key,list(key).filter(record=>record.id!==item.id),draw);})));
         meals.append(card);
       }
-      manual.append(meals);
-      root.replaceChildren(editor,summary,plannerSection,manual);
+      summary.append(meals);
+      root.replaceChildren(editor,summary);
     }
     draw();
   }

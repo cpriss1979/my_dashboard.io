@@ -58,94 +58,6 @@
     data.mealCategories ??= {};
     return data;
   }
-  const mealSlots=['Breakfast','Morning snack','Lunch','Afternoon snack','Dinner'];
-  function itemsFor(data,date,meal){
-    const saved=data.mealItems?.[date]?.[meal];
-    if(Array.isArray(saved))return saved;
-    const name=data.meals?.[date]?.[meal]||'';
-    const calories=data.mealCalories?.[date]?.[meal];
-    return name||Number.isFinite(calories)?[{name,calories:Number.isFinite(calories)?calories:null}]:[];
-  }
-  function saveItems(data,date,meal,entries){
-    ((data.mealItems??={})[date]??={})[meal]=entries
-      .filter(item=>item.name||Number.isFinite(item.calories))
-      .map(item=>({...item}));
-  }
-  window.DashboardMealPlanner={
-    calorieEntries(date){
-      const data=state.dashboardPlanning||{};
-      return mealSlots.flatMap(meal=>itemsFor(data,date,meal)
-        .filter(item=>Number.isFinite(item.calories)&&item.calories>=0)
-        .map(item=>({meal,name:item.name||meal,calories:item.calories})));
-    }
-  };
-  let foodLibrary;
-  function loadFoodLibrary(){
-    return foodLibrary??=fetch('https://raw.githubusercontent.com/tempolife-app/tempo-food-db/c9c558a82dd7acd20ade373c2a63762503e4d19e/data/tempolife-foods.json')
-      .then(response=>{if(!response.ok)throw Error('Food library unavailable');return response.json()})
-      .then(rows=>{
-        const foods=rows.map(food=>({name:food.name,kcal_per_100g:food.kcal_per_100g??food.calories}))
-          .filter(food=>typeof food.name==='string'&&Number.isFinite(food.kcal_per_100g)&&food.kcal_per_100g>=0);
-        if(!foods.length)throw Error('No foods returned');
-        return foods;
-      })
-      .catch(error=>{foodLibrary=undefined;throw error});
-  }
-  function foodCalculator(onUse){
-    const owner=state;
-    const dialog=el('dialog',undefined,'priss-options-dialog recipe-editor');
-    dialog.setAttribute('aria-label','Food calorie calculator');
-    const [searchLabel,search]=field('Search foods','search');
-    search.placeholder='Try banana, eggs, or cooked rice';
-    const [portionLabel,portion]=field('Portion weight','number','100');
-    portion.min='.01';portion.max='100000';portion.step='any';
-    const unit=el('select');unit.setAttribute('aria-label','Portion weight unit');
-    unit.add(new Option('Grams','g'));unit.add(new Option('Ounces','oz'));
-    const result=el('select');result.size=6;result.setAttribute('aria-label','Matching foods');
-    const status=el('p','Loading food library…');status.setAttribute('role','status');
-    let foods=[],matches=[];
-    const use=button('Use this food',()=>{
-      const food=selected();
-      const kcal=calculate();
-      if(owner!==state||!food||kcal===null)return;
-      onUse({name:food.name,calories:Math.round(kcal)});
-      dialog.close();
-    });
-    function selected(){return result.value===''?undefined:matches[Number(result.value)]}
-    function calculate(){
-      const food=selected(),weight=portion.valueAsNumber;
-      if(!food||!portion.validity.valid||!Number.isFinite(weight)||weight<=0)return null;
-      return food.kcal_per_100g*weight*(unit.value==='oz'?28.349523125:1)/100;
-    }
-    function update(){
-      const food=selected(),kcal=calculate();
-      use.disabled=kcal===null;
-      if(food)status.textContent=food.kcal_per_100g+' cal per 100 g'+(kcal===null?' · Enter a valid portion weight.':' · ≈ '+Math.round(kcal).toLocaleString()+' cal for this portion');
-      else status.textContent=foods.length?(search.value.trim()?'No matching foods. Try a simpler search.':'Search '+foods.length.toLocaleString()+' foods and drinks.'):'Loading food library…';
-    }
-    function filter(){
-      const query=search.value.trim().toLowerCase();
-      const words=query.split(/\s+/).filter(Boolean);
-      matches=words.length?foods.filter(food=>words.every(word=>food.name.toLowerCase().includes(word)))
-        .sort((a,b)=>Number(!a.name.toLowerCase().startsWith(query))-Number(!b.name.toLowerCase().startsWith(query))||a.name.length-b.name.length)
-        .slice(0,80):[];
-      result.replaceChildren();
-      matches.forEach((food,index)=>result.add(new Option(food.name+' · '+food.kcal_per_100g+' cal / 100 g',String(index))));
-      result.value=matches.length?'0':'';
-      update();
-    }
-    search.oninput=filter;result.onchange=unit.onchange=portion.oninput=update;
-    use.disabled=true;
-    const attribution=el('small','Food nutrition data from TempoLife (tempolife.app), CC-BY-4.0. Portions and preparation affect estimates. ');
-    attribution.append(link('Dataset', 'https://github.com/tempolife-app/tempo-food-db'),document.createTextNode(' · '),link('License','https://creativecommons.org/licenses/by/4.0/'));
-    dialog.append(el('h2','Food calorie calculator'),searchLabel,result,portionLabel,unit,status,use,button('Close',()=>dialog.close()),attribution);
-    dialog.classList.add('food-calculator');
-    dialog.onclose=()=>dialog.remove();
-    document.body.append(dialog);dialog.showModal();search.focus();
-    void loadFoodLibrary().then(rows=>{if(dialog.open&&owner===state){foods=rows;filter()}})
-      .catch(()=>{if(dialog.open){status.textContent='The food library could not load. Close and retry, or enter calories manually.';search.oninput=null}});
-  }
-  window.DashboardMealPlanner.openCalculator=foodCalculator;
   function section(title) {
     const panel = el('section', undefined, 'card planning-page');
     const bar = el('div', undefined, 'planning-toolbar');
@@ -291,10 +203,11 @@
         const date=new Date(start);date.setDate(start.getDate()+day);
         const key=localDate(date);
         meals.forEach((meal,index)=>{
-          if(itemsFor(data,key,meal).length)return;
+          if(data.meals[key]?.[meal])return;
           const categories=selected[meal];
           const category=categories[day%categories.length];
-          saveItems(data,key,meal,[{name:ideas[meal][category][0],calories:null}]);
+          (data.meals[key]??={})[meal]=ideas[meal][category][0];
+          (data.mealCategories[key]??={})[meal]=category;
           if(daily)(data.mealTargets[key]??={})[meal]=portions[index];
           filled++;
         });
@@ -317,69 +230,66 @@
     table.append(body);grid.append(names,table);
     const totals=new Map();
     function dailyTotal(key){
-     const data=model(),values=window.DashboardMealPlanner.calorieEntries(key).map(item=>item.calories);
+     const data=model(),values=Object.values(data.mealCalories[key]||{});
      const target=Object.values(data.mealTargets[key]||{}).reduce((sum,n)=>sum+n,0);
      totals.get(key).textContent=(values.length?'≈ '+values.reduce((sum,n)=>sum+n,0).toLocaleString()+' cal entered':'—')+
        (target?' · '+target.toLocaleString()+' target':'');
     }
-    for(const meal of mealSlots){
+    for(const meal of ['Breakfast','Morning snack','Lunch','Afternoon snack','Dinner']){
      const row=el('tr'),heading=el('th',meal);heading.scope='row';row.append(heading);
      for(const d of dates){
       const key=localDate(d),data=model(),cell=el('td'),named=weekday.format(d)+' '+meal;
-      const entries=itemsFor(data,key,meal).map(item=>({...item}));
-      const list=el('div',undefined,'meal-food-list');
+      const category=el('select');
+      for(const label of ['',...Object.keys(ideas[meal]||{}),'Fruit','Vegetables','Protein','Grains','Dairy','Other']){
+       category.add(new Option(label||'Category',label));
+      }
+      category.value=data.mealCategories[key]?.[meal]||'';
+      category.setAttribute('aria-label',named+' category');
+      category.onchange=()=>{
+       if(category.value)(data.mealCategories[key]??={})[meal]=category.value;
+       else if(data.mealCategories[key])delete data.mealCategories[key][meal];
+       const suggestion=ideas[meal]?.[category.value];
+       if(suggestion&&!input.value.trim()){input.value=suggestion[0];input.onchange();}
+       save();
+      };
+      const input=el('input');input.type='text';input.maxLength=150;input.placeholder='Add meal';input.value=data.meals[key]?.[meal]||'';
+      input.setAttribute('aria-label',named);input.setAttribute('list',names.id);
+      const kcal=el('input');kcal.type='number';kcal.min=0;kcal.max=10000;kcal.step=1;kcal.placeholder='Approx. cal';
+      kcal.value=data.mealCalories[key]?.[meal]??'';kcal.setAttribute('aria-label',named+' approximate calories');
       const target=el('small');
-      const portion=data.mealTargets[key]?.[meal];
-      target.hidden=!Number.isFinite(portion);
-      target.textContent=target.hidden?'':'Target '+portion+' cal';
-      function persist(){
-       saveItems(data,key,meal,entries);dailyTotal(key);save();
-      }
-      function addRow(item,focus=false){
-       const fields=el('div',undefined,'meal-food-item');
-       const input=el('input');
-       input.type='text';input.maxLength=150;input.placeholder='Food or drink';input.value=item.name;
-       input.setAttribute('aria-label',named+' food');input.setAttribute('list',names.id);
-       const kcal=el('input');
-       kcal.type='number';kcal.min=0;kcal.max=10000;kcal.step=1;kcal.placeholder='Approx. cal';
-       kcal.value=item.calories??'';kcal.setAttribute('aria-label',named+' approximate calories');
-       const remove=button('×',()=>{
-        entries.splice(entries.indexOf(item),1);fields.remove();persist();add.focus();
-       });
-       remove.setAttribute('aria-label','Remove food from '+named);
-       const recipe=button('Save recipe',()=>{
-        const idea=Object.values(ideas[meal]||{}).find(entry=>entry[0]===item.name);
-        if(!idea)return;
-        if(!data.recipes.some(record=>record.title===idea[0])){
-         data.recipes.unshift({id:crypto.randomUUID(),title:idea[0],ingredients:idea[1],instructions:idea[2]});
-         names.append(new Option(idea[0]));save();
-        }
-        updateRecipe();
-       });
-       function updateRecipe(){
-        recipe.hidden=!Object.values(ideas[meal]||{}).some(entry=>entry[0]===item.name);
-        recipe.textContent=data.recipes.some(record=>record.title===item.name)?'In Recipe box':'Save recipe';
+      const recipe=button('Save recipe',()=>{
+       const idea=Object.values(ideas[meal]||{}).find(entry=>entry[0]===input.value.trim());
+       if(!idea)return;
+       if(!data.recipes.some(item=>item.title===idea[0])){
+        data.recipes.unshift({id:crypto.randomUUID(),title:idea[0],ingredients:idea[1],instructions:idea[2]});
+        names.append(new Option(idea[0]));save();
        }
-       input.onchange=()=>{item.name=input.value.trim();updateRecipe();persist()};
-       kcal.onchange=()=>{if(kcal.reportValidity()){item.calories=kcal.value===''?null:kcal.valueAsNumber;persist()}};
-       const bottom=el('div',undefined,'meal-food-calories');bottom.append(kcal,remove);
-       updateRecipe();fields.append(input,bottom,recipe);list.append(fields);
-       if(focus)input.focus();
-      }
-      const add=button('+',()=>{
-       const item={name:'',calories:null};entries.push(item);addRow(item,true);
+       recipe.textContent='In Recipe box';
       });
-      add.classList.add('meal-food-add');
-      add.setAttribute('aria-label','Add food to '+named);
-      entries.forEach(item=>addRow(item));
-      const lookup=button('Find food',()=>foodCalculator(item=>{
-       const existing=entries.find(entry=>!entry.name&&!Number.isFinite(entry.calories));
-       if(existing){entries.splice(entries.indexOf(existing),1,item);list.replaceChildren();entries.forEach(entry=>addRow(entry));}
-       else{entries.push(item);addRow(item);}
-       persist();
-      }));
-      const tools=el('div',undefined,'meal-food-tools');tools.append(add,lookup);
-      cell.append(list,tools,target);row.append(cell);
+      function details(){
+       const portion=data.mealTargets[key]?.[meal];
+       target.hidden=!Number.isFinite(portion);
+       target.textContent=target.hidden?'':'Target '+portion+' cal';
+       recipe.hidden=!Object.values(ideas[meal]||{}).some(entry=>entry[0]===input.value.trim());
+       recipe.textContent=data.recipes.some(item=>item.title===input.value.trim())?'In Recipe box':'Save recipe';
+      }
+      input.onchange=()=>{
+       const name=input.value.trim();
+       if(data.meals[key]?.[meal]===name)return;
+       if(data.mealTargets[key])delete data.mealTargets[key][meal];
+       if(data.mealCalories[key])delete data.mealCalories[key][meal];
+       kcal.value='';
+       if(name)(data.meals[key]??={})[meal]=name;
+       else if(data.meals[key])delete data.meals[key][meal];
+       details();dailyTotal(key);save();
+      };
+      kcal.onchange=()=>{
+       if(!kcal.reportValidity())return;
+       if(kcal.value!=='')(data.mealCalories[key]??={})[meal]=kcal.valueAsNumber;
+       else if(data.mealCalories[key])delete data.mealCalories[key][meal];
+       dailyTotal(key);save();
+      };
+      details();cell.append(category,input,kcal,target,recipe);row.append(cell);
      }
      body.append(row);
     }
@@ -529,6 +439,6 @@
   };
   addEventListener('dashboard:account-changing', () => {
     weekOffset = 0;
-    document.querySelectorAll('.recipe-editor[open]').forEach(dialog=>dialog.close());
+    document.querySelector('.recipe-editor[open]')?.close();
   });
 })();
