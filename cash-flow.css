@@ -219,3 +219,39 @@ body.glow-redesign main #content .cf-bill-cells h3 { margin:0!important;font-siz
   font-weight: 650;
 }
 .cf-overview-breakdown > summary { cursor: pointer; }
+
+/* Reserve the right edge for selecting a bill, including on narrow screens. */
+body.glow-redesign main #content .cf-selectable-bill {
+  position: relative;
+  padding-inline-end: 52px !important;
+}
+#content label.cf-delete-check {
+  position: absolute;
+  inset: 4px 4px auto auto;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  cursor: pointer;
+}
+#content .cf-delete-check input[type="checkbox"] {
+  width: 19px !important;
+  height: 19px !important;
+  min-height: 0 !important;
+  margin: 0;
+  cursor: pointer;
+}
+#content .cf-delete-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  justify-self: end;
+  width: fit-content;
+  margin-inline-start: auto;
+  padding: 6px;
+  background: #fff8fc;
+  border: 1px solid #b998ab;
+  border-radius: 10px;
+}
+#content .cf-delete-bar[hidden] { display: none !important; }
