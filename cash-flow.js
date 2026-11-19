@@ -1153,7 +1153,7 @@ function bills(root){
  const rules=card('Bill rules');rules.append(b('Set up recurring bill',()=>billForm(),'primary'),b('View Archive',()=>{tab='Archive';render()}));const ordered=m.bills.filter(r=>!r.deleted&&!r.archived&&matchesOwner(r.account)).sort((a,b)=>(C.billDate(a,today())||'9999').localeCompare(C.billDate(b,today())||'9999')||a.name.localeCompare(b.name));const schedules=compactList('Manage recurring schedules',ordered.map(r=>compactRow(r.name,r.amount,[(r.account?name(r.account):'Choose account')+' · '+frequencies[r.frequency],'Next due '+(C.billDate(r,today())?dateLabel(C.billDate(r,today())):'Needs date'),r.autopay?'Autopay':'Manual pay',r.archived?'Archived':'',r.stop?'Replaced from '+dateLabel(r.stop):'',r.notes],[...(r.stop?[]:[b('Edit rule',()=>billForm(r))]),b(r.archived?'Restore':'Archive',()=>toggleArchive(r)),b('Delete',()=>removeRule(r),'link')],r.account)),false);schedules.id='cfRecurringSchedules';rules.append(schedules);root.append(rules,selection.bar)}
 function billCalendar(root,rows,selectableBill){const p=card('Monthly bill calendar'),details=e('details',undefined,'cf-group');details.open=!!calendarDay;details.append(e('summary','Due dates · '+billMonth));const grid=e('div',undefined,'cf-bill-calendar');for(const label of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'])grid.append(e('span',label,'cf-day-label'));const first=new Date(billMonth+'-01T00:00:00Z').getUTCDay();for(let i=0;i<first;i++)grid.append(e('span'));for(let day=1;day<=Number(T.monthEnd(billMonth).slice(-2));day++){const date=billMonth+'-'+String(day).padStart(2,'0'),items=rows.filter(x=>x.due===date);const n=b(String(day),()=>{calendarDay=date;render()},'cf-calendar-date');n.setAttribute('aria-label',dateLabel(date)+' · '+items.length+' bills');n.setAttribute('aria-pressed',String(calendarDay===date));if(items.length)n.append(e('small',items.length+' bills'));if(date===today())n.dataset.today='true';grid.append(n)}details.append(grid);if(calendarDay){const dayItems=rows.filter(x=>x.due===calendarDay);details.append(compactList(dateLabel(calendarDay),dayItems.map(selectableBill)))}p.append(details);root.append(p)}
 
-function forecastPeriod(start,end,opening,entries,heading,sources){
+function forecastPeriod(start,end,opening,entries,heading,sources,account,prior=[]){
  const panel=e('article',undefined,'cf-payday-focus cf-payday-estimate');
  const signed=amount=>amount>0?'+'+dollars(amount):dollars(amount);
  const line=(label,amount,change=true)=>{
@@ -1168,20 +1168,50 @@ function forecastPeriod(start,end,opening,entries,heading,sources){
  const afterBills=opening===null?null:opening+total(deposits)+total(bills);
  const closing=afterBills===null?null:afterBills+total(other);
  const range=start===end?dateLabel(end):dateLabel(start)+'–'+dateLabel(end);
- panel.append(e('h4',heading),e('p',range),e('span','Left after planned and pending bills'),
-  e('strong',dollars(afterBills),afterBills<0?'cf-payday-amount cf-shortfall':'cf-payday-amount'));
-
+ function breakdown(label,amount,content,change=false){
+  const details=e('details',undefined,'cf-payday-other');
+  const summary=e('summary');
+  summary.append(document.createTextNode(label+' '));
+  if(amount!==undefined)summary.append(e('strong',change?signed(amount):dollars(amount)));
+  details.append(summary,...content);
+  return details;
+ }
+ function activityRows(items){
+  return items.map(item=>{
+   const movement=item.kind==='transfer'?' · '+name(item.from)+' → '+name(item.to):'';
+   const note=item.unavailable?' · counts when cleared':item.status==='pending'?' · pending':'';
+   return line(dateLabel(item.date)+' · '+item.name+movement+note,item.delta);
+  });
+ }
+ const openingLabel=heading.startsWith('From your ')?'Projected balance carried in':'Cleared balance at start';
+ function openingRows(){
+  if(opening===null)return [e('p','Set a starting balance for '+name(account.id)+' to calculate this amount.')];
+  return [line('Starting balance for '+name(account.id)+' on '+dateLabel(account.asOf),account.opening,false),
+   ...activityRows(account.clearedEntries),line('Cleared balance today',account.current,false),
+   ...activityRows(prior),line(openingLabel,opening,false)];
+ }
+ const components=()=>[line(openingLabel,opening,false),line('Add expected deposits',total(deposits)),
+  line('Subtract planned and pending bills',total(bills)),line('Left after bills',afterBills,false)];
+ const headline=breakdown('Left after planned and pending bills',afterBills,components());
+ headline.querySelector('strong').className=afterBills<0?'cf-payday-amount cf-shortfall':'cf-payday-amount';
+ panel.append(e('h4',heading),e('p',range),headline);
  const math=e('div',undefined,'cf-payday-math');
- math.append(line(heading==='Before your next deposit'||heading==='Selected range'?'Cleared balance at start':'Projected balance carried in',opening,false),
-  line('Expected deposits',total(deposits)),line('Planned and pending bills',total(bills)));
- if(other.length)math.append(line('Other forecast activity',total(other)),line('Projected balance with all activity',closing,false));
+ function category(label,items,empty){
+  return breakdown(label,total(items),items.length?[...activityRows(items),line('Total',total(items))]:[e('p',empty)],true);
+ }
+ math.append(breakdown(openingLabel,opening,openingRows()),
+  category('Expected deposits',deposits,'No deposits are expected in this period.'),
+  category('Planned and pending bills',bills,'No planned or pending bills in this period.'),
+  category('Other forecast activity',other,'No other activity in this period.'),
+  breakdown('Projected balance with all activity',closing,[...components(),line('Other forecast activity',total(other)),
+   line('Projected balance',closing,false)]));
  panel.append(math);
 
  const firstShort=opening<0?null:entries.find(item=>item.balance<0);
  if(firstShort){
-  panel.append(e('p',dollars(-firstShort.balance)+' short on '+dateLabel(firstShort.date)+' after '+firstShort.name,'cf-shortfall'));
+  panel.append(breakdown(dollars(-firstShort.balance)+' short on '+dateLabel(firstShort.date)+' after '+firstShort.name,undefined,[line(openingLabel,opening,false),...activityRows(entries.slice(0,entries.indexOf(firstShort)+1)),line('Balance after this item',firstShort.balance,false)]));
  }else if(opening<0){
-  panel.append(e('p','Starts '+dollars(-opening)+' short','cf-shortfall'));
+  panel.append(breakdown('Starts '+dollars(-opening)+' short',undefined,openingRows()));
  }
 
  // The core puts unknown-timing bills after deposits for its running balance.
@@ -1196,7 +1226,10 @@ function forecastPeriod(start,end,opening,entries,heading,sources){
   const beforeUnknown=beforeDay+total(knownFirst);
   const possible=beforeUnknown+total(unknownBills);
   if(day.some(item=>item.kind==='income')&&beforeUnknown>=0&&possible<0){
-   panel.append(e('p','May be '+dollars(-possible)+' short on '+dateLabel(date)+' if bills post before the deposit.','cf-payday-note'));
+   panel.append(breakdown('May be '+dollars(-possible)+' short on '+dateLabel(date)+' if bills post before the deposit.',undefined,[
+    line('Available before these bills',beforeDay,false),...activityRows(knownFirst),...activityRows(unknownBills),
+    line('Balance if these bills clear first',possible,false),e('p','This estimate assumes the following deposits arrive afterward.'),
+    ...activityRows(day.filter(item=>item.kind==='income'))]));
   }
   beforeDay=day.at(-1).balance;
  }
@@ -1241,13 +1274,13 @@ function timeline(root,report){
   if(horizon||!first){
    const end=C.add(start,horizon||30);
    if(!horizon)section.append(e('p','No upcoming deposit entered. Showing the next 30 days.'));
-   section.append(forecastPeriod(start,end,account.current,entries.filter(item=>item.date<=end),'Selected range',sources));
+   section.append(forecastPeriod(start,end,account.current,entries.filter(item=>item.date<=end),'Selected range',sources,account));
   }else{
    const depositIndex=entries.indexOf(first);
    const before=entries.slice(0,depositIndex);
    if(first.date>start||before.length){
     const end=before.at(-1)?.date===first.date?first.date:C.add(first.date,-1);
-    section.append(forecastPeriod(start,end,account.current,before,'Before your next deposit',sources));
+    section.append(forecastPeriod(start,end,account.current,before,'Before your next deposit',sources,account));
    }
    const end=following?C.add(following.date,-1):C.add(first.date,30);
    const nextIndex=following?entries.indexOf(following):entries.length;
@@ -1256,7 +1289,7 @@ function timeline(root,report){
    const last=period.at(-1);
    const periodEnd=last&&last.date>end?last.date:end;
    const boundedEnd=periodEnd>report.end?report.end:periodEnd;
-   section.append(forecastPeriod(first.date,boundedEnd,before.length?before.at(-1).balance:account.current,period,'From your '+dateLabel(first.date)+' payday',sources));
+   section.append(forecastPeriod(first.date,boundedEnd,before.length?before.at(-1).balance:account.current,period,'From your '+dateLabel(first.date)+' payday',sources,account,before));
    if(!following)section.append(e('p','No later deposit found in the forecast. The payday estimate covers up to 30 days.'));
    if(last&&last.date>end)section.append(e('p','Includes bills marked to post before your '+dateLabel(following.date)+' deposit.'));
   }

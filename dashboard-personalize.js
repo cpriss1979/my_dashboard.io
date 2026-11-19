@@ -384,6 +384,32 @@
   function setupSettings() {
     if(!settings||!settingsContent)return;
     settings.querySelector('h2').textContent='Settings';
+    const authButton=document.getElementById('fbSignOut');
+    if(authButton){
+      const feedback=el('p');
+      feedback.setAttribute('role','status');
+      feedback.hidden=true;
+      const status=document.getElementById('fbSyncStatus');
+      const signOut=button('Sign out',()=>{
+        authButton.click();
+        feedback.textContent=status?.textContent||'';
+        feedback.hidden=!feedback.textContent;
+      });
+      const syncSignOut=()=>{
+        signOut.hidden=authButton.hidden;
+        if(authButton.hidden){
+          feedback.hidden=true;
+          if(settings.open)settings.close();
+        }
+      };
+      signOut.hidden=authButton.hidden;
+      settings.querySelector('.app-dialog-heading').insertBefore(signOut,document.getElementById('appSettingsClose'));
+      settings.querySelector('.app-dialog-heading').after(feedback);
+      new MutationObserver(syncSignOut).observe(authButton,{attributes:true,attributeFilter:['hidden']});
+      if(status)new MutationObserver(()=>{
+        if(!feedback.hidden)feedback.textContent=status.textContent;
+      }).observe(status,{childList:true,subtree:true,characterData:true});
+    }
     const tabs=el('div',undefined,'priss-settings-tabs');
     const sectionsPanel=el('section');
     const appearance=el('section');

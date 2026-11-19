@@ -86,7 +86,8 @@ function forecast(m,today,horizon){
   let current=configured?a.opening:null;
   const related=list=>list.flatMap(r=>r.kind==='transfer'?(r.from===a.id?[{...r,delta:-r.amount}]:r.to===a.id?[{...r,delta:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'?0:r.amount,unavailable:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'}]:[]):r.account===a.id?[{...r,delta:['bill','money-out'].includes(r.kind)?-r.amount:r.amount}]:[]);
   const relevant=related(rows);
-  for(const r of relevant)if(configured&&r.status==='cleared'&&(r.date>a.asOf||r.date===a.asOf&&r.afterBalances?.[a.id]===balanceKey(a))&&r.date<=today)current+=r.delta;
+  const clearedEntries=relevant.filter(r=>configured&&r.status==='cleared'&&(r.date>a.asOf||r.date===a.asOf&&r.afterBalances?.[a.id]===balanceKey(a))&&r.date<=today);
+  for(const r of clearedEntries)current+=r.delta;
   const upcoming=list=>{
    const pending=list.filter(r=>r.status!=='cleared'&&!(r.kind==='income'&&r.status==='planned'&&r.date<today)).map(r=>{
     const expected=r.kind==='income'&&r.status==='pending'?r.expectedDate||r.date:r.date;
@@ -104,7 +105,7 @@ function forecast(m,today,horizon){
   for(const r of reserveRows){net+=r.delta;nextReserve=Math.max(nextReserve,-net)}
   for(const r of future){if(configured){running+=r.delta;min=Math.min(min,running);if(!firstShort&&running<0)firstShort=r.date}r.balance=running}
   const pending=future.filter(r=>r.status==='pending').reduce((n,r)=>n+r.delta,0);
-  return {...a,configured,current,pending,projected:running,reserved:nextReserve,safe:configured?Math.max(0,Math.min(current-nextReserve,min)-a.cushion):null,min,firstShort,nextDeposit,billsBeforeDeposit:reserveRows.filter(r=>r.kind==='bill'),dueBeforeDeposit,lowPeriods:periods(today,end,current,a.cushion,future),future};
+  return {...a,configured,current,clearedEntries,pending,projected:running,reserved:nextReserve,safe:configured?Math.max(0,Math.min(current-nextReserve,min)-a.cushion):null,min,firstShort,nextDeposit,billsBeforeDeposit:reserveRows.filter(r=>r.kind==='bill'),dueBeforeDeposit,lowPeriods:periods(today,end,current,a.cushion,future),future};
  });
  const accounts=allAccounts.filter(a=>a.type!=='savings'),savings=allAccounts.filter(a=>a.type==='savings');
  const ready=accounts.every(a=>a.configured),sum=k=>accounts.reduce((n,a)=>n+(a[k]??0),0);
