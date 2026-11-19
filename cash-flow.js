@@ -243,12 +243,29 @@ function billForm(r){
  updateRule(m.bills,r,next)
  })
 }
-function transferForm(r,preset){const t=r||preset||{},id=r?.id||uid(),choices=activeAccounts().map(a=>[a.id,name(a.id)]);const f=form('Transfer money',[
- field('FROM',select('from',choices,t.from||choices[0]?.[0])),field('TO',select('to',choices,t.to||choices.find(x=>x[0]!==(t.from||choices[0]?.[0]))?.[0])),field('Amount ($)',number('amount',t.amount?t.amount/100:'',.01)),field('Date',input('date','date',t.date||today())),field('Status',select('status',[['completed','Completed'],['pending','Pending'],['planned','Planned']],t.status||'completed')),field('Description',input('name','text',t.name||'Money moved')),e('p','Records one movement between accounts. It does not send a bank transfer.','cf-wide')
+function transferToSavings(checkingId){
+ const checking=activeAccounts().find(account=>account.id===checkingId);
+ const savings=activeAccounts().filter(account=>account.type==='savings');
+ if(!savings.length){
+  const existingIds=new Set(activeAccounts().map(account=>account.id));
+  accountForm(null,'savings','',()=>{
+   const added=activeAccounts().find(account=>!existingIds.has(account.id)&&account.type==='savings');
+   if(added)transferForm(null,{from:checkingId,to:added.id},true);
+  });
+  return;
+ }
+ const paired=savingsForChecking(checking,savings);
+ transferForm(null,{from:checkingId,to:paired.length===1?paired[0].id:''},true);
+}
+function transferForm(r,preset,savingsOnly=false){const t=r||preset||{},id=r?.id||uid(),choices=activeAccounts().map(a=>[a.id,name(a.id)]);const fromChoices=savingsOnly?choices.filter(([id])=>id===t.from):choices;
+ const toChoices=savingsOnly?[['','Choose a savings account'],...activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,name(a.id)])]:choices;
+ const defaultTo=savingsOnly?t.to:t.to||choices.find(x=>x[0]!==(t.from||choices[0]?.[0]))?.[0];
+ const f=form('Transfer money',[
+ field('FROM',select('from',fromChoices,t.from||choices[0]?.[0])),field('TO',select('to',toChoices,defaultTo)),field('Amount ($)',number('amount',t.amount?t.amount/100:'',.01)),field('Date',input('date','date',t.date||today())),field('Status',select('status',[['completed','Completed'],['pending','Pending'],['planned','Planned']],t.status||'completed')),field('Description',input('name','text',t.name||'Money moved')),e('p','Records one movement between accounts. It does not send a bank transfer.','cf-wide')
  ],fields=>{if(!fields.from.value||!fields.to.value||fields.from.value===fields.to.value)throw Error('Choose different FROM and TO accounts.');if(fields.status.value==='completed'&&fields.date.value>today())throw Error('Use today or earlier for a completed move.');const ids=[fields.from.value,fields.to.value];if(fields.status.value==='completed'&&ids.some(id=>m.accounts.find(a=>a.id===id).asOf>fields.date.value))throw Error('Choose a transfer date on or after both starting balances.');if(fields.status.value==='completed'&&ids.some(id=>m.accounts.find(a=>a.id===id).opening===null))throw Error('Set both starting balances before recording a completed move.');const from=m.accounts.find(a=>a.id===fields.from.value);if(fields.status.value==='completed'&&from.type==='savings'){const available=C.forecast(m,today(),30).savings.find(a=>a.id===from.id).current;const oldDebit=r?.status==='completed'&&r.from===from.id&&(r.date>from.asOf||r.date===from.asOf&&r.afterBalances?.[from.id]===C.balanceKey(from))?r.amount:0;if(available+oldDebit<cents(fields.amount.value))throw Error('Savings does not have enough cleared money for this move.');}const next={id,name:reqName(fields),from:fields.from.value,to:fields.to.value,amount:cents(fields.amount.value),date:fields.date.value,status:fields.status.value,afterBalances:r&&r.status==='completed'&&r.date===fields.date.value&&r.from===fields.from.value&&r.to===fields.to.value?r.afterBalances:balanceTags(ids)};const index=m.transfers.findIndex(x=>x.id===id);if(index<0)m.transfers.push(next);else Object.assign(m.transfers[index],next)});f.querySelector('button[type=submit]').textContent='Save transfer';
  const route=e('p',undefined,'cf-transfer-route');
  route.setAttribute('aria-live','polite');
- const updateRoute=()=>{route.textContent=name(f.elements.from.value)+' → '+name(f.elements.to.value)};
+ const updateRoute=()=>{route.textContent=name(f.elements.from.value)+' → '+(f.elements.to.value?name(f.elements.to.value):'Choose a savings account')};
  f.elements.from.addEventListener('change',()=>{
   if(f.elements.from.value===f.elements.to.value)f.elements.to.value=choices.find(([id])=>id!==f.elements.from.value)?.[0]||'';
   updateRoute();
@@ -1066,6 +1083,7 @@ function bills(root){
   for(const account of balances){
    const balance=e('div');
    balance.append(e('span',name(account.id)),e('strong',dollars(account.current)));
+   balance.append(b('Transfer to savings',()=>transferToSavings(account.id)));
    available.append(balance);
   }
   p.append(e('h3','Available now'),e('p','Cleared balances in your dashboard.'),available);
