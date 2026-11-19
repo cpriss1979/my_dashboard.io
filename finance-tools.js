@@ -104,7 +104,40 @@ function paydayPlan(account,today,fallbackEnd){
   lowest,firstShort,firstShortBalance,preDeposit,conditionalShortfall,hasPayday};
 }
 const arrays=['groups','accounts','income','bills','transfers','ledger','goals','reconciliations'];
-function changes(before,after){const out=[];for(const key of [...arrays,'overrides']){const a=key==='overrides'?before[key]||{}:Object.fromEntries((before[key]||[]).map(x=>[x.id,x])),b=key==='overrides'?after[key]||{}:Object.fromEntries((after[key]||[]).map(x=>[x.id,x]));for(const id of new Set([...Object.keys(a),...Object.keys(b)])){if(JSON.stringify(a[id])===JSON.stringify(b[id]))continue;out.push({key,id,hadBefore:a[id]!==undefined,hadAfter:b[id]!==undefined,before:copy(a[id])??null,after:copy(b[id])??null})}}return out}
-function undo(model,entry){if(entry.undone)throw Error('This change has already been undone.');for(const op of entry.changes){const now=op.key==='overrides'?model.overrides?.[op.id]:(model[op.key]||[]).find(x=>x.id===op.id);if(JSON.stringify(now)!==JSON.stringify(op.hadAfter?op.after:undefined))throw Error('This record has changed since then. Use Edit to correct it safely.');}for(const op of entry.changes){if(op.key==='overrides'){if(op.hadBefore)model.overrides[op.id]=copy(op.before);else delete model.overrides[op.id]}else{model[op.key]??=[];const i=model[op.key].findIndex(x=>x.id===op.id);if(i>=0)model[op.key].splice(i,1);if(op.hadBefore)model[op.key].splice(i<0?model[op.key].length:i,0,copy(op.before))}}entry.undone=true}
+function changes(before,after){const out=[];for(const key of [...arrays,'overrides']){const a=key==='overrides'?before[key]||{}:Object.fromEntries((before[key]||[]).map(x=>[x.id,x])),b=key==='overrides'?after[key]||{}:Object.fromEntries((after[key]||[]).map(x=>[x.id,x]));for(const id of new Set([...Object.keys(a),...Object.keys(b)])){if(JSON.stringify(a[id])===JSON.stringify(b[id]))continue;out.push({key,id,hadBefore:a[id]!==undefined,hadAfter:b[id]!==undefined,before:copy(a[id])??null,after:copy(b[id])??null})}}
+ for(const key of ['budgetName']){
+  if(before[key]!==after[key])out.push({key,id:key,hadBefore:before[key]!==undefined,hadAfter:after[key]!==undefined,before:before[key]??null,after:after[key]??null});
+ }
+ for(const id of Object.keys(after.hiddenHistory||{})){
+  if(!before.hiddenHistory?.[id])out.push({key:'hiddenHistory',id,before:false,after:true,hadAfter:true,hadBefore:true});
+ }
+ return out;
+}
+function undo(model,entry){
+ if(entry.undone)throw Error('This change has already been undone.');
+ for(const op of entry.changes){
+  let now;
+  if(op.key==='budgetName')now=model.budgetName;
+  else if(op.key==='hiddenHistory')now=model.audit.find(item=>item.id===op.id)?.deleted;
+  else if(op.key==='overrides')now=model.overrides?.[op.id];
+  else now=(model[op.key]||[]).find(x=>x.id===op.id);
+  if(JSON.stringify(now)!==JSON.stringify(op.hadAfter?op.after:undefined))throw Error('This record changed later. Undo its newer change first.');
+ }
+ for(const op of entry.changes){
+  if(op.key==='budgetName'){
+   if(op.hadBefore)model.budgetName=op.before;else delete model.budgetName;
+  }else if(op.key==='hiddenHistory'){
+   delete model.audit.find(item=>item.id===op.id).deleted;
+  }else if(op.key==='overrides'){
+   if(op.hadBefore)model.overrides[op.id]=copy(op.before);else delete model.overrides[op.id];
+  }else{
+   model[op.key]??=[];
+   const i=model[op.key].findIndex(x=>x.id===op.id);
+   if(i>=0)model[op.key].splice(i,1);
+   if(op.hadBefore)model[op.key].splice(i<0?model[op.key].length:i,0,copy(op.before));
+  }
+ }
+ entry.undone=true;
+}
 const api={financeSetup,splitBillRule,billMonthRows,billTotals,billPayment,paydayPlan,compareBillDue,monthEnd,groups,changes,undo,copy};root.FinanceTools=api;if(typeof module!=='undefined')module.exports=api;
 })(globalThis);

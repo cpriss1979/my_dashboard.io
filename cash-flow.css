@@ -255,3 +255,24 @@ body.glow-redesign main #content .cf-selectable-bill {
   border-radius: 10px;
 }
 #content .cf-delete-bar[hidden] { display: none !important; }
+
+#content .cf-undo-bar {
+  position: sticky;
+  top: var(--app-header-height, 0px);
+  z-index: 4;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-self: start;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 5px;
+  background: #fff8fc;
+  border: 1px solid #b998ab;
+  border-radius: 10px;
+}
+#content .cf-undo-bar select { width: 23rem; max-width: 100%; min-width: 0; }
+#content .cf-undo-bar button { flex: none; }
+@media (max-width: 750px) {
+  #content .cf-undo-bar { top: 64px; }
+}
