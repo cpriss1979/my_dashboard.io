@@ -483,6 +483,7 @@ function savings(root){
   }
   root.append(old);
  }
+ root.append(financeEditBar());
 }
 function reservedFor(account,except){
  return (m.goals||[]).filter(g=>!g.archived&&!g.deleted&&g.account===account&&g.id!==except)
@@ -686,13 +687,24 @@ function clearedBreakdown(account){
 }
 function savingsBalanceCard(account,summaryOnly=false){
  const item=e('article',undefined,'cf-payday-focus');
- const available=account.current===null?null:Math.max(0,account.current-(account.cushion||0));
+ const assigned=reservedFor(account.id);
+ const unassigned=account.current==null?null:Math.max(0,account.current-assigned);
+ const transferable=unassigned==null?null:Math.min(unassigned,Math.max(0,account.current-(account.cushion||0)));
  item.append(e('h3',name(account.id)),e('strong',dollars(account.current),'cf-payday-amount'),e('p','Full cleared balance'));
+ item.append(balanceFooter('Left to designate',unassigned),balanceFooter('Free to transfer',transferable));
+ const details=e('details',undefined,'cf-overview-breakdown');
+ details.append(e('summary','How these amounts are calculated'),balanceFooter('Cleared savings',account.current));
+ for(const fund of (m.goals||[]).filter(g=>g.account===account.id&&!g.deleted&&!g.archived&&g.reserved>0)){
+  details.append(balanceFooter('Set aside for '+fund.name,fund.reserved));
+ }
+ details.append(balanceFooter('Total set aside',assigned),balanceFooter('Account cushion',account.cushion||0),
+  e('p','You can designate any unassigned savings. Free to transfer is the amount you can move while keeping every fund covered and the account at or above its cushion.'));
+ if(account.current!=null&&assigned>account.current)details.append(e('p','Funds exceed cleared savings by '+dollars(assigned-account.current)+'.','cf-shortfall'));
+ item.append(details);
  if(summaryOnly){
-  item.append(balanceFooter('Available above cushion',available),accountControls(account));
+  item.append(accountControls(account));
   return item;
  }
- item.append(balanceFooter('Available above cushion',available));
  const math=e('div',undefined,'cf-payday-math');
  for(const [label,amount] of [['Cleared savings',account.current],['Pending change',account.pending],['Projected savings',account.projected]]){
   const line=e('div',undefined,'cf-payday-line');
@@ -1563,7 +1575,9 @@ function paint(){
   backupText='';backupProblem='';actionNotice='';paymentJustSaved=false;backupOwner=null;
  }
  lastScope=scope;
- const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar,financeEditBar());if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
+ const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);
+ if(tab!=='Savings')content.append(financeEditBar());
+ if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
  if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);const tools=card('Loan tools');tools.append(b('Loan amortization',()=>go('Amortization')));content.append(tools)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
 window.dashboardFinanceView=()=>m?selectedOwner():'';
 window.dashboardFinanceActions=()=>{
