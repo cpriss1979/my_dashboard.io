@@ -1091,21 +1091,66 @@ function financeSelection(noun='transaction'){
  }
  return {bar,top,attach};
 }
+// Reconstruct the saved records first, then let the normal cleared-balance
+// calculation apply the transaction dates and opening-balance rules.
+function balanceModelOn(model,cutoff){
+ const {audit=[],...records}=model;
+ const changes=[];
+ const add=(at,ops,applied)=>{
+  if(at&&localDate(new Date(at))>cutoff)changes.push({at,ops,applied});
+ };
+ for(const entry of audit){
+  const transitions=entry.balanceTransitions||[];
+  const originallyApplied=transitions.length?transitions[0].wasApplied:!entry.undone;
+  if(originallyApplied)add(entry.at,entry.changes,true);
+  for(const transition of transitions)add(transition.at,entry.changes,!transition.wasApplied);
+ }
+ if(!changes.length)return model;
+ const result=T.copy(records);
+ changes.sort((a,b)=>a.at.localeCompare(b.at));
+ for(const {ops,applied} of changes.reverse()){
+  for(const op of ops||[]){
+   const present=applied?op.hadBefore:op.hadAfter;
+   const value=applied?op.before:op.after;
+   if(op.key==='overrides'){
+    if(present)result.overrides[op.id]=T.copy(value);
+    else delete result.overrides[op.id];
+   }else if(Array.isArray(result[op.key])){
+    const list=result[op.key],index=list.findIndex(item=>item.id===op.id);
+    if(index>=0)list.splice(index,1);
+    if(present)list.push(T.copy(value));
+   }
+  }
+ }
+ return result;
+}
+function noteBalanceTransition(entry,wasApplied){
+ (entry.balanceTransitions??=[]).push({at:new Date().toISOString(),wasApplied});
+}
+function billsBalanceDate(month,day,now){
+ const end=day||T.monthEnd(month);
+ return end<now?end:now;
+}
 function bills(root){
  const selection=financeSelection('bill entry');
  const selectableBill=item=>selection.attach(billCard(item),item);
  const p=card('Bills & expenses');
- const balances=C.forecast(m,today(),0).accounts.filter(account=>matchesOwner(account.id));
+ const now=today(),cutoff=billsBalanceDate(billMonth,calendarDay,now);
+ const historical=cutoff<now;
+ const source=historical?balanceModelOn(m,cutoff):m;
+ const balances=C.forecast(source,cutoff,0).accounts.filter(account=>matchesOwner(account.id));
  if(balances.length){
   const available=e('div',undefined,'cf-month-totals');
   for(const account of balances){
    const balance=e('div');
-   balance.append(e('span',name(account.id)),e('strong',dollars(account.current)));
-   balance.append(clearedBreakdown(account));
-   balance.append(b('Transfer to savings',()=>transferToSavings(account.id)));
+   balance.append(e('span',account.name),e('strong',historical&&account.current==null?'No recorded balance':dollars(account.current)));
+   if(account.current!=null||!historical)balance.append(clearedBreakdown(account));
+   if(!historical)balance.append(b('Transfer to savings',()=>transferToSavings(account.id)));
    available.append(balance);
   }
-  p.append(e('h3','Available now'),e('p','Cleared balances in your dashboard.'),available);
+  p.append(e('h3',historical?'Available on '+dateLabel(cutoff):'Available now'),e('p','Cleared balances through '+dateLabel(cutoff)+'.'),available);
+ }else if(historical){
+  p.append(e('h3','Available on '+dateLabel(cutoff)),e('p','No recorded checking balance for this date.'));
  }
  const previous=C.add(billMonth+'-01',-1).slice(0,7), next=C.add(T.monthEnd(billMonth),1).slice(0,7);
  const monthNav=row(b('‹ '+monthName(previous),()=>changeMonth(previous)),e('h3',monthName(billMonth,true),'cf-month-title'),b(monthName(next)+' ›',()=>changeMonth(next)));
@@ -1419,6 +1464,7 @@ function financeEditBar(){
   try{
    safetyBackup();
    T.undo(m,{changes:recovery.changes});
+   noteBalanceTransition(entry,!entry.undone);
    if(entry.undone)delete entry.undone;else entry.undone=true;
    entry.recovered=true;
    undoing=true;
@@ -1429,7 +1475,7 @@ function financeEditBar(){
  bar.append(removed);
  return bar;
 }
-function undoChange(entry){try{safetyBackup();T.undo(m,entry);delete entry.recovered;undoing=true;commit('Undid '+entry.label);}catch(err){alert(err.message)}finally{undoing=false}}
+function undoChange(entry){try{safetyBackup();T.undo(m,entry);noteBalanceTransition(entry,true);delete entry.recovered;undoing=true;commit('Undid '+entry.label);}catch(err){alert(err.message)}finally{undoing=false}}
 function attention(root,report){
  const p=card('Needs Attention');
  const events=C.events(m,C.add(today(),90)).filter(matchesTransaction).filter(item=>item.status==='pending'||item.kind==='bill'&&needsBill(item));
