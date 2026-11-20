@@ -276,3 +276,8 @@ body.glow-redesign main #content .cf-selectable-bill {
 @media (max-width: 750px) {
   #content .cf-undo-bar { top: 64px; }
 }
+
+#content .cf-undo-bar { flex-wrap: wrap; }
+#content .cf-undo-bar > * { min-width: 0; max-width: 100%; }
+#content .cf-undo-bar select { width: min(23rem, 65vw); }
+#content .cf-undo-bar summary { cursor: pointer; padding: .4rem; }

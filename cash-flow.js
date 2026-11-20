@@ -367,7 +367,7 @@ function plannedPurchases(root){
   [b('Edit',()=>plannedPurchaseForm(item)),b('Delete',()=>safeAction('Delete planned purchase',()=>{item.deleted=true}),'link')],item.account,[item.notes]))));
  root.append(panel);
 }
-function editEvent(o){if(o.reconciliationId){alert('To reverse a reconciliation adjustment, use Undo in Activity.');return}if(o.kind==='transfer')transferForm(m.transfers.find(t=>t.id===o.id));else if(['money-in','money-out'].includes(o.kind)){const entry=m.ledger.find(t=>t.id===o.id);if(entry?.afterDepositId)plannedPurchaseForm(entry);else moneyForm(o.direction,entry);}else occurrenceForm(o)}
+function editEvent(o){if(o.reconciliationId){alert('To reverse a reconciliation adjustment, use Reverse change in Activity.');return}if(o.kind==='transfer')transferForm(m.transfers.find(t=>t.id===o.id));else if(['money-in','money-out'].includes(o.kind)){const entry=m.ledger.find(t=>t.id===o.id);if(entry?.afterDepositId)plannedPurchaseForm(entry);else moneyForm(o.direction,entry);}else occurrenceForm(o)}
 function historyDate(item){return item.kind==='bill'?(item.paymentDate||item.posted||item.date):item.date}
 function transactionTouchesAccount(item,id){
  return item.kind==='transfer'?item.from===id||item.to===id:item.account===id;
@@ -427,7 +427,7 @@ function history(root){
  const rows=C.events(m,historyEnd()).filter(visible).filter(o=>(o.status!=='planned'||o.kind==='transfer')&&(o.kind==='transfer'?(ids.has(o.from)||ids.has(o.to)):ids.has(o.account))).sort(newestFirst);
  const selection=financeSelection();
  p.append(e('p',rows.length+' transactions · newest first'),selection.top);p.append(compactList('Transactions & planned moves',rows.slice(0,historyLimit).map(o=>selection.attach(compactRow(o.name,o.amount,[dateLabel(historyDate(o)),o.kind==='transfer'?name(o.from)+' → '+name(o.to):name(o.account),o.kind==='bill'?statusLabel(o):o.status], [badge(o.kind==='bill'?statusLabel(o):o.status),b('Edit',()=>editEvent(o)),...(o.kind==='bill'&&o.status==='pending'?[b('Mark Cleared',()=>payment(o,true))]:[]),b('Delete',()=>deleteEvent(o),'link')],o.account||o.from,[o.notes]),o)),true));if(rows.length>historyLimit)p.append(b('Show more transactions',()=>{historyLimit+=24;render()}));p.append(selection.bar);root.append(p);
- {const audit=card('Corrections & undo');audit.append(e('p','Saved changes cover all accounts. Undo restores the dashboard entry. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].filter(entry=>!entry.deleted).reverse();audit.append(group('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.undone?'Undone':'Saved'),...(!x.undone?[b('Undo',()=>undoChange(x))]:[]),b('Delete history entry',()=>{
+ {const audit=card('Change history');audit.append(e('p','Saved changes cover all accounts. Reverse change returns the affected records to their earlier values. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].filter(entry=>!entry.deleted).reverse();audit.append(group('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.recovered?'Restored':x.undone?'Undone':'Saved'),...(!x.undone?[b('Reverse change',()=>{if(confirm('Reverse '+x.label+'?'))undoChange(x)})]:[]),b('Delete history entry',()=>{
   if(confirm('Remove this saved change from the undo history? Its transactions and balances will stay as they are.'))safeAction('Delete history entry',()=>{x.deleted=true});
  },'link'));const details=e('details');details.append(e('summary','Original / new values'));for(const op of x.changes)details.append(e('p',op.key+' · '+(op.after?.name||op.before?.name||op.id)+'\nBefore: '+JSON.stringify(op.before)+'\nAfter: '+JSON.stringify(op.after)));n.append(details);return n}),false));root.append(audit)}
 }
@@ -656,6 +656,24 @@ function beforePaydayEstimate(plan){
  if(plan.firstShort)estimate.append(e('p','First projected shortfall '+dateLabel(plan.firstShort)+' · '+dollars(-plan.firstShortBalance),'cf-shortfall'));
  return estimate;
 }
+function clearedBreakdown(account){
+ const panel=e('details',undefined,'cf-overview-breakdown');
+ panel.append(e('summary','Why this balance?'));
+ if(account.current==null){panel.append(e('p','Set a starting balance to see the calculation.'));return panel}
+ let balance=account.opening;
+ panel.append(e('p','Starting balance on '+dateLabel(account.asOf)+' · '+dollars(balance)+(balance<0?' · Already below zero':'')));
+ const entries=[...(account.clearedEntries||[])].sort((a,b)=>a.date.localeCompare(b.date));
+ for(const entry of entries){
+  const previous=balance;
+  balance+=entry.delta;
+  const crossed=previous>=0&&balance<0;
+  panel.append(e('p',dateLabel(entry.date)+' · '+entry.name+' · '+(entry.delta>0?'+'+dollars(entry.delta):dollars(entry.delta))+' → '+dollars(balance)
+   +(crossed?' · Balance went below zero':''),crossed?'cf-shortfall':''));
+ }
+ if(!entries.length)panel.append(e('p','No cleared activity counted after the starting balance.'));
+ panel.append(e('strong','Cleared balance · '+dollars(account.current)));
+ return panel;
+}
 function savingsBalanceCard(account,summaryOnly=false){
  const item=e('article',undefined,'cf-payday-focus');
  const available=account.current===null?null:Math.max(0,account.current-(account.cushion||0));
@@ -742,7 +760,7 @@ function overview(root,report){
   if(billBalance<0)headline.classList.add('cf-shortfall');
   const expanded=e('details',undefined,'cf-overview-breakdown');
   expanded.append(e('summary','Balance and payday details'),e('p',plan.hasPayday?'Left after bills, before payday':'Left after bills over the next 30 days'),headline);
-  item.append(title,e('strong',dollars(account.current),'cf-payday-amount'),e('p','Full cleared balance'),expanded);
+  item.append(title,e('strong',dollars(account.current),'cf-payday-amount'),e('p','Full cleared balance'),clearedBreakdown(account),expanded);
   const cushion=cushionOverview(account,plan);
   if(cushion)expanded.append(cushion);
   const math=e('div',undefined,'cf-payday-math');
@@ -1083,6 +1101,7 @@ function bills(root){
   for(const account of balances){
    const balance=e('div');
    balance.append(e('span',name(account.id)),e('strong',dollars(account.current)));
+   balance.append(clearedBreakdown(account));
    balance.append(b('Transfer to savings',()=>transferToSavings(account.id)));
    available.append(balance);
   }
@@ -1334,27 +1353,83 @@ function archive(root){
  root.append(panel);
 }
 function showSafetyCopy(){if(backupOwner!==state||!backupText){alert('No safety copy is available yet. Export a dashboard backup first.');return}const d=e('dialog',undefined,'cf-dialog'),area=note('backup',backupText),message=e('p');area.readOnly=true;d.append(e('h2','Pre-update safety copy'),e('p','Save this JSON file to use with the existing dashboard Restore backup control. Restoring replaces the dashboard data; export your current copy first.'),area,row(b('Download',()=>{const url=URL.createObjectURL(new Blob([backupText],{type:'application/json'})),a=e('a');a.href=url;a.download='dashboard-before-pastel-'+today()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}),b('Copy',async()=>{try{await navigator.clipboard.writeText(backupText);message.textContent='Copied.'}catch{area.focus();area.select();message.textContent='Selected. Use your device’s Copy command.'}}),b('Select all',()=>{area.focus();area.select()}),b('Close',()=>d.close())),message);document.body.append(d);d.addEventListener('close',()=>d.remove(),{once:true});d.showModal()}
-function financeUndoBar(){
- const entries=(m.audit||[]).filter(entry=>!entry.deleted&&!entry.undone&&entry.changes?.length).reverse();
+function savedRecord(op){
+ if(op.key==='budgetName')return m.budgetName;
+ if(op.key==='overrides')return m.overrides?.[op.id];
+ return Array.isArray(m[op.key])?m[op.key].find(record=>record.id===op.id):null;
+}
+function editSavedRecord(op,record){
+ switch(op.key){
+ case 'accounts':return accountForm(record);
+ case 'groups':return form('Edit account group',[field('Group name',input('name','text',record.name))],fields=>{record.name=reqName(fields)});
+ case 'income':return incomeForm(record);
+ case 'bills':return billForm(record);
+ case 'overrides':return occurrenceForm(record);
+ case 'transfers':return transferForm(record);
+ case 'ledger':return record.afterDepositId?plannedPurchaseForm(record):moneyForm(record.direction,record);
+ case 'goals':return goalForm(record);
+ case 'budgetName':return budgetNameForm();
+ case 'reconciliations':return form('Edit reconciliation notes',[
+  e('p',dateLabel(record.date)+' · Bank balance '+dollars(record.bank)),field('Notes',note('notes',record.notes))
+ ],fields=>{
+  record.notes=value(fields,'notes');
+  for(const entry of m.ledger||[])if(entry.reconciliationId===record.id)entry.notes=record.notes;
+ });
+ }
+}
+function recoveryAction(entry){
+ if(entry.undone&&!entry.changes.some(op=>op.key==='hiddenHistory')){
+  const changes=entry.changes.map(op=>({...op,before:op.after,after:op.before,hadBefore:op.hadAfter,hadAfter:op.hadBefore}));
+  return {changes,label:'Undone change · '+entry.label};
+ }
+ if(!entry.undone&&/^(Delete |Skip bill occurrence)/i.test(entry.label))return {changes:entry.changes,label:entry.label};
+ return null;
+}
+function financeEditBar(){
  const bar=e('div',undefined,'cf-actions cf-undo-bar');
- const choices=entries.map(entry=>{
-  const op=entry.changes[0];
-  const item=op.after?.name||op.before?.name;
-  const title=entry.label+(item&&item!==entry.label?' · '+item:'');
-  return [entry.id,title+' · '+new Date(entry.at).toLocaleString()];
- });
- const picker=select('financeUndo',choices,choices[0]?.[0]||'');
- picker.setAttribute('aria-label','Saved finance changes across all accounts, newest first');
- const undo=b('↶ Undo',()=>{
-  const entry=entries.find(item=>item.id===picker.value);
-  if(entry)undoChange(entry);
- });
- if(!entries.length)picker.add(new Option('No saved changes to undo',''));
- picker.disabled=undo.disabled=!entries.length;
- bar.append(picker,undo);
+ const entries=[...(m.audit||[])].reverse();
+ const edits=[],seen=new Set(),recoveries=[];
+ for(const entry of entries){
+  if(!entry.changes?.length)continue;
+  const recovery=recoveryAction(entry);
+  if(recovery&&!entry.recovered){
+   const title=recovery.label+' · '+entry.changes.map(op=>op.after?.name||op.before?.name).filter(Boolean).join(', ');
+   recoveries.push({entry,recovery,title:title.replace(/ · $/,'')+' · '+new Date(entry.at).toLocaleString()});
+  }
+  if(entry.deleted)continue;
+  for(const op of entry.changes){
+   const key=JSON.stringify([op.key,op.id]),record=savedRecord(op);
+   if(!record||record.deleted||record.skipped||record.reconciliationId||seen.has(key))continue;
+   seen.add(key);
+   edits.push({op,record,title:(record.name||({budgetName:'Budget name',reconciliations:'Reconciliation'}[op.key])||entry.label)
+    +' · '+op.key+' · '+(record.scheduled?dateLabel(record.scheduled)+' · ':'')+new Date(entry.at).toLocaleString()});
+  }
+ }
+ function picker(label,items,action,empty){
+  const choices=items.map((item,i)=>[String(i),item.title]);
+  const control=select(label,choices.length?choices:[['',empty]],choices.length?'0':'');
+  control.setAttribute('aria-label',label);
+  const button=b(label,()=>action(items[Number(control.value)]));
+  control.disabled=button.disabled=!items.length;
+  return row(control,button);
+ }
+ bar.append(picker('Edit',edits,({op,record})=>editSavedRecord(op,record),'No saved items to edit'));
+ const removed=e('details');
+ removed.append(e('summary','Recently removed'),picker('Restore',recoveries,({entry,recovery})=>{
+  try{
+   safetyBackup();
+   T.undo(m,{changes:recovery.changes});
+   if(entry.undone)delete entry.undone;else entry.undone=true;
+   entry.recovered=true;
+   undoing=true;
+   commit('Restored '+entry.label);
+  }catch(error){alert(error.message.includes('changed later')?'A later change affects this item. Restore was stopped to protect your newer entries.':error.message)}
+  finally{undoing=false}
+ },'No removed changes to restore'));
+ bar.append(removed);
  return bar;
 }
-function undoChange(entry){try{safetyBackup();T.undo(m,entry);undoing=true;commit('Undid '+entry.label);}catch(err){alert(err.message)}finally{undoing=false}}
+function undoChange(entry){try{safetyBackup();T.undo(m,entry);delete entry.recovered;undoing=true;commit('Undid '+entry.label);}catch(err){alert(err.message)}finally{undoing=false}}
 function attention(root,report){
  const p=card('Needs Attention');
  const events=C.events(m,C.add(today(),90)).filter(matchesTransaction).filter(item=>item.status==='pending'||item.kind==='bill'&&needsBill(item));
@@ -1432,7 +1507,7 @@ function paint(){
   backupText='';backupProblem='';actionNotice='';paymentJustSaved=false;backupOwner=null;
  }
  lastScope=scope;
- const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar,financeUndoBar());if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
+ const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar,financeEditBar());if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
  if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);const tools=card('Loan tools');tools.append(b('Loan amortization',()=>go('Amortization')));content.append(tools)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
 window.dashboardFinanceView=()=>m?selectedOwner():'';
 window.dashboardFinanceActions=()=>{
