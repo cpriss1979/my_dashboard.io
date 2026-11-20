@@ -5,7 +5,7 @@ const widgetSavings=new URLSearchParams(location.search).get('widget')==='money-
 let tab=widgetSavings?'Savings':'Overview',horizon=0,m=null,filters={frequency:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='',backupProblem='',actionNotice='',paymentJustSaved=false;
 const today=()=>localDate(new Date()), dollars=n=>n===null||n===undefined?'Not set':money(n/100), name=accountName, uid=()=>crypto.randomUUID();
 const minDate='1900-01-01',maxDate='2199-12-31';
-function e(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
+function e(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;if(tag==='button')n.className=(n.className+' cf-control').trim();return n}
 function viewOwner(account){
  if(!account)return '';
  if(m.groups.some(group=>group.id===account.ownerId))return account.ownerId;
@@ -94,6 +94,7 @@ function needsBill(item){
 let financeTrigger;
 function b(label,fn,cls='secondary'){
  const n=e('button',label,cls);
+ if(/^Delete(?: |$)/.test(label))n.className+=' cf-destructive';
  n.type='button';
  n.onclick=event=>{
   const previous=financeTrigger;

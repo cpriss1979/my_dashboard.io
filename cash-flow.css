@@ -281,3 +281,122 @@ body.glow-redesign main #content .cf-selectable-bill {
 #content .cf-undo-bar > * { min-width: 0; max-width: 100%; }
 #content .cf-undo-bar select { width: min(23rem, 65vw); }
 #content .cf-undo-bar summary { cursor: pointer; padding: .4rem; }
+
+/* Shared controls for the finance views and their inline and modal editors. */
+body :is(#content, dialog.cf-dialog) button.cf-control {
+  --ink: #382a49;
+  --surface: #fffafd;
+  --edge: #ae9bb2;
+  --hover: #f2e7f2;
+  --radius: 9px;
+  --height: 34px;
+  --pad: 5px 12px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: var(--height) !important;
+  height: auto !important;
+  width: fit-content !important;
+  max-width: 100%;
+  min-width: 0;
+  justify-self: start;
+  flex: 0 1 auto !important;
+  padding: var(--pad) !important;
+  margin: 0 !important;
+  border: 1px solid var(--edge) !important;
+  border-radius: var(--radius) !important;
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+  font-family: inherit;
+  font-size: .875rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: none !important;
+  text-shadow: none;
+  cursor: pointer;
+}
+body :is(#content, dialog.cf-dialog) button.cf-control.primary {
+  --surface: #56376b; --edge: #56376b; --ink: white; --hover: #452958;
+}
+body :is(#content, dialog.cf-dialog) button.cf-control.cf-destructive {
+  --ink: #92283c; --edge: #cc9ba6; --surface: #fff7f8; --hover: #fbe3e8;
+}
+body #content .cf-actions { gap: 6px 8px; }
+body #content .cf-toolbar .cf-owner-switch {
+  display: inline-flex; max-width: 100%; box-sizing: border-box;
+  padding: 3px; gap: 3px; border-radius: 12px;
+  background: #f6eaf2; border: 1px solid #cdb8c9;
+}
+body #content :is(.cf-owner-switch,.cf-tabs,.cf-bill-views) button.cf-control {
+  --surface: transparent; --edge: transparent;
+}
+body #content .cf-owner-switch button.cf-control[aria-pressed=true] {
+  --surface: #513451; --ink: #fff; --hover: #422940;
+}
+body #content .cf-toolbar .cf-tabs {
+  gap: 2px 5px; border: 0; border-bottom: 1px solid #cdb8c9;
+  margin: 8px 0; padding: 0;
+}
+body #content .cf-tabs button.cf-control {
+  --radius: 6px 6px 0 0; --pad: 7px 10px; --height: 36px;
+  border-bottom: 3px solid transparent !important;
+}
+body #content .cf-tabs button.cf-control[aria-pressed=true] {
+  --surface: #f7edf8; --ink: #512959;
+  border-bottom-color: #764783 !important;
+}
+body #content .cf-bill-views button.cf-control {
+  --radius: 999px; --edge: #beaebe; --surface: #fff9fd; --pad: 4px 12px;
+}
+body #content .cf-bill-views button.cf-control[aria-pressed=true] {
+  --surface: #e8d9ef; --ink: #442850; --edge: #906c9f; --hover: #dfcbe9;
+}
+body #content button.cf-control.cf-payday-edit {
+  --surface: transparent; --edge: transparent; --ink: #59336c; --pad: 3px 1px;
+  text-align: left; text-decoration: underline; text-underline-offset: .16em;
+}
+body #content button.cf-control.cf-payday-edit.cf-shortfall { --ink: #92283c; }
+body #content .cf-bill-calendar button.cf-control {
+  --height: 52px; --pad: 4px 1px;
+  width: 100% !important; flex-direction: column;
+}
+body #content .cf-bill-calendar button.cf-control[data-today=true] { --edge: #694779; outline: 1px solid #694779; }
+body #content .cf-bill-calendar button.cf-control[aria-pressed=true] {
+  --surface: #56376b; --ink: white; --edge: #56376b; --hover: #452958;
+}
+body #content .cf-undo-bar {
+  gap: 6px 12px; padding: 8px 10px; background: #fffafd; color: #382a49;
+}
+body #content .cf-undo-bar .cf-actions { margin: 0; }
+body #content .cf-undo-bar summary { color: #53325f !important; font-weight: 600; }
+body #content :is(.cf-undo-bar,.cf-card,.cf-dialog) select,
+body dialog.cf-dialog select {
+  box-sizing: border-box; min-height: 34px; max-width: 100%;
+  border: 1px solid #ae9bb2; border-radius: 8px; padding: 4px 8px;
+  color: #382a49; background-color: #fffafd; font-family: inherit;
+}
+@media (hover: hover) {
+  body :is(#content, dialog.cf-dialog) button.cf-control:hover:enabled { background: var(--hover) !important; }
+}
+body :is(#content, dialog.cf-dialog) button.cf-control:disabled {
+  color: #635967 !important; background: #eee9ef !important; border-color: #d1c8d3 !important;
+  opacity: 1 !important; cursor: default;
+}
+body :is(#content, dialog.cf-dialog) button.cf-control:focus-visible,
+body #content :is(.cf-card,.cf-undo-bar,.cf-dialog) :is(summary,select):focus-visible {
+  outline: 3px solid #345f96 !important; outline-offset: 2px;
+}
+@media (pointer: coarse), (max-width: 600px) {
+  body :is(#content, dialog.cf-dialog) button.cf-control { min-height: max(44px, var(--height)) !important; }
+  body #content .cf-undo-bar select { width: min(23rem,100%); }
+  body #content .cf-undo-bar .cf-actions { max-width: 100%; }
+}
+body #content :is(.cf-card, .cf-toolbar > details) > button.cf-control + button.cf-control {
+  margin-inline-start: 6px !important;
+}
+body #content .cf-undo-bar > .cf-actions select { flex: 1 1 12rem; }
