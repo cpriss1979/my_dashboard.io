@@ -472,7 +472,17 @@ function savings(root){
   b('Delete',()=>{if(confirm('Delete '+g.name+'?'))safeAction('Delete savings fund',()=>{g.deleted=true})},'link')));
  if(archived.length)goals.append(archive);
  root.append(goals);
- if(!selectedOwner()&&state.savingsEntries?.length){const old=e('details',undefined,'cf-old-savings');old.append(e('summary','Earlier savings records · '+state.savingsEntries.length),e('p','Preserved separately; not replayed into current balances.'));for(const x of [...state.savingsEntries].filter(x=>!m.overrides['legacy-savings|'+x.id]?.skipped).sort((a,b)=>(b.date||'').localeCompare(a.date||'')))old.append(record(dateLabel(x.date)+' · '+x.kind,(state.people?.find(p=>p.id===x.person)?.name||'')+' · '+money(Number(x.amount))+(x.note?' · '+x.note:''),b('Delete',()=>safeAction('Delete earlier savings entry',()=>{m.overrides['legacy-savings|'+x.id]={id:'legacy-savings|'+x.id,skipped:true,legacyId:x.id}}),'link')));root.append(old)}
+ if(!selectedOwner()&&state.savingsEntries?.length){
+  const remaining=state.savingsEntries.filter(entry=>!m.overrides['legacy-savings|'+entry.id]?.skipped)
+   .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const old=e('details',undefined,'cf-old-savings');
+  old.append(e('summary','Earlier savings records · '+remaining.length),e('p','Preserved separately; not replayed into current balances.'));
+  for(const x of remaining){
+   old.append(record(dateLabel(x.date)+' · '+x.kind,(state.people?.find(p=>p.id===x.person)?.name||'')+' · '+money(Number(x.amount))+(x.note?' · '+x.note:''),
+    b('Delete',()=>safeAction('Delete earlier savings entry',()=>{m.overrides['legacy-savings|'+x.id]={id:'legacy-savings|'+x.id,skipped:true,legacyId:x.id}}),'link')));
+  }
+  root.append(old);
+ }
 }
 function reservedFor(account,except){
  return (m.goals||[]).filter(g=>!g.archived&&!g.deleted&&g.account===account&&g.id!==except)
