@@ -446,33 +446,6 @@ function savings(root){
   grid.append(accountCard);
  }
  p.append(grid,b('Create savings account',()=>accountForm(null,'savings')));root.append(p);
- const goals=card('Savings funds');
- goals.append(e('p','Set aside parts of a savings account for different purchases.'),b('＋ Add fund',()=>goalForm()));
- for(const account of selected){
-  const unassigned=account.current-reservedFor(account.id);
-  goals.append(e('p',name(account.id)+' · '+(account.configured?(unassigned<0?dollars(-unassigned)+' overallocated':dollars(unassigned)+' unassigned'):'Set a starting balance to assign money')));
- }
- const fundList=e('div',undefined,'bre-fund-grid');
- const funds=(m.goals||[]).filter(g=>!g.archived&&!g.deleted&&matchesOwner(g.account));
- for(const g of funds){
-  const allocated=g.reserved||0;
-  const n=e('article',undefined,'bre-fund');
-  n.style.setProperty('--paper-color',/^#[a-f0-9]{6}$/i.test(g.color)?g.color:'#ffe9f2');
-  n.append(e('h3',[g.emoji,g.name].filter(Boolean).join(' ')),e('p',name(g.account)),
-   e('strong',dollars(allocated)+' set aside · '+dollars(g.target)+' goal'));
-  const progress=e('progress');progress.max=g.target;progress.value=Math.min(g.target,allocated);
-  progress.setAttribute('aria-label',g.name+' savings progress');
-  n.append(progress,row(b('＋ Add',()=>fundAmount(g,false)),b('Release',()=>fundAmount(g,true)),b('Edit',()=>goalForm(g))));
-  fundList.append(n);
- }
- if(!funds.length)fundList.append(e('p','Create a fund for Christmas, the car, or anything you’re saving for.'));
- goals.append(fundList);
- const archive=e('details');const archived=(m.goals||[]).filter(g=>g.archived&&!g.deleted&&matchesOwner(g.account));
- archive.append(e('summary','Archived funds ('+archived.length+')'));
- for(const g of archived)archive.append(row(e('span',g.name),b('Edit or restore',()=>goalForm(g)),
-  b('Delete',()=>{if(confirm('Delete '+g.name+'?'))safeAction('Delete savings fund',()=>{g.deleted=true})},'link')));
- if(archived.length)goals.append(archive);
- root.append(goals);
  if(!selectedOwner()&&state.savingsEntries?.length){
   const remaining=state.savingsEntries.filter(entry=>!m.overrides['legacy-savings|'+entry.id]?.skipped)
    .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
@@ -486,8 +459,43 @@ function savings(root){
  }
  root.append(financeEditBar());
 }
-function reservedFor(account,except){
- return (m.goals||[]).filter(g=>!g.archived&&!g.deleted&&g.account===account&&g.id!==except)
+function savingsDisclosure(label,key){
+ const details=e('details',undefined,'cf-savings-disclosure');
+ const viewKey=tab+'|'+selectedOwner()+'|'+key;
+ details.open=folded.get(viewKey)||false;
+ details.append(e('summary',label));
+ details.addEventListener('toggle',()=>{if(details.isConnected)folded.set(viewKey,details.open)});
+ return details;
+}
+function accountFunds(account,source,editable){
+ const records=(source.goals||[]).filter(g=>!g.deleted&&g.account===account.id);
+ const goals=savingsDisclosure('Savings funds','funds|'+account.id);
+ if(editable)goals.append(b('＋ Add fund',()=>goalForm(null,account.id),'primary'));
+ const fundList=e('div',undefined,'bre-fund-grid');
+ const funds=records.filter(g=>!g.archived);
+ for(const g of funds){
+  const allocated=g.reserved||0;
+  const n=e('article',undefined,'bre-fund');
+  n.style.setProperty('--paper-color',/^#[a-f0-9]{6}$/i.test(g.color)?g.color:'#ffe9f2');
+  n.append(e('h3',[g.emoji,g.name].filter(Boolean).join(' ')),
+   e('strong',dollars(allocated)+' set aside · '+dollars(g.target)+' goal'));
+  const progress=e('progress');progress.max=g.target;progress.value=Math.min(g.target,allocated);
+  progress.setAttribute('aria-label',g.name+' savings progress');
+  n.append(progress);
+  if(editable)n.append(row(b('＋ Add',()=>fundAmount(g,false)),b('Release',()=>fundAmount(g,true)),b('Edit',()=>goalForm(g))));
+  fundList.append(n);
+ }
+ if(!funds.length)fundList.append(e('p','No active funds in this account.'));
+ goals.append(fundList);
+ const archive=e('details');const archived=records.filter(g=>g.archived);
+ archive.append(e('summary','Archived funds ('+archived.length+')'));
+ for(const g of archived)if(!editable)archive.append(e('p',g.name));else archive.append(row(e('span',g.name),b('Edit or restore',()=>goalForm(g)),
+  b('Delete',()=>{if(confirm('Delete '+g.name+'?'))safeAction('Delete savings fund',()=>{g.deleted=true})},'link')));
+ if(archived.length)goals.append(archive);
+ return goals;
+}
+function reservedFor(account,except,source=m){
+ return (source.goals||[]).filter(g=>!g.archived&&!g.deleted&&g.account===account&&g.id!==except)
   .reduce((total,g)=>total+(g.reserved||0),0);
 }
 function assertFundBalance(account,amount,except){
@@ -505,12 +513,12 @@ function fundAmount(goal,release){
   goal.reserved=prior+(release?-amount:amount);
  });
 }
-function goalForm(g){
+function goalForm(g,accountId){
  const choices=activeAccounts().filter(a=>a.type==='savings').map(a=>[a.id,name(a.id)]);
  if(!choices.length){alert('Create a savings account first.');return}
  form(g?'Edit savings fund':'Add savings fund',[
   field('Fund name',input('name','text',g?.name)),
-  field('Savings account',select('account',choices,g?.account||choices[0][0])),
+  field('Savings account',select('account',choices,g?.account||accountId||choices[0][0])),
   field('Target ($)',number('target',g?g.target/100:'',.01)),
   field('Starting amount set aside ($)',number('reserved',(g?.reserved||0)/100)),
   field('Card color',input('color','color',g?.color||'#ffe9f2')),
@@ -686,22 +694,23 @@ function clearedBreakdown(account){
  panel.append(e('strong','Cleared balance · '+dollars(account.current)));
  return panel;
 }
-function savingsBalanceCard(account,summaryOnly=false){
- const item=e('article',undefined,'cf-payday-focus');
- const assigned=reservedFor(account.id);
+function savingsBalanceCard(account,summaryOnly=false,source=m,editable=true){
+ const assigned=reservedFor(account.id,undefined,source);
  const unassigned=account.current==null?null:Math.max(0,account.current-assigned);
  const transferable=unassigned==null?null:Math.min(unassigned,Math.max(0,account.current-(account.cushion||0)));
- item.append(e('h3',name(account.id)),e('strong',dollars(account.current),'cf-payday-amount'),e('p','Full cleared balance'));
+ const item=savingsDisclosure(account.name+' · '+(unassigned==null?'No recorded balance':dollars(unassigned)+' available after designating'),'savings|'+account.id);
+ item.append(balanceFooter('Full cleared balance',account.current),accountFunds(account,source,editable));
  item.append(balanceFooter('Left to designate',unassigned),balanceFooter('Free to transfer',transferable));
  const details=e('details',undefined,'cf-overview-breakdown');
  details.append(e('summary','How these amounts are calculated'),balanceFooter('Cleared savings',account.current));
- for(const fund of (m.goals||[]).filter(g=>g.account===account.id&&!g.deleted&&!g.archived&&g.reserved>0)){
+ for(const fund of (source.goals||[]).filter(g=>g.account===account.id&&!g.deleted&&!g.archived&&g.reserved>0)){
   details.append(balanceFooter('Set aside for '+fund.name,fund.reserved));
  }
  details.append(balanceFooter('Total set aside',assigned),balanceFooter('Account cushion',account.cushion||0),
   e('p','You can designate any unassigned savings. Free to transfer is the amount you can move while keeping every fund covered and the account at or above its cushion.'));
  if(account.current!=null&&assigned>account.current)details.append(e('p','Funds exceed cleared savings by '+dollars(assigned-account.current)+'.','cf-shortfall'));
  item.append(details);
+ if(!editable)return item;
  if(summaryOnly){
   item.append(accountControls(account));
   return item;
@@ -1161,16 +1170,18 @@ function bills(root){
  const now=today(),cutoff=billsBalanceDate(billMonth,calendarDay,now);
  const historical=cutoff<now;
  const source=historical?balanceModelOn(m,cutoff):m;
- const balances=C.forecast(source,cutoff,0).accounts.filter(account=>matchesOwner(account.id));
- if(balances.length){
-  const available=e('div',undefined,'cf-month-totals');
+ const report=C.forecast(source,cutoff,0);
+ const balances=report.accounts.filter(account=>matchesOwner(account.id));
+ const savingsAccounts=report.savings.filter(account=>matchesOwner(account.id));
+ if(balances.length||savingsAccounts.length){
+  const available=e('div',undefined,'cf-balance-list');
   for(const account of balances){
-   const balance=e('div');
-   balance.append(e('span',account.name),e('strong',historical&&account.current==null?'No recorded balance':dollars(account.current)));
+   const balance=savingsDisclosure(account.name+' · '+(historical&&account.current==null?'No recorded balance':dollars(account.current)),'checking|'+account.id);
    if(account.current!=null||!historical)balance.append(clearedBreakdown(account));
    if(!historical)balance.append(b('Transfer to savings',()=>transferToSavings(account.id)));
    available.append(balance);
   }
+  for(const account of savingsAccounts)available.append(savingsBalanceCard(account,false,source,!historical));
   p.append(e('h3',historical?'Available on '+dateLabel(cutoff):'Available now'),e('p','Cleared balances through '+dateLabel(cutoff)+'.'),available);
  }else if(historical){
   p.append(e('h3','Available on '+dateLabel(cutoff)),e('p','No recorded checking balance for this date.'));

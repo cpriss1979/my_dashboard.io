@@ -400,3 +400,16 @@ body #content :is(.cf-card, .cf-toolbar > details) > button.cf-control + button.
   margin-inline-start: 6px !important;
 }
 body #content .cf-undo-bar > .cf-actions select { flex: 1 1 12rem; }
+
+#content .cf-balance-list, #content .cf-savings-grid {
+  display: grid; grid-template-columns: minmax(0,1fr); gap: 6px;
+}
+#content .cf-savings-disclosure {
+  align-self: start; min-width: 0; padding: 0 12px;
+  background: #fffafd; color: #382a49; border: 1px solid #d4c3d4; border-radius: 9px;
+}
+#content .cf-savings-disclosure > summary {
+  padding: 9px 0; cursor: pointer; color: #402c49; font-weight: 650;
+}
+#content .cf-savings-disclosure[open] { padding-bottom: 10px; }
+#content .cf-savings-disclosure .cf-savings-disclosure { margin: 8px 0; background: #f8eff6; }
