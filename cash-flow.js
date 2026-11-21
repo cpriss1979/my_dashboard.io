@@ -784,6 +784,7 @@ function overview(root,report){
  const placed=new Set();
  const available=[];
  const events=new Map([...C.events(m,report.end,{byDue:true}),...C.events(m,report.end)].map(item=>[item.id,item]));
+ const monthReport=C.forecast(m,today(),30); // A consistent, explicit 30-day window for the overview
  for(const {account,plan} of plans){
   const item=e('article',undefined,'cf-payday-focus');
   const billRows=[...plan.before.filter(entry=>entry.kind==='bill'),
@@ -836,6 +837,23 @@ function overview(root,report){
   expanded.append(details);
   const spendable=plan.preDeposit===null?null:Math.max(0,Math.min(plan.lowest,plan.preDeposit)-(account.cushion||0));
   available.push(spendable);
+  // Display the actual projected result beside today's cleared balance; never hide it behind Forecast.
+  const month=monthReport.accounts.find(a=>a.id===account.id);
+  if(month){
+   const future=month.future||[];
+   const deposits=future.filter(x=>x.delta>0&&['income','money-in'].includes(x.kind)).reduce((sum,x)=>sum+x.delta,0);
+   const bills=future.filter(x=>x.delta<0&&['bill','money-out'].includes(x.kind)).reduce((sum,x)=>sum-x.delta,0);
+   const other=future.filter(x=>!['income','money-in','bill','money-out'].includes(x.kind)).reduce((sum,x)=>sum+x.delta,0);
+   const summary=e('div',undefined,'cf-payday-math');
+   summary.append(balanceFooter('Current cleared balance (money in bank)',month.current),
+    balanceFooter('Expected income over next 30 days (not yet received)',deposits),
+    balanceFooter('Upcoming bills over next 30 days',-bills),
+    balanceFooter('Other planned activity over next 30 days',other),
+    balanceFooter('PROJECTED balance in 30 days',month.projected));
+   const heading=e('h4','30-day money picture · '+dateLabel(today())+' to '+dateLabel(monthReport.end));
+   const note=e('p','Projected balance includes future deposits and expenses. It is NOT the amount currently in your bank account. When a deposit is marked cleared, it moves into your cleared balance and must not be counted twice.');
+   item.append(heading,summary,note);
+  }
   // Keep cleared money and expected future income visibly separate.
   // A forecast is not a bank balance, even when the deposit is due today.
   const explanation=e('details',undefined,'cf-overview-breakdown');
