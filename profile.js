@@ -18,9 +18,7 @@
   const picture=document.createElement('img');
   picture.alt='';
   const initial=document.createElement('span');
-  const caption=document.createElement('span');
-  caption.className='dashboard-profile-caption';
-  avatar.append(picture,initial,caption);
+  avatar.append(picture,initial);
   sidebar?.prepend(avatar);
 
   const photoField=document.createElement('label');
@@ -74,7 +72,7 @@
     picture.hidden=!photo;
     initial.hidden=Boolean(photo);
     initial.textContent=Array.from(displayName())[0]?.toUpperCase()||'•';
-    caption.textContent=displayName()||'Your profile';
+    avatar.title='Edit your profile';
   }
   function openProfile(){
     uploadGeneration++;
@@ -134,20 +132,10 @@
   };
   dialog.addEventListener('close',()=>{if(!dialog.open){uploadGeneration++;reading=false}});
 
-  function placeGreeting() {
-    const scripture = document.getElementById('homeBibleHero');
-    if (scripture) scripture.before(greeting);
-    else greeting.remove();
-  }
-
-  const renderDashboard = render;
-  render = function () {
-    renderDashboard();
-    placeGreeting();
-  };
-
+  document.getElementById('appMobileHeader').append(greeting);
+  const centralHour = new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',hour:'numeric',hourCycle:'h23'});
   function updateGreeting() {
-    const hour = new Date().getHours();
+    const hour = Number(centralHour.format(new Date()));
     const salutation = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     const userName = displayName();
     greeting.textContent = userName ? salutation + ', ' + userName : salutation;
@@ -178,7 +166,7 @@
   });
   window.addEventListener('dashboard:data-applied', updateGreeting);
   window.addEventListener('dashboard:profile-changed', updateGreeting);
-  placeGreeting();
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateGreeting()});
   updateGreeting();
   setInterval(updateGreeting, 1000 * 15);
 })();

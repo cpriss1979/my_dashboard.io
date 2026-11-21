@@ -101,3 +101,25 @@ body.glow-redesign #content .collection-panel,body.glow-redesign .pk-dialog{
   mask-image:linear-gradient(90deg,transparent,#000 23%,#000 72%,transparent)
  }
 }
+
+body.glow-redesign #appSettings{
+ --settings-inset:clamp(16px,3vw,28px);
+ box-sizing:border-box;padding:var(--settings-inset)!important;scrollbar-gutter:auto
+}
+#appSettings .settings-group{margin:14px 0;padding:12px 16px;border:1px solid var(--settings-line);border-radius:12px}
+#appSettings .settings-group summary{cursor:pointer;font-weight:650}
+#appSettings .settings-group[open] > div{margin-top:14px}
+body.glow-redesign #appSettingsContent .footer{margin-bottom:0}
+body.glow-redesign aside .dashboard-profile-avatar{display:grid;grid-template-columns:auto;justify-content:center;align-self:center;width:fit-content!important;background:transparent!important;border:0!important;padding:4px!important;gap:0}
+body.glow-redesign #appMobileHeader:is(#appMobileHeader){grid-template-columns:minmax(0,1fr) minmax(0,1.45fr) minmax(0,1fr)!important}
+body.glow-redesign #appMobileHeader :is(.app-home-logo,#appSettingsButton){display:none!important}
+#appMobileHeader .app-header-copy{grid-column:1;grid-row:1}
+#appMobileHeader .glow-header-clock{grid-column:3;grid-row:1}
+#appMobileHeader #dashboardGreeting{grid-column:2;grid-row:1;position:relative;margin:0;min-width:0;overflow-wrap:anywhere;text-align:center;color:inherit;font:650 clamp(1rem,1.8vw,1.55rem)/1.22 system-ui}
+@media(max-width:750px){
+ body.glow-redesign #appMobileHeader:is(#appMobileHeader){grid-template-columns:minmax(0,1fr)!important;row-gap:5px}
+ #appMobileHeader .app-header-copy{grid-column:1;grid-row:1}
+ #appMobileHeader #dashboardGreeting{grid-column:1;grid-row:2}
+ body.glow-redesign #appMobileHeader .glow-header-clock{display:none!important}
+}
+body.glow-redesign > main{padding:clamp(12px,2vw,24px)}

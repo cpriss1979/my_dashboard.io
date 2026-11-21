@@ -110,10 +110,7 @@
   }
   setInterval(()=>refreshChores?.(),30000);
   addEventListener('focus',()=>refreshChores?.());
-  function navigationOptions(){
-    const appSettings=document.getElementById('appSettings');
-    appSettings?.close();
-    const dialog=el('dialog',undefined,'priss-options-dialog household-settings');
+  function navigationOptions(host,close){
     const form=el('form');
     const fields=el('div',undefined,'household-settings-grid');
     const owner=state;
@@ -152,11 +149,11 @@
     }
     const status=el('p');status.setAttribute('role','alert');
     const submit=el('button','Save navigation','primary');submit.type='submit';
-    form.append(fields,pinned,status,submit,button('Cancel',()=>dialog.close()));
-    dialog.append(el('h2','Sidebar & navigation'),form);
+    form.append(fields,pinned,status,submit,button('Cancel',()=>close()));
+    host.append(form);
     form.onsubmit=event=>{
       event.preventDefault();
-      if(state!==owner){dialog.close();return}
+      if(state!==owner){close();return}
       const selected=pins.filter(([,field])=>field.checked).map(([key])=>key);
       if(selected.length>3){status.textContent='Choose up to three pages to pin.';return}
       state.sidebarPreferences={
@@ -165,9 +162,8 @@
         hidden:inputs.filter(([,field])=>field.type==='checkbox'&&!field.checked).map(([key])=>key),
         groups:Object.fromEntries(inputs.filter(([,field])=>field.type==='text').map(([key,field])=>[key,field.value.trim()||key]))
       };
-      save();dialog.close();render();
+      save();close();render();
     };
-    document.body.append(dialog);dialog.onclose=()=>dialog.remove();dialog.showModal();
   }
   window.DashboardNavigation={options:navigationOptions,isHidden:key=>(state.sidebarPreferences?.hidden||[]).includes(key)};
   function hide(node,hidden){

@@ -93,9 +93,32 @@
     d.showModal();
   }
 
+  const mixedTiles=new Map();
+  function mixedTile(parts){
+    const key=parts.slice().sort().join('|');
+    if(mixedTiles.has(key))return mixedTiles.get(key);
+    const columns=5, rows=Math.ceil(Math.max(25,parts.length*3)/columns);
+    const motifs=Array.from({length:rows*columns},(_,i)=>parts[i%parts.length]);
+    for(let i=motifs.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [motifs[i],motifs[j]]=[motifs[j],motifs[i]];
+    }
+    const symbols=parts.map(id=>'<g id="'+id+'">'+designs[id]+'</g>').join('');
+    const marks=motifs.map((id,i)=>{
+      const x=i%columns*62+4+Math.floor(Math.random()*23);
+      const y=Math.floor(i/columns)*57+4+Math.floor(Math.random()*17);
+      const scale=(.48+Math.random()*.17).toFixed(2);
+      return '<use href="#'+id+'" transform="translate('+x+' '+y+') scale('+scale+')"/>';
+    });
+    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+columns*62+'" height="'+rows*57+'"><defs>'+symbols+'</defs><g opacity=".55">'+marks.join('')+'</g></svg>';
+    const pattern='url("data:image/svg+xml,'+encodeURIComponent(svg)+'")';
+    mixedTiles.set(key,pattern);
+    return pattern;
+  }
   function tile(layers){
     const parts=layers.filter(id=>Object.hasOwn(designs,id));
     if(!parts.length)return 'none';
+    if(parts.length>1)return mixedTile(parts);
     const width=parts.length*70;
     const ribbon=parts.includes('santa')?'<path d="M-15 15 15-15M0 66 66 0m-15 81 35-35" stroke="#35644c" stroke-width="5" opacity=".45"/><path d="m0 60 60-60" stroke="#a82d40" stroke-width="3"/>':'';
     const art=ribbon+parts.map((id,i)=>'<g transform="translate('+(i*70+4)+' 3) scale(.57)">'+designs[id]+'</g><g transform="translate('+(i*70+36)+' 32) scale(.47)">'+designs[id]+'</g>').join('');

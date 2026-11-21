@@ -14,7 +14,7 @@
   const content = document.getElementById('content');
   const settings = document.getElementById('appSettings');
   const settingsContent = document.getElementById('appSettingsContent');
-  let settingsPage;
+  let homeSettings;
 
   function el(tag, text, className) {
     const node = document.createElement(tag);
@@ -191,10 +191,8 @@
     panel.append(button('Open Finances',()=>openPage('Finances')));
     return panel;
   }
-  function editHome() {
+  function editHome(host) {
     const owner=state;
-    const dialog=el('dialog',undefined,'priss-options-dialog');
-    dialog.setAttribute('aria-label','Choose Home cards');
     const list=el('div',undefined,'priss-card-picker');
     const shown=prefs().homeCards??homeDefaults;
     const inputs=sections.map(([key,label])=>{
@@ -230,20 +228,17 @@
         let src=canvas.toDataURL('image/jpeg',.7);
         if(src.length>75000)src=canvas.toDataURL('image/jpeg',.45);
         if(src.length>75000)throw Error('Choose a smaller photo.');
-        if(owner!==state||!dialog.open)return;
+        if(owner!==state||!host.isConnected||!settings.open||!homeSettings.open)return;
         (write().homePhotos??=[]).push({id:crypto.randomUUID(),caption:caption.value.trim(),src});save();render();caption.value='';showPhotos();
         photoStatus.textContent='Photo added to Home.';
       }catch(error){photoStatus.textContent=error.message}
       finally{URL.revokeObjectURL(url);upload.disabled=false;upload.value=''}
     };
     showPhotos();
-    dialog.append(el('h2','Choose Home cards'),list,photos,button('Save Home',()=>{
+    host.append(list,photos,button('Save Home',()=>{
       if(owner===state){write().homeCards=inputs.filter(([,box])=>box.checked).map(([key])=>key);save();render()}
-      dialog.close();
-    }),button('Cancel',()=>dialog.close()));
-    dialog.addEventListener('close',()=>dialog.remove(),{once:true});
-    document.body.append(dialog);
-    dialog.showModal();
+      homeSettings.open=false;
+    }));
   }
   function home() {
     const layout=content.querySelector('.glow-overview');
@@ -385,24 +380,21 @@
   function setupSettings() {
     if(!settings||!settingsContent)return;
     settings.querySelector('h2').textContent='Settings';
-    const tabs=el('div',undefined,'priss-settings-tabs');
-    const sectionsPanel=el('section');
-    const homePanel=el('section');
-    homePanel.append(el('h3','Home cards'),button('Choose Home cards',()=>{settings.close();editHome()}));
-    sectionsPanel.append(homePanel);
-    const navigation=el('section');
-    navigation.append(el('h3','Manage navigation'),button('Choose visible sections & rename groups',()=>window.DashboardNavigation.options()));
-    settingsContent.before(tabs,sectionsPanel,navigation);
-    const options=[['Home',sectionsPanel],['Navigation',navigation],['Account & data',settingsContent]];
-    const tabButtons=options.map(([label,panel])=>button(label,()=>settingsPage(panel)));
-    settingsPage=panel=>{
-      options.forEach(([,section],i)=>{
-        section.hidden=section!==panel;
-        tabButtons[i].setAttribute('aria-pressed',String(section===panel));
-      });
-    };
-    tabs.append(...tabButtons);
-    settingsPage(sectionsPanel);
+    function section(label,fill){
+      const group=el('details',undefined,'settings-group');
+      const host=el('div');
+      group.append(el('summary',label),host);
+      group.ontoggle=()=>{
+        host.replaceChildren();
+        if(group.open)fill(host);
+      };
+      settingsContent.before(group);
+      return group;
+    }
+    homeSettings=section('Home cards',editHome);
+    const navigation=section('Navigation',host=>window.DashboardNavigation.options(host,()=>{navigation.open=false}));
+    settingsContent.prepend(el('h3','Account & data'));
+    settings.addEventListener('close',()=>{homeSettings.open=false;navigation.open=false});
     const side=document.querySelector('aside .glow-side-settings');
     if(side){side.textContent='⚙';side.title='Settings';side.setAttribute('aria-label','Settings');side.onclick=()=>window.DashboardMobileUI.openSettings()}
     const header=document.getElementById('appSettingsButton');
@@ -436,13 +428,14 @@
         focus?.focus();
       },'dashboard-control dashboard-arrange-toggle');
       arrange.setAttribute('aria-pressed',String(Boolean(prefs().arrangingHome)));
-      tools.append(button('Edit Home cards',editHome,'dashboard-control'),arrange);
+      tools.append(button('Edit Home cards',()=>{window.DashboardMobileUI.openSettings();homeSettings.open=true},'dashboard-control'),arrange);
     }
     const toolbar=page==='Finances'?content.querySelector('.cf-toolbar'):null;
     if(tools.childElementCount){if(toolbar)toolbar.after(tools);else content.append(tools);}
     paintColors();
   };
   addEventListener('dashboard:account-changing',()=>{
+    if(settings?.open)settings.close();
     document.querySelectorAll('.priss-options-dialog[open]').forEach(dialog=>dialog.close());
   });
   render();
