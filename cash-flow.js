@@ -836,7 +836,23 @@ function overview(root,report){
   expanded.append(details);
   const spendable=plan.preDeposit===null?null:Math.max(0,Math.min(plan.lowest,plan.preDeposit)-(account.cushion||0));
   available.push(spendable);
-  item.append(balanceFooter('Available to spend',spendable),accountControls(account));
+  // Keep cleared money and expected future income visibly separate.
+  // A forecast is not a bank balance, even when the deposit is due today.
+  const explanation=e('details',undefined,'cf-overview-breakdown');
+  explanation.append(e('summary','How available spending is calculated'));
+  const spendMath=e('div',undefined,'cf-payday-math');
+  spendMath.append(balanceFooter('Cleared money in the account',account.current));
+  spendMath.append(balanceFooter('Lowest projected balance before the next deposit',plan.lowest));
+  spendMath.append(balanceFooter('Balance immediately before the next deposit',plan.preDeposit));
+  spendMath.append(balanceFooter('Money reserved as your cushion',account.cushion||0));
+  spendMath.append(balanceFooter('Safe to spend before that deposit',spendable));
+  explanation.append(e('p','This is a conservative spending limit, NOT the balance after your next paycheck. Expected income is not spendable until it is received and recorded as cleared.'),spendMath);
+  if(account.nextDeposit){
+   explanation.append(e('p','Next expected deposit: '+dateLabel(account.nextDeposit.date)+' · '+dollars(account.nextDeposit.amount)+'. This is included in Forecast, not in cleared money.'));
+  }
+  const forecastLink=b('See projected balance and every included transaction',()=>{tab='Forecast';render()},'cf-payday-edit');
+  item.append(balanceFooter('Safe to spend before next deposit',spendable),explanation,
+   e('p','Future deposits and bills are shown separately in Forecast. They do not change your cleared bank balance.'),forecastLink,accountControls(account));
   const column=e('div',undefined,'cf-account-column');
   column.append(item);
   for(const saving of savingsForChecking(account,savings)){
@@ -853,8 +869,8 @@ function overview(root,report){
  p.append(actions,grid);
  if(available.length){
   const total=available.every(Number.isFinite)?available.reduce((sum,value)=>sum+value,0):null;
-  p.append(e('p',(selectedOwner()?'Available to spend from checking':'Total available to spend across checking')+' · '+dollars(total),'cf-savings-total'),
-   e('small','After planned activity and cushions, through each account’s next payday or 30 days.'));
+  p.append(e('p',(selectedOwner()?'Safe to spend before next deposit · checking':'Total safe to spend before next deposit · checking')+' · '+dollars(total),'cf-savings-total'),
+   e('small','Conservative estimate based on cleared money, upcoming activity before the next deposit, and cushions. Future income is shown in Forecast, not treated as cleared cash.'));
  }
  p.classList.add('cf-payday-overview');
  root.append(p);
