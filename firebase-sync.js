@@ -7,7 +7,7 @@
  let firebase,user=null,ref=null,ready=false,busy=false,dirty=false,conflict=false,revision=0,seq=0,epoch=0,timer=0,unsubscribe=null,deferred=null,auth=null,db=null,retryAt=0;
  const writer=crypto.randomUUID();
  function allowDashboard(value){document.body.classList.toggle('fb-account-locked',!value);el('fbAccountGate').hidden=value;document.querySelector('main').inert=!value;document.querySelector('aside').inert=!value}
- function switchUI(signedIn){el('fbAccountAccess').hidden=!signedIn;el('fbSignIn').hidden=signedIn;el('fbSignOut').hidden=!signedIn;el('fbImportDevice').hidden=!signedIn;el('fbLoadLatest').hidden=!signedIn;el('fbRetry').hidden=!signedIn;el('fbIdentity').textContent=signedIn?('Signed in: '+(user.email||user.displayName||'Google account')):'Local-only mode'}
+ function switchUI(signedIn){el('fbAccountAccess').hidden=!signedIn;el('fbSignIn').hidden=signedIn;el('fbSignOut').hidden=!signedIn;el('fbImportDevice').hidden=!signedIn;el('fbRetry').hidden=!signedIn;el('fbIdentity').textContent=signedIn?('Signed in: '+(user.email||user.displayName||'Google account')):'Local-only mode'}
  function accountMeta(){return bridge.readMeta()||{}}
  function remember(){if(user)bridge.writeMeta({revision,pending:dirty})}
  function editing(){return Boolean(document.querySelector('dialog[open]'))||['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)||bridge.gameActive()}
@@ -38,15 +38,15 @@
     result=await transact(false);
    }
    if(ownEpoch!==epoch)return;widgets?.publish(user.uid,JSON.parse(json).state);revision=result;retryAt=0;dirty=seq!==ownSeq;remember();status(dirty?'More changes waiting to sync…':'Saved to your account · synced');
-  }catch(error){if(ownEpoch!==epoch)return;if(error.message==='SYNC_CONFLICT'){conflict=true;status('Another device changed this dashboard. Export your local backup, then use Load latest. Your edits are kept locally.')}else{retryAt=Date.now()+30000;status(errorText(error))}remember()}
+  }catch(error){if(ownEpoch!==epoch)return;if(error.message==='SYNC_CONFLICT'){conflict=true;status('Another device changed this dashboard. Export your local backup, then use Retry sync. Your edits are kept locally.')}else{retryAt=Date.now()+30000;status(errorText(error))}remember()}
   finally{if(ownEpoch===epoch){busy=false;if(dirty&&!conflict)queue()}}
  }
  function watch(ownEpoch){
   unsubscribe?.();unsubscribe=firebase.onSnapshot(ref,{includeMetadataChanges:true},snap=>{
    if(ownEpoch!==epoch||!ready||!snap.exists()||snap.metadata.fromCache||snap.metadata.hasPendingWrites)return;const record=snap.data();if(!Number.isInteger(record.revision)||record.revision<=revision)return;
    if(busy){deferred=record;return}
-   if(dirty){conflict=true;status('New cloud changes conflict with edits on this device. Export backup, then Load latest.');return}
-   if(editing()){deferred=record;status('New updates available. Finish editing, then use Load latest.');return}
+   if(dirty){conflict=true;status('New cloud changes conflict with edits on this device. Export backup, then Retry sync.');return}
+   if(editing()){deferred=record;status('New updates available. Finish editing, then use Retry sync.');return}
    try{applyCloud(record);status('Updated from your other device')}catch(e){status(errorText(e))}
   },e=>{if(ownEpoch===epoch)status(errorText(e))});
  }
@@ -58,7 +58,7 @@
   try{const snap=await firebase.getDocFromServer(ref);if(ownEpoch!==epoch)return;
    if(snap.exists()){
     const decoded=core.decode(snap.data());
-    if(dirty){if(decoded.revision!==revision){conflict=true;status('This device has unsynced edits and newer cloud data. Export backup before loading latest.')}else status('Resuming changes saved on this device…')}
+    if(dirty){if(decoded.revision!==revision){conflict=true;status('This device has unsynced edits and newer cloud data. Export backup before choosing Retry sync.')}else status('Resuming changes saved on this device…')}
     else{applyCloud(snap.data());status('Cloud connected · changes sync automatically')}
    }else if(revision!==0&&dirty){conflict=true;status('The cloud copy is missing. Export your backup before choosing Import this device.')}else{revision=0;status('Cloud account is empty. Add an entry or use Import this device to bring over your existing dashboard.')}
    ready=true;remember();allowDashboard(true);widgets?.ready(current.uid);if(snap.exists())widgets?.publish(current.uid,core.decode(snap.data()).bundle.state);watch(ownEpoch);if(dirty&&!conflict)queue();
@@ -111,7 +111,12 @@
   if(!user)return;const account=user;const dialog=document.createElement('dialog');dialog.className='fb-access-dialog';dialog.innerHTML=`<h2>Account access</h2><p id="fbAccessEmail"></p><p>Save this email somewhere safe. Use Forgot password on the sign-in screen to receive a reset link.</p><form id="fbAddPassword"><label for="fbNewPassword">Add a password to this Google account</label><input id="fbNewPassword" type="password" autocomplete="new-password" minlength="8" required><label for="fbNewPasswordAgain">Confirm password</label><input id="fbNewPasswordAgain" type="password" autocomplete="new-password" minlength="8" required><button type="submit">Add email sign-in</button></form><p id="fbAccessStatus" role="status"></p><button type="button" id="fbAccessClose">Close</button>`;document.body.append(dialog);el('fbAccessEmail').textContent='Your email: '+(account.email||'Unavailable');const hasPassword=account.providerData.some(p=>p.providerId==='password');el('fbAddPassword').hidden=hasPassword;if(hasPassword)el('fbAccessStatus').textContent='Email/password sign-in is already enabled for this account.';
   el('fbAddPassword').onsubmit=async e=>{e.preventDefault();if(auth.currentUser?.uid!==account.uid){dialog.close();return}const pass=el('fbNewPassword').value;if(pass!==el('fbNewPasswordAgain').value){el('fbAccessStatus').textContent='The passwords do not match.';return}const b=e.target.querySelector('button');b.disabled=true;try{await firebase.linkWithCredential(account,firebase.EmailAuthProvider.credential(account.email,pass));el('fbAddPassword').hidden=true;el('fbNewPassword').value='';el('fbNewPasswordAgain').value='';el('fbAccessStatus').textContent='Email sign-in added. Google and email now open this same dashboard.'}catch(error){el('fbAccessStatus').textContent=errorText(error)}finally{b.disabled=false}};el('fbAccessClose').onclick=()=>dialog.close();dialog.onclose=()=>dialog.remove();dialog.showModal();
  };
- el('fbSignIn').onclick=signIn;el('fbGateSignIn').onclick=signIn;el('fbSignOut').onclick=()=>signOut().catch(e=>status(errorText(e)));el('fbGateSignOut').onclick=()=>signOut().catch(e=>gateMessage(errorText(e)));el('fbLoadLatest').onclick=loadLatest;el('fbImportDevice').onclick=importDevice;el('fbRetry').onclick=()=>loadAccount(auth.currentUser);el('fbGateRetry').onclick=()=>loadAccount(auth.currentUser);
+ el('fbSignIn').onclick=signIn;el('fbGateSignIn').onclick=signIn;el('fbSignOut').onclick=()=>signOut().catch(e=>status(errorText(e)));el('fbGateSignOut').onclick=()=>signOut().catch(e=>gateMessage(errorText(e)));el('fbImportDevice').onclick=importDevice;el('fbRetry').onclick=()=>{
+  if(busy)return status('A save is already in progress.');
+  if(conflict||deferred)return loadLatest();
+  if(dirty&&ready){retryAt=0;return push()}
+  return loadAccount(auth.currentUser);
+ };el('fbGateRetry').onclick=()=>loadAccount(auth.currentUser);
  el('fbLocalOnly').onclick=()=>{if(user){gateMessage('Sign out first to use local-only storage. Your account’s cache stays separate.');return}bridge.setScope('');bridge.apply(bridge.readGuest());switchUI(false);allowDashboard(true);status('Local-only mode · data stays in this browser')};
  el('fbExportLocal').onclick=()=>bridge.exportGuestBackup();
  addEventListener('online',()=>{if(user&&!ready)loadAccount(user);else if(dirty)push()});

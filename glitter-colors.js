@@ -16,6 +16,10 @@
     ['ocean-glass', 'Ocean Glass'],
     ['pearl-parlor', 'Teddy & Pearls'],
     ['candy-hearts', 'Candy Hearts'],
+    ['dolphin','Dolphin Cove'], ['barbie','Barbie Dreamhouse'],
+    ['santa','Santa Wrapping Paper'], ['snowman','Snowman Village'],
+    ['nutcracker','Nutcracker Ballet'], ['gingerbread','Gingerbread Bakery'],
+    ['evergreen','Christmas Tree Farm'], ['confetti','Birthday Confetti'],
     ['custom', 'Custom']
   ];
   const key = 'glowcode-dashboard-theme';

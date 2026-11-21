@@ -4332,13 +4332,13 @@ const renderBeforeJournalMagic=render;render=function(){renderBeforeJournalMagic
  apply(bundle){dashboardSuppressStorageSync=true;try{state={...blank(),...JSON.parse(JSON.stringify(bundle.state))};window.localStorage.setItem(dashboardActivePrefix+'myday-v1',JSON.stringify(state));for(const k of extras){if(typeof bundle.extras[k]==='string')window.localStorage.setItem(dashboardActivePrefix+k,bundle.extras[k]);else window.localStorage.removeItem(dashboardActivePrefix+k)}if(typeof chessMatch!=='undefined')chessMatch=null;if(typeof financePerson!=='undefined'&&!state.people?.some(p=>p.id===financePerson))financePerson='';render();window.dispatchEvent(new Event('dashboard:data-applied'))}finally{dashboardSuppressStorageSync=false}},
  saveRecoveryCopy(){window.localStorage.setItem(dashboardActivePrefix+'firebase-before-replace',JSON.stringify(this.snapshot()))},gameActive(){return page==='Games'},exportBackup(){backup()},exportGuestBackup(){showOriginalDeviceBackupPanel(this.readGuest().state)}
  };
- const bar=document.createElement('section');bar.className='fb-sync-bar';bar.innerHTML='<div><strong id="fbIdentity">Google account sync</strong><p id="fbSyncStatus" role="status">Starting Google connection…</p></div><div class="fb-sync-actions"><button type="button" id="editDashboardProfile">Edit display name</button><button type="button" id="fbSignIn" disabled>Sign in with Google</button><button type="button" id="fbSignOut" hidden>Sign out</button><button type="button" id="fbImportDevice" hidden>Import this device</button><button type="button" id="fbLoadLatest" hidden>Load latest</button><button type="button" id="fbRetry" hidden>Retry sync</button></div>';document.querySelector('main').prepend(bar);
+ const bar=document.createElement('section');bar.className='fb-sync-bar';bar.innerHTML='<div><strong id="fbIdentity">Google account sync</strong><p id="fbSyncStatus" role="status">Starting Google connection…</p></div><div class="fb-sync-actions"><button type="button" id="editDashboardProfile">Edit display name</button><button type="button" id="fbSignIn" disabled>Sign in with Google</button><button type="button" id="fbSignOut" hidden>Sign out</button><button type="button" id="fbImportDevice" hidden>Import this device</button><button type="button" id="fbRetry" hidden>Retry sync</button></div>';document.querySelector('main').prepend(bar);
  const gate=document.createElement('section');gate.id='fbAccountGate';gate.className='fb-account-gate';gate.setAttribute('aria-label','Dashboard sign-in');gate.innerHTML='<div class="fb-gate-card"><h1>Your dashboard, wherever you are.</h1><p>Sign in with Google or email to access your own private calendar, finances, journal and projects across devices.</p><p id="fbGateStatus" role="status">Connecting to Google…</p><div class="fb-gate-buttons"><button id="fbGateSignIn" type="button" disabled>Sign in with Google</button><button id="fbLocalOnly" type="button">Continue on this device only</button><button id="fbGateRetry" type="button" hidden>Retry connection</button><button id="fbGateSignOut" type="button" hidden>Sign out</button><button id="fbExportLocal" type="button">Export original device backup</button></div><p class="fb-gate-note">Start in Chrome or Safari. Google sign-in may be blocked inside Plash. Existing device entries are preserved and are imported only when you choose Import this device.</p></div>';document.body.append(gate);
  // Local-only mode remains available even if the Firebase CDN cannot load.
  document.getElementById('fbLocalOnly').onclick=()=>{window.DashboardSyncBridge.setScope('');window.DashboardSyncBridge.apply(window.DashboardSyncBridge.readGuest());document.body.classList.remove('fb-account-locked');gate.hidden=true;document.getElementById('fbSyncStatus').textContent='Local-only mode · Google connection has not started'};
  document.getElementById('fbExportLocal').onclick=()=>window.DashboardSyncBridge.exportGuestBackup();
 })();
-</script><script src="sync-core.js"></script><script src="./widgets/connection.js"></script><script src="firebase-sync.js?v=section-sharing"></script><script>
+</script><script src="sync-core.js"></script><script src="./widgets/connection.js?v=dashboard-layout-1"></script><script src="firebase-sync.js?v=dashboard-layout-1"></script><script>
 function showOriginalDeviceBackupPanel(data){
  document.getElementById('originalDeviceBackupPanel')?.remove();
  const text=JSON.stringify(data,null,2),filename='dashboard-local-backup-'+localDate(new Date())+'.json';
@@ -4807,14 +4807,14 @@ window.GlowAchievementMedals={collection,badges,remember,renderMedals};
  let generation=0;
  let gameKey='',gamePending=false;
  async function gamesCollection(token){if(gamePending)return;gamePending=true;const owner=state;const host=document.createElement('section');host.className='card achievement-collection';host.id='gamesBadgeCollection';document.getElementById('gamesBadgeCollection')?.remove();const title=document.createElement('h2');title.textContent='Games · Little Wins';host.append(title);document.getElementById('content').append(host);try{const medals=window.GlowAchievementMedals;if(!medals||medals.collection.length!==20)throw Error('Expected 20 medals');if(token!==generation||page!=='Badges'||state!==owner)return;const original=state.glowActivities?.['little-wins'];const model=structuredClone(original||{stars:0,wins:[],awards:[]});medals.remember(model);if(original&&JSON.stringify(original.awards||[])!==JSON.stringify(model.awards)){original.awards=model.awards;original.achievementTracking=model.achievementTracking;save()}gameKey=JSON.stringify(state.glowActivities?.['little-wins']||null);let expanded=true;const area=document.createElement('div');host.append(area);function paint(){area.replaceChildren();medals.renderMedals(area,model,document,()=>{expanded=!expanded;paint()},expanded)}paint()}catch{if(host.isConnected){const p=document.createElement('p');p.textContent='Game badges could not load. Reopen Badges to try again.';host.append(p)}}finally{gamePending=false}}
- const before=render;render=function(){const badgesPage=page==='Badges';generation++;if(badgesPage)page='Quick notes';try{before()}finally{if(badgesPage)page='Badges'}if(badgesPage){document.getElementById('content').replaceChildren();gameKey='';gamePending=false;const refreshButton=document.createElement('button');refreshButton.type='button';refreshButton.className='secondary';refreshButton.textContent='Refresh badge progress';refreshButton.onclick=()=>{render();notify('Badge progress checked against saved entries and wins')};const reset=document.createElement('button');reset.type='button';reset.className='secondary';reset.textContent='Reset all badges';reset.onclick=()=>{
+ const before=render;render=function(){const badgesPage=page==='Badges';generation++;if(badgesPage)page='Quick notes';try{before()}finally{if(badgesPage)page='Badges'}if(badgesPage){document.getElementById('content').replaceChildren();gameKey='';gamePending=false;const reset=document.createElement('button');reset.type='button';reset.className='secondary';reset.textContent='Reset all badges';reset.onclick=()=>{
  if(!confirm('Reset all badges? Existing milestones will stay cleared and future milestones can still earn new badges.'))return;
  state.badgeReset={journal:journalRules().flatMap((rule,i)=>rule[3]?[i]:[]),habit:habitRules().flatMap((rule,i)=>rule[3]?[i]:[])};
  state.achievementCollections={};window.resetBibleBadges?.();window.resetJoyBadges?.();
  const games=state.glowActivities?.['little-wins'];
  if(games){games.resetBadges=window.GlowAchievementMedals.badges({...games,resetBadges:[]}).filter(item=>item.earned).map(item=>item.id);games.awards=[]}
  save();render();notify('Badges reset');
- };document.getElementById('content').append(refreshButton,reset);document.body.dataset.glowPage='Badges';document.getElementById('title').textContent='Badges';document.getElementById('appPageTitle').textContent='Badges';document.getElementById('description').textContent='';}refresh();if(badgesPage)gamesCollection(generation)};
+ };document.getElementById('content').append(reset);document.body.dataset.glowPage='Badges';document.getElementById('title').textContent='Badges';document.getElementById('appPageTitle').textContent='Badges';document.getElementById('description').textContent='';}refresh();if(badgesPage)gamesCollection(generation)};
  const beforeJournal=renderJournalPage;renderJournalPage=function(){beforeJournal();collection('journal')};const beforeFavorite=toggleJournalFavorite;toggleJournalFavorite=function(id){beforeFavorite(id);collection('journal')};
  let queued=false;
  function checkProgress(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;collection('journal');collection('habit');if(page==='Badges'&&JSON.stringify(state.glowActivities?.['little-wins']||null)!==gameKey)gamesCollection(generation)})}
@@ -4975,7 +4975,7 @@ dialog.tfy-dialog.app-action-dialog {
 </style>
 <script src="./time-for-you.js?v=compact-ideas"></script>
 <link rel="stylesheet" href="./navigation-sparkles.css?v=sidebar-blog">
-<script src="./navigation-sparkles.js?v=layout-wellness"></script>
+<script src="./navigation-sparkles.js?v=dashboard-layout-1"></script>
 <link rel="stylesheet" href="./peaceful-polish.css?v=20261104">
 <script src="./welcome-verse.js?noPopups=1&v=20261104"></script>
 <link rel="stylesheet" href="./chess-themes.css?v=20261104">
@@ -4985,9 +4985,9 @@ dialog.tfy-dialog.app-action-dialog {
 <link rel="stylesheet" href="./cash-flow.css?v=owner-tabs">
 <script src="./cash-flow-core.js?v=weekday-rules"></script>
 <script src="./finance-tools.js?v=personal-finance-1"></script>
-<script src="./cash-flow.js?v=owner-tabs"></script>
+<script src="./cash-flow.js?v=dashboard-layout-1"></script>
 <link rel="stylesheet" href="./glitter-colors.css?v=layout-wellness">
-<script src="./glitter-colors.js?v=reflect-palette"></script>
+<script src="./glitter-colors.js?v=dashboard-layout-1"></script>
 <link rel="stylesheet" href="./profile.css?v=home-greeting">
 <dialog id="dashboardProfile">
   <form>
@@ -4999,7 +4999,7 @@ dialog.tfy-dialog.app-action-dialog {
     </div>
   </form>
 </dialog>
-<script src="./profile.js?v=photo-crop"></script>
+<script src="./profile.js?v=dashboard-layout-1"></script>
 <link rel="stylesheet" href="./widgets/focus.css">
 <script src="./widgets/focus.js?v=savings-bible"></script>
 <link rel="stylesheet" href="./sticky-notes.css?v=2">
@@ -5009,13 +5009,13 @@ dialog.tfy-dialog.app-action-dialog {
 <link rel="stylesheet" href="./dashboard-personalize.css?v=layout-wellness">
 <script src="./amortization.js?v=1"></script>
 <script src="./dashboard-lists.js?v=sidebar-blog"></script>
-<script src="./dashboard-personalize.js?v=layout-wellness"></script>
+<script src="./dashboard-personalize.js?v=dashboard-layout-1"></script>
 <link rel="stylesheet" href="./bre-planner.css?v=matrix">
 <link rel="stylesheet" href="./dashboard-lists.css?v=stationery-2">
 <script src="./bre-planner.js?v=sidebar-blog"></script>
 <script src="./dashboard-sharing.js?v=sidebar-groups"></script>
 <link rel="stylesheet" href="./household.css?v=1">
-<script src="./household.js?v=sidebar-blog"></script>
+<script src="./household.js?v=dashboard-layout-1"></script>
 <link rel="stylesheet" href="./notes-studio.css?v=reflect-palette">
 <script src="./notes-studio.js?v=reflect-palette"></script>
 <link rel="stylesheet" href="./dashboard-planning.css?v=calendar-first">
@@ -5027,4 +5027,6 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./dashboard-blog.js?v=layout-wellness"></script>
 <link rel="stylesheet" href="./dashboard-wellness.css?v=1">
 <script src="./dashboard-wellness.js?v=1"></script>
+<link rel="stylesheet" href="./dashboard-layout.css?v=1">
+<script src="./dashboard-layout.js?v=1"></script>
 </body></html>

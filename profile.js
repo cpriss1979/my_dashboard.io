@@ -96,6 +96,9 @@
     name.setCustomValidity('');
     if(!dialog.open)dialog.showModal();
   }
+  const signOut=document.getElementById('fbSignOut');
+  form.querySelector('.actions').append(signOut);
+  document.getElementById('editDashboardProfile').remove();
   avatar.onclick=openProfile;
   window.DashboardProfile={open:openProfile};
 
@@ -151,7 +154,7 @@
     updateAvatar();
   }
 
-  document.getElementById('editDashboardProfile').onclick = openProfile;
+
   dialog.querySelector('[data-profile-cancel]').onclick = () => dialog.close();
   name.oninput = () => name.setCustomValidity('');
   form.onsubmit = event => {

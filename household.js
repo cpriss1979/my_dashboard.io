@@ -179,7 +179,7 @@
     const settings=document.getElementById('appSettings');
     if(settings&&!settings.querySelector('.nav-customize')){
       const actions=el('div',undefined,'household-actions nav-customize');
-      actions.append(button('Sticky Notes',()=>{settings.close();window.DashboardStickyNotes?.open()}),button('Timer',()=>{settings.close();go('Focus timer')}),button('Edit profile',()=>{settings.close();window.DashboardProfile.open()}),button('Sharing',()=>{settings.close();go('Sharing')}));
+      actions.append(button('Sharing',()=>{settings.close();go('Sharing')}));
       settings.querySelector('#appSettingsContent')?.prepend(actions);
     }
     window.DashboardSidebar.organize();

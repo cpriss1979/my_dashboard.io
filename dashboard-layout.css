@@ -1,0 +1,51 @@
+body.glow-redesign {--ui-radius:10px;--ui-edge:#99899e;--ui-action:#513750;--ui-paper:#fffafd}
+body.glow-redesign > aside {display:flex;flex-direction:column;gap:6px;height:100dvh;overflow:hidden}
+body.glow-redesign > aside nav {flex:1;overflow:auto;min-height:0;scrollbar-width:thin}
+body.glow-redesign.rail-closed > aside{width:62px!important;padding:8px 7px!important;box-sizing:border-box}
+body.glow-redesign.rail-closed > main,body.glow-redesign.rail-closed #appMobileHeader{margin-left:62px!important;width:calc(100% - 62px)!important}
+body.glow-redesign.rail-closed > aside :is(.dashboard-profile-avatar,.brand,.app-nav-label,.app-nav-count,.app-nav-group>div),body.glow-redesign.rail-closed > aside nav .app-nav-group>summary:after{display:none!important}
+body.glow-redesign.rail-closed > aside nav :is(.app-nav-link,.app-nav-group>summary){justify-content:center!important;padding:6px!important}
+body.glow-redesign.rail-closed > aside .app-nav-group:has(.active)>summary{background:#ffffff26!important;box-shadow:inset 3px 0 #b2ebed!important}
+body.glow-redesign.rail-closed aside .dashboard-utility-bar {display:flex!important;flex-direction:column-reverse;flex-wrap:nowrap;gap:5px}
+body.glow-redesign .layout-icon {display:inline-grid;place-items:center;width:38px!important;height:38px!important;min-width:38px;min-height:38px;padding:8px!important;border-radius:10px;border:1px solid #99899e;background:#fffafd;color:#513750}
+.layout-icon svg{width:20px;height:20px}
+#railToggle{align-self:center;flex:none}
+#pagePalette{position:fixed;bottom:max(14px,env(safe-area-inset-bottom));right:16px;z-index:79;box-shadow:0 2px 8px #21132a33}
+body.fb-account-locked #pagePalette{display:none}
+#reportPrint{float:right;margin:6px 8px}
+#dashboardPrintFrame{position:fixed;left:-10000px;top:0;width:800px;height:600px;border:0}
+body.glow-redesign #content :is(.card,.cf-card,.cf-record,.joy-tile,.achievement-tile),.layout-dialog{border-radius:14px!important}
+body.glow-redesign :is(#content,dialog) :is(button.primary,button.secondary,button.cf-control,.actions button,form button,.joy-actions button):not(.cf-tab,.cf-calendar-date,[aria-pressed=true],[disabled]){
+ border:1px solid var(--ui-edge)!important;border-radius:var(--ui-radius)!important;background:var(--ui-paper)!important;color:var(--ui-action)!important;min-height:36px;padding:7px 13px!important;font:600 .91rem/1.2 system-ui!important}
+body.glow-redesign :is(#content,dialog) :is(button.primary,button[type=submit]):not([disabled]){background:var(--ui-action)!important;color:white!important}
+body.glow-redesign :is(#content,dialog) :is(.actions,.cf-actions,.joy-actions,.household-actions,.priss-settings-tabs){gap:8px;margin-block:8px}
+body.glow-redesign :is(#content,dialog) :is(input,textarea,select,label,fieldset,p,details,section,article,div)+button,
+body.glow-redesign :is(#content,dialog) button+:is(label,fieldset,input,textarea,select,p,details,section,article,div){margin-block-start:8px}
+body.glow-redesign :is(#content,dialog) :is(section,article,form,fieldset) > button{margin-block:5px;margin-inline-end:5px}
+.layout-dialog{padding:20px;max-width:min(540px,calc(100vw - 24px));max-height:85dvh;overflow:auto;background:#fffafd;color:#32253b;border:1px solid #b4a4ba}
+.layout-dialog header{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:14px}
+.layout-dialog h2{font-size:1.2rem;margin:0}
+.layout-dialog button{padding:8px 12px;border:1px solid #aa99ae;border-radius:9px;background:#faf5fb;color:#402d48;margin:3px}
+.layout-dialog form,.layout-dialog fieldset{display:grid;gap:10px}
+.layout-dialog label{display:flex;align-items:center;gap:8px}
+.layout-dialog input[type=checkbox]{width:18px;height:18px}
+.layout-dialog fieldset{margin:12px 0;padding:12px;border:1px solid #c8bbcc;border-radius:10px;min-width:0}
+.layout-preview{display:grid;grid-template-columns:1fr 2fr;grid-template-areas:"side head" "side back" "side card" "side text";padding:6px;background:#ece4ed;border-radius:12px}
+.layout-preview [data-region=Header]{grid-area:head}.layout-preview [data-region=Sidebar]{grid-area:side}.layout-preview [data-region=Background]{grid-area:back}.layout-preview [data-region=Containers]{grid-area:card}.layout-preview [data-region=Text]{grid-area:text}
+.layout-preview button{min-height:36px;text-shadow:0 0 4px white,0 0 3px white}
+.layout-preview button[aria-pressed=true]{outline:3px solid #885476}
+.design-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.badge-disclosure>summary{cursor:pointer;font-weight:700;padding:8px}
+@media(max-width:750px){
+ body.glow-redesign.app-mobile>aside{display:flex!important;position:fixed!important;inset:0 auto 0 0;z-index:84;max-height:100dvh}
+ body.glow-redesign:not(.rail-closed)>aside{width:min(230px,76vw)!important}
+ body.glow-redesign.app-mobile #phoneBottomNavigation{display:none!important}
+ body.glow-redesign.rail-closed #appMobileHeader{gap:4px;grid-template-columns:minmax(0,1fr) auto}
+ body.glow-redesign.rail-closed #appMobileHeader :is(.app-home-logo,.glow-header-clock){display:none!important}
+ #pagePalette{right:10px;bottom:12px}
+}
+body.glow-redesign :is(#content,dialog) :where(button:not([class]),button.link):not([role=tab],[aria-pressed],[data-calendar-date]){
+ border-radius:var(--ui-radius);padding:.45rem .75rem;min-height:34px}
+body.glow-redesign :is(#content,dialog) :is(.cardhead,.button-row,.toolbar,.form-actions){gap:8px}
+body.glow-redesign :is(#content,dialog) button:focus-visible,.layout-icon:focus-visible{outline:3px solid #9266b3;outline-offset:2px}
+body.glow-redesign #dashboardProfile #fbSignOut[hidden]{display:none!important}

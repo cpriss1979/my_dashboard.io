@@ -5,9 +5,8 @@
   ['Planner',[['Calendar','Calendar','calendar'],['Daily priorities','Tasks','tasks'],['Projects','Projects','projects'],['Quick notes','Notes','notes'],['Habit Tracker','Habit Tracker','habit']],'calendar'],
   ['Finances',[['Finances','Finances','finances']]],
   ['Journal & Faith',[['Journal','Journal','journal'],['Bible','Bible','bible'],['Blog','Blog','blog'],['Brain Dump','Brain Dump','notes']],'journal'],
-  ['Household',[['Chores','Chores','chores']],'chores'],
+  ['Household',[['Chores','Chores','chores'],['Meal Planner','Meal Planner','calendar'],['Recipes','Recipes','bible']],'chores'],
   ['Shopping',[['Shopping List','Shopping List','tasks'],['Wish List','Wish List','bookmarks'],['Gift Planner','Gift Planner','gift']],'shopping'],
-  ['Kitchen',[['Meal Planner','Meal Planner','calendar'],['Recipes','Recipes','bible']],'kitchen'],
   ['Wellness',[['Exercise','Exercise','habit'],['Calorie Log','Calorie Log','notes']],'habit'],
   ['Travel',[['Packing Checklist','Packing Checklist','tasks']],'travel'],
   ['Hobbies',[['Collections','Collections','projects']],'projects'],
@@ -48,6 +47,7 @@
  function outline(node,label,symbol){
   const text=document.createElement('span');text.className='app-nav-label';text.textContent=label;
   node.replaceChildren(icon(symbol),text);
+  if(label){node.setAttribute('aria-label',label);node.title=label}
  }
  window.DashboardNavIcon=outline;
  function hidden(target){return window.DashboardNavigation?.isHidden(target)===true}
@@ -99,6 +99,10 @@
    const heading=document.createElement('summary');outline(heading,groupLabel(key),symbol);
    heading.onclick=event=>{
     event.preventDefault();
+    if(document.body.classList.contains('rail-closed')){
+     window.DashboardLayout.chooseSection(groupLabel(key),list);
+     return;
+    }
     openGroup=section.open?null:key;
     for(const group of sidebar.querySelectorAll('details[data-household-group]'))group.open=group===section&&openGroup===key;
    };

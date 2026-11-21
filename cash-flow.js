@@ -2,7 +2,7 @@
 'use strict';
 const C=window.CashFlowCore,T=window.FinanceTools,frequencies={once:'One time',weekly:'Weekly',biweekly:'Every two weeks',monthly:'Monthly',bimonthly:'Every two months',quarterly:'Quarterly',annually:'Annually'},tabs=['Overview','Income','Bills','Savings','Activity','Forecast','Archive'];
 const widgetSavings=new URLSearchParams(location.search).get('widget')==='money-tracker';
-let tab=widgetSavings?'Savings':'Overview',horizon=0,m=null,filters={frequency:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='',backupProblem='',actionNotice='',paymentJustSaved=false;
+let tab=widgetSavings?'Savings':'Overview',horizon=0,m=null,filters={frequency:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='',backupProblem='';
 const today=()=>localDate(new Date()), dollars=n=>n===null||n===undefined?'Not set':money(n/100), name=accountName, uid=()=>crypto.randomUUID();
 const minDate='1900-01-01',maxDate='2199-12-31';
 function e(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;if(tag==='button')n.className=(n.className+' cf-control').trim();return n}
@@ -148,7 +148,7 @@ function note(key,value=''){const n=e('textarea');n.name=key;n.value=value;n.row
 function cents(v){return Math.round(Number(v)*100)}
 function snapshot(){const {audit=[],...data}=m;return {...T.copy(data),hiddenHistory:Object.fromEntries(audit.filter(entry=>entry.deleted).map(entry=>[entry.id,true]))}}
 function safetyBackup(){if(backupOwner===state)return;try{const key=(typeof dashboardActivePrefix==='string'?dashboardActivePrefix:'')+'finance-before-pastel-v1';const saved=localStorage.getItem(key);if(saved)JSON.parse(saved);const text=saved||JSON.stringify(state,null,2);if(!saved)localStorage.setItem(key,text);backupText=text;backupOwner=state;backupProblem=''}catch(err){throw Error('The safety backup could not be stored. Use Export dashboard backup, free device storage, then try again. No change has been saved.')}}
-function commit(label='Finance update'){paymentJustSaved=label==='Mark bill Paid'||label==='Mark bill Cleared';actionNotice=label==='Mark bill Paid'?'✓ Payment saved.':label==='Mark bill Cleared'?'✓ Paid and cleared.':undoing?label+'.':label+' saved.';if(baselineOwner!==state)throw Error('Account changed. Reopen Finances.');const delta=T.changes(baseline,snapshot());if(delta.length&&!undoing){m.audit??=[];m.audit.push({id:uid(),at:new Date().toISOString(),label,changes:delta})}state.cashFlow=m;save();redrawFinanceInPlace()}
+function commit(label='Finance update'){if(baselineOwner!==state)throw Error('Account changed. Reopen Finances.');const delta=T.changes(baseline,snapshot());if(delta.length&&!undoing){m.audit??=[];m.audit.push({id:uid(),at:new Date().toISOString(),label,changes:delta})}state.cashFlow=m;save();redrawFinanceInPlace()}
 function safeAction(label,fn){safetyBackup();fn();commit(label)}
 function group(title,items,open=true){const d=e('details',undefined,'cf-group'),key=tab+'|'+title;d.open=folded.has(key)?folded.get(key):open;d.append(e('summary',title+' · '+items.length));d.addEventListener('toggle',()=>folded.set(key,d.open));const grid=e('div',undefined,'cf-record-grid');items.forEach(n=>grid.append(n));if(!items.length)grid.append(e('p','Nothing here.'));d.append(grid);return d}
 function tint(n,key){const account=m.accounts.find(a=>a.id===key);if(account){n.dataset.cfOwner=accountOwner(account);if(account.accent)n.style?.setProperty('--cf-account-accent',accountAccent(account));}let h=0;for(const ch of String(key))h=(h*31+ch.charCodeAt(0))>>>0;n.dataset.pastel=String(h%5);return n}
@@ -430,7 +430,11 @@ function history(root){
  p.append(e('p',rows.length+' transactions · newest first'),selection.top);p.append(compactList('Transactions & planned moves',rows.slice(0,historyLimit).map(o=>selection.attach(compactRow(o.name,o.amount,[dateLabel(historyDate(o)),o.kind==='transfer'?name(o.from)+' → '+name(o.to):name(o.account),o.kind==='bill'?statusLabel(o):o.status], [badge(o.kind==='bill'?statusLabel(o):o.status),b('Edit',()=>editEvent(o)),...(o.kind==='bill'&&o.status==='pending'?[b('Mark Cleared',()=>payment(o,true))]:[]),b('Delete',()=>deleteEvent(o),'link')],o.account||o.from,[o.notes]),o)),true));if(rows.length>historyLimit)p.append(b('Show more transactions',()=>{historyLimit+=24;render()}));p.append(selection.bar);root.append(p);
  {const audit=card('Change history');audit.append(e('p','Saved changes cover all accounts. Reverse change returns the affected records to their earlier values. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].filter(entry=>!entry.deleted).reverse();audit.append(group('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.recovered?'Restored':x.undone?'Undone':'Saved'),...(!x.undone?[b('Reverse change',()=>{if(confirm('Reverse '+x.label+'?'))undoChange(x)})]:[]),b('Delete history entry',()=>{
   if(confirm('Remove this saved change from the undo history? Its transactions and balances will stay as they are.'))safeAction('Delete history entry',()=>{x.deleted=true});
- },'link'));const details=e('details');details.append(e('summary','Original / new values'));for(const op of x.changes)details.append(e('p',op.key+' · '+(op.after?.name||op.before?.name||op.id)+'\nBefore: '+JSON.stringify(op.before)+'\nAfter: '+JSON.stringify(op.after)));n.append(details);return n}),false));root.append(audit)}
+ },'link'));const details=e('details');details.append(e('summary','Original / new values'));for(const op of x.changes)details.append(e('p',op.key+' · '+(op.after?.name||op.before?.name||op.id)+'\nBefore: '+JSON.stringify(op.before)+'\nAfter: '+JSON.stringify(op.after)));for(const op of x.changes){
+ const current=savedRecord(op);
+ if(current&&!current.deleted&&!current.skipped&&!current.reconciliationId&&['accounts','groups','income','bills','overrides','transfers','ledger','goals','budgetName','reconciliations'].includes(op.key))
+  details.append(b('Edit '+(current.name||op.key),()=>editSavedRecord(op,current)));
+ }n.append(details);return n}),false));root.append(audit)}
 }
 function savings(root){
  const report=C.forecast(m,today(),horizon),p=card('Savings');
@@ -457,7 +461,7 @@ function savings(root){
   }
   root.append(old);
  }
- root.append(financeEditBar());
+ root.append(recoveryControls());
 }
 function savingsDisclosure(label,key){
  const details=e('details',undefined,'cf-savings-disclosure');
@@ -605,7 +609,7 @@ function banner(){const p=card('Accounts');
   if(x==='Forecast'&&tab!=='Forecast')horizon=0;
   tab=x;render();
  }); 
- btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);const tools=e('details');tools.append(e('summary','Budget settings'),e('p',m.budgetName||'My budget'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Use the Undo menu on any Finances tab to reverse a saved change.'));p.append(tools);return p}
+ btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);const tools=e('details');tools.append(e('summary','Budget settings'),e('p',m.budgetName||'My budget'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Open Activity → Change history to review a saved change.'));p.append(tools);return p}
 function visiblePlans(report){
  return report.accounts.filter(account=>matchesOwner(account.id)).map(account=>({
   account,plan:T.paydayPlan(account,today(),C.add(today(),30))
@@ -1464,24 +1468,16 @@ function recoveryAction(entry){
  if(!entry.undone&&/^(Delete |Skip bill occurrence)/i.test(entry.label))return {changes:entry.changes,label:entry.label};
  return null;
 }
-function financeEditBar(){
+function recoveryControls(){
  const bar=e('div',undefined,'cf-actions cf-undo-bar');
  const entries=[...(m.audit||[])].reverse();
- const edits=[],seen=new Set(),recoveries=[];
+ const recoveries=[];
  for(const entry of entries){
   if(!entry.changes?.length)continue;
   const recovery=recoveryAction(entry);
   if(recovery&&!entry.recovered){
    const title=recovery.label+' · '+entry.changes.map(op=>op.after?.name||op.before?.name).filter(Boolean).join(', ');
    recoveries.push({entry,recovery,title:title.replace(/ · $/,'')+' · '+new Date(entry.at).toLocaleString()});
-  }
-  if(entry.deleted)continue;
-  for(const op of entry.changes){
-   const key=JSON.stringify([op.key,op.id]),record=savedRecord(op);
-   if(!record||record.deleted||record.skipped||record.reconciliationId||seen.has(key))continue;
-   seen.add(key);
-   edits.push({op,record,title:(record.name||({budgetName:'Budget name',reconciliations:'Reconciliation'}[op.key])||entry.label)
-    +' · '+op.key+' · '+(record.scheduled?dateLabel(record.scheduled)+' · ':'')+new Date(entry.at).toLocaleString()});
   }
  }
  function picker(label,items,action,empty){
@@ -1492,7 +1488,7 @@ function financeEditBar(){
   control.disabled=button.disabled=!items.length;
   return row(control,button);
  }
- bar.append(picker('Edit',edits,({op,record})=>editSavedRecord(op,record),'No saved items to edit'));
+
  const removed=e('details');
  removed.append(e('summary','Recently removed'),picker('Restore',recoveries,({entry,recovery})=>{
   try{
@@ -1584,13 +1580,53 @@ function paint(){
   tab=widgetSavings?'Savings':'Overview';horizon=0;billMonth='';billView='All bills';billSearch='';calendarDay='';
   filters.frequency='';historyLimit=24;showAllAttention=false;folded.clear();
   for(const key of Object.keys(historyFilters))historyFilters[key]='';
-  backupText='';backupProblem='';actionNotice='';paymentJustSaved=false;backupOwner=null;
+  backupText='';backupProblem='';backupOwner=null;
  }
  lastScope=scope;
  const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);
- if(tab!=='Savings')content.append(financeEditBar());
- if(actionNotice){const notice=e('p',actionNotice,'cf-action-notice');if(paymentJustSaved)notice.classList.add('cf-payment-saved');paymentJustSaved=false;notice.setAttribute('role','status');content.append(notice)}if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
+ if(tab==='Activity')content.append(recoveryControls());
+ if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
  if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);const tools=card('Loan tools');tools.append(b('Loan amortization',()=>go('Amortization')));content.append(tools)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
+window.dashboardFinancePrint = {
+ options(){
+  return {scope:ownerOptions().find(([id])=>id===selectedOwner())[1],
+   section:tab==='Overview'?'Accounts':tab,month:billMonth};
+ },
+ rows(section,from,to){
+  const within=date=>date>=from&&date<=to;
+  const cutoff=to<today()?to:today();
+  if(section==='Accounts'){
+   const model=cutoff<today()?balanceModelOn(m,cutoff):m;
+   const report=C.forecast(model,cutoff,0);
+   return [...report.accounts,...report.savings].filter(a=>matchesOwner(a.id))
+    .map(a=>[cutoff,a.name,'Cleared balance',a.current==null?'No recorded balance':dollars(a.current)]);
+  }
+  if(section==='Forecast'){
+   const start=from<today()?from:today();
+   const model=start<today()?balanceModelOn(m,start):m;
+   const forecast=C.forecast(model,start,C.day(to)-C.day(start));
+   return forecast.accounts.filter(a=>matchesOwner(a.id)).flatMap(a=>{
+    const before=a.future.filter(r=>r.date<from);
+    const opening=before.length?before.at(-1).balance:a.current;
+    const rows=[[from,a.name,'Balance carried in',dollars(opening)]];
+    for(const r of a.future.filter(r=>within(r.date)))rows.push([r.date,a.name,r.name||r.kind,dollars(r.delta),dollars(r.balance)]);
+    return rows;
+   });
+  }
+  const rows=C.events(m,section==='Activity'&&historyEnd()>to?historyEnd():to,{byDue:section==='Bills'}).filter(matchesTransaction);
+  const result=[];
+  for(const r of rows){
+   if(section==='Bills'&&r.kind!=='bill')continue;
+   if(section==='Income'&&!['income','money-in'].includes(r.kind))continue;
+   if(section==='Activity'&&r.status==='planned'&&r.kind!=='transfer')continue;
+   const day=section==='Bills'?(r.due||r.scheduled||r.date):section==='Activity'?historyDate(r):r.date;
+   if(!within(day))continue;
+   const account=r.kind==='transfer'?name(r.from)+' → '+name(r.to):name(r.account);
+   result.push([day,account,r.name||r.kind,dollars(r.amount),r.status]);
+  }
+  return result.sort((a,b)=>a[0].localeCompare(b[0]));
+ }
+};
 window.dashboardFinanceView=()=>m?selectedOwner():'';
 window.dashboardFinanceActions=()=>{
  const chosen=scopedChecking();

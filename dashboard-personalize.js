@@ -384,53 +384,14 @@
   function setupSettings() {
     if(!settings||!settingsContent)return;
     settings.querySelector('h2').textContent='Settings';
-    const authButton=document.getElementById('fbSignOut');
-    if(authButton){
-      const feedback=el('p');
-      feedback.setAttribute('role','status');
-      feedback.hidden=true;
-      const status=document.getElementById('fbSyncStatus');
-      const signOut=button('Sign out',()=>{
-        authButton.click();
-        feedback.textContent=status?.textContent||'';
-        feedback.hidden=!feedback.textContent;
-      });
-      const syncSignOut=()=>{
-        signOut.hidden=authButton.hidden;
-        if(authButton.hidden){
-          feedback.hidden=true;
-          if(settings.open)settings.close();
-        }
-      };
-      signOut.hidden=authButton.hidden;
-      settings.querySelector('.app-dialog-heading').insertBefore(signOut,document.getElementById('appSettingsClose'));
-      settings.querySelector('.app-dialog-heading').after(feedback);
-      new MutationObserver(syncSignOut).observe(authButton,{attributes:true,attributeFilter:['hidden']});
-      if(status)new MutationObserver(()=>{
-        if(!feedback.hidden)feedback.textContent=status.textContent;
-      }).observe(status,{childList:true,subtree:true,characterData:true});
-    }
     const tabs=el('div',undefined,'priss-settings-tabs');
     const sectionsPanel=el('section');
     const appearance=el('section');
     const themeDialog=document.getElementById('dashboardThemes');
     if(themeDialog) {
-      const colors=el('details',undefined,'appearance-page-colors');
-      colors.append(el('summary','Page & entry colors'),button('Customize the current page',()=>{
-        settings.close();customize();
-      }));
-      const controls=[...themeDialog.querySelectorAll('.dashboard-color-settings')];
-      colors.append(...controls);
       const studio=themeDialog.querySelector('.dashboard-appearance');
-      if(studio){
-        const saveArea=el('div',undefined,'appearance-save');
-        const apply=studio.querySelector('button');
-        const status=studio.querySelector('[role="status"]');
-        saveArea.append(apply,status);
-        studio.append(colors,saveArea);
-        appearance.append(studio);
-        settings.addEventListener('close',()=>{colors.open=false});
-      }else appearance.append(colors);
+      if(studio)appearance.append(studio);
+      appearance.append(button('Customize this page',()=>window.DashboardLayout.openPalette()));
       addEventListener('dashboard:data-applied',()=>themeDialog.dispatchEvent(new Event('close')));
       settings.addEventListener('close',()=>themeDialog.dispatchEvent(new Event('close')));
     }

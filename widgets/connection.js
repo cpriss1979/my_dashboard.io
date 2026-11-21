@@ -37,7 +37,7 @@
       copy.textContent = 'Copy pairing code';
       copy.hidden = true;
       panel.append(heading, pair, message, key, copy, list);
-      controls.append(panel);
+      // Existing paired widgets continue receiving account updates.
       let published = Promise.resolve();
       let readyUid = '';
 
