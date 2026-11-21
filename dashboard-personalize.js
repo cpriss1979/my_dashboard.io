@@ -98,6 +98,7 @@
       const properties=[];
       for (const [property,color] of [['background',value.background],['color',value.text]]) {
         if (!hex(color)) continue;
+        if (page === 'Finances' && node === content && property === 'background') continue;
         properties.push([property,node.style.getPropertyValue(property),node.style.getPropertyPriority(property)]);
         node.style.setProperty(property,color,'important');
       }
@@ -386,22 +387,13 @@
     settings.querySelector('h2').textContent='Settings';
     const tabs=el('div',undefined,'priss-settings-tabs');
     const sectionsPanel=el('section');
-    const appearance=el('section');
-    const themeDialog=document.getElementById('dashboardThemes');
-    if(themeDialog) {
-      const studio=themeDialog.querySelector('.dashboard-appearance');
-      if(studio)appearance.append(studio);
-      appearance.append(button('Customize this page',()=>window.DashboardLayout.openPalette()));
-      addEventListener('dashboard:data-applied',()=>themeDialog.dispatchEvent(new Event('close')));
-      settings.addEventListener('close',()=>themeDialog.dispatchEvent(new Event('close')));
-    }
     const homePanel=el('section');
     homePanel.append(el('h3','Home cards'),button('Choose Home cards',()=>{settings.close();editHome()}));
     sectionsPanel.append(homePanel);
     const navigation=el('section');
     navigation.append(el('h3','Manage navigation'),button('Choose visible sections & rename groups',()=>window.DashboardNavigation.options()));
-    settingsContent.before(tabs,appearance,sectionsPanel,navigation);
-    const options=[['Appearance',appearance],['Home',sectionsPanel],['Navigation',navigation],['Account & data',settingsContent]];
+    settingsContent.before(tabs,sectionsPanel,navigation);
+    const options=[['Home',sectionsPanel],['Navigation',navigation],['Account & data',settingsContent]];
     const tabButtons=options.map(([label,panel])=>button(label,()=>settingsPage(panel)));
     settingsPage=panel=>{
       options.forEach(([,section],i)=>{
@@ -410,7 +402,7 @@
       });
     };
     tabs.append(...tabButtons);
-    settingsPage(appearance);
+    settingsPage(sectionsPanel);
     const side=document.querySelector('aside .glow-side-settings');
     if(side){side.textContent='⚙';side.title='Settings';side.setAttribute('aria-label','Settings');side.onclick=()=>window.DashboardMobileUI.openSettings()}
     const header=document.getElementById('appSettingsButton');
@@ -424,7 +416,6 @@
       header.onclick=()=>openPage('Overview');
       brand.closest('.brand').hidden=true;
     }
-    if(themeDialog)window.DashboardThemes.open=()=>{settingsPage(appearance);window.DashboardMobileUI.openSettings()};
   }
   setupSettings();
   const previousRender=render;

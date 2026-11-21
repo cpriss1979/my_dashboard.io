@@ -49,3 +49,55 @@ body.glow-redesign :is(#content,dialog) :where(button:not([class]),button.link):
 body.glow-redesign :is(#content,dialog) :is(.cardhead,.button-row,.toolbar,.form-actions){gap:8px}
 body.glow-redesign :is(#content,dialog) button:focus-visible,.layout-icon:focus-visible{outline:3px solid #9266b3;outline-offset:2px}
 body.glow-redesign #dashboardProfile #fbSignOut[hidden]{display:none!important}
+
+/* Keep the utility pair together even when the navigation labels are hidden. */
+body.glow-redesign .rail-controls{display:inline-flex;align-items:center;gap:4px;flex:none}
+body.glow-redesign aside .rail-controls > button{margin:0!important;order:0!important}
+body.glow-redesign.rail-closed aside .rail-controls{justify-content:center;gap:2px}
+body.glow-redesign.rail-closed aside .rail-controls > button{width:26px!important;min-width:26px!important;height:36px!important;min-height:36px!important;padding:2px!important}
+body.glow-redesign.rail-closed aside .rail-controls svg{width:17px}
+body.glow-redesign #appSettings{
+ --settings-surface:#ffe2f1;--settings-ink:#481932;--settings-line:#b57a9b;--settings-tile:#fff5fa;
+ width:min(760px,calc(100vw - 28px))!important;height:min(620px,calc(100dvh - 32px))!important;
+ box-sizing:border-box;overflow:auto;scrollbar-gutter:stable;background:#ffe2f1!important;color:#481932!important;color-scheme:light
+}
+body.glow-redesign #appSettings :is(h2,h3,h4,p,label,small,summary,legend,strong){color:#481932!important}
+body.glow-redesign #appSettings .priss-settings-tabs button[aria-pressed=true]{color:white!important;background:#79244d!important}
+body.glow-redesign #appSettings .fb-backup-actions button{color:#79244d!important}
+#dashboardThemes .theme-preview-option{position:relative;display:grid;place-items:center;text-align:center;min-height:42px;background:color-mix(in srgb,var(--theme-background,#eadaf0) 65%,white);color:#211623;font-weight:650}
+#dashboardThemes .theme-preview-option:has(input:checked){outline:3px solid #a42465;outline-offset:1px}
+#dashboardThemes .theme-preview-option:focus-within{outline:3px solid #285e91}
+#dashboardThemes .theme-preview-option input{position:absolute;opacity:0;width:1px;height:1px}
+#dashboardThemes{box-sizing:border-box;width:min(720px,94vw);max-height:86dvh;overflow:auto}
+#dashboardThemes .theme-preview-option{background:color-mix(in srgb,var(--theme-background,#eadaf0) 43%,white)}
+body.glow-redesign #dashboardProfile .quiet-photo-action,body.glow-redesign #content .weight-guidance > summary{
+ display:inline-block;width:fit-content;min-height:24px;padding:3px 0!important;margin-block:8px!important;border:0!important;box-shadow:none!important;background:transparent!important;color:inherit!important;text-decoration:underline;text-underline-offset:3px;font:500 .9rem/1.55 system-ui!important;cursor:pointer
+}
+#dashboardProfile .quiet-photo-action:disabled{opacity:.55}
+body.glow-redesign #content:has(.cf-toolbar){background:transparent!important}
+body.glow-redesign :is(#content,dialog) :is(section,article,details,fieldset,form,.card,.cf-record-grid,.cf-account-grid,.inventory-list,textarea,input,select,div) + :is(button,.actions,.cf-actions,.button-row,.form-actions),
+body.glow-redesign :is(#content,dialog) :is(button,.actions,.cf-actions,.button-row,.form-actions) + :is(div,section,article,details,form,textarea,input,select,p){margin-block-start:12px!important}
+#appAllEvents .app-dialog-content > .layout-icon{display:grid;margin:0 0 14px}
+body.glow-redesign #content .collection-panel,body.glow-redesign .pk-dialog{
+ background:var(--theme-page-panel,#fff4f6)!important;color:var(--theme-panel-text,#302137)!important;border:1px solid #977d955a!important;padding:clamp(16px,2vw,28px)!important;border-radius:16px
+}
+#content .collection-panel .pk-tabs{display:flex;gap:4px;margin:0 0 20px;padding:0 0 12px;border-bottom:1px solid #92739059}
+#content .collection-panel .pk-tabs button{border:0;background:transparent;color:inherit;font-weight:600}
+#content .collection-panel .pk-tabs button[aria-pressed=true]{background:#503951;color:white}
+#content .collection-panel :is(.pk-actions,.cardhead){gap:10px}
+#content .collection-panel :is(.cardhead,.pk-tabs + .pk-actions){display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap}
+#content .collection-panel :is(.collection-filters,.inventory-actions:has(input[type=search])){display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));gap:10px;margin-block:16px}
+#content .collection-panel :is(input[type=search],select),body.glow-redesign .pk-dialog :is(input,textarea,select){width:100%;min-width:0;min-height:38px;border:1px solid #a79aab;background:#fffcff;color:#372e3a}
+#content .collection-panel :is(.pk-tile,.inventory-item,.pk-placeholder,details,.pk-summary,.inventory-total){background:color-mix(in srgb,var(--theme-page-panel,#fff3fa) 68%,white);color:inherit;border:1px solid #92739055;border-radius:12px;padding:12px}
+#content .collection-panel .pk-price{color:inherit}
+#content .collection-panel .pk-badge{background:#e1ede5;color:#204938}
+#content .collection-panel .pk-actions:not(.pk-tabs) button,.pk-dialog button{background:#fffafd;color:#4e304d;border:1px solid #a893a4;border-radius:9px}
+#content .collection-panel .inventory-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:14px}
+/* A second glimpse of Oz stays visible above long lists of accounts. */
+@media(min-width:800px){
+ body.glow-redesign[data-dashboard-theme=oz]:not([data-midnight-glitter]) #appMobileHeader::before{
+  content:"";position:absolute;inset:0 27% 0 32%;pointer-events:none;
+  background:url("./oz-landscape.svg") center 46% / cover no-repeat;
+  mask-image:linear-gradient(90deg,transparent,#000 23%,#000 72%,transparent)
+ }
+}

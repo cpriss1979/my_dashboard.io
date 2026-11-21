@@ -4392,7 +4392,7 @@ let gameLastTouch=0;
 document.addEventListener('gesturestart',e=>{if(e.target.closest?.('.games-card'))e.preventDefault()},{passive:false});
 document.addEventListener('touchstart',e=>{if(e.touches.length>1&&e.target.closest?.('.games-card'))e.preventDefault()},{passive:false});
 document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))return;const now=Date.now();if(now-gameLastTouch<300)e.preventDefault();gameLastTouch=now},{passive:false});
-</script><script src="./mobile-app.js?v=calendar-emoji"></script><script id="dashboard-presentation-current">
+</script><script src="./mobile-app.js?v=appearance-2"></script><script id="dashboard-presentation-current">
 /* Presentation adapter: uses the original storage, forms, recurrence and finance functions. */
 (function(){
  const phone=matchMedia('(max-width:750px)'),$=id=>document.getElementById(id),main=document.querySelector('main'),sidebar=document.querySelector('body>aside');
@@ -4987,7 +4987,7 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./finance-tools.js?v=personal-finance-1"></script>
 <script src="./cash-flow.js?v=dashboard-layout-1"></script>
 <link rel="stylesheet" href="./glitter-colors.css?v=layout-wellness">
-<script src="./glitter-colors.js?v=dashboard-layout-1"></script>
+<script src="./glitter-colors.js?v=appearance-2"></script>
 <link rel="stylesheet" href="./profile.css?v=home-greeting">
 <dialog id="dashboardProfile">
   <form>
@@ -4999,17 +4999,17 @@ dialog.tfy-dialog.app-action-dialog {
     </div>
   </form>
 </dialog>
-<script src="./profile.js?v=dashboard-layout-1"></script>
+<script src="./profile.js?v=appearance-2"></script>
 <link rel="stylesheet" href="./widgets/focus.css">
 <script src="./widgets/focus.js?v=savings-bible"></script>
 <link rel="stylesheet" href="./sticky-notes.css?v=2">
 <script src="./sticky-notes.js?v=icon-tools"></script>
 <link rel="stylesheet" href="./dashboard-colors.css?v=1">
 <script src="./dashboard-colors.js?v=emoji-stickers"></script>
-<link rel="stylesheet" href="./dashboard-personalize.css?v=layout-wellness">
+<link rel="stylesheet" href="./dashboard-personalize.css?v=appearance-2">
 <script src="./amortization.js?v=1"></script>
-<script src="./dashboard-lists.js?v=sidebar-blog"></script>
-<script src="./dashboard-personalize.js?v=dashboard-layout-1"></script>
+<script src="./dashboard-lists.js?v=appearance-2"></script>
+<script src="./dashboard-personalize.js?v=appearance-2"></script>
 <link rel="stylesheet" href="./bre-planner.css?v=matrix">
 <link rel="stylesheet" href="./dashboard-lists.css?v=stationery-2">
 <script src="./bre-planner.js?v=sidebar-blog"></script>
@@ -5026,7 +5026,7 @@ dialog.tfy-dialog.app-action-dialog {
 <link rel="stylesheet" href="./dashboard-blog.css?v=1">
 <script src="./dashboard-blog.js?v=layout-wellness"></script>
 <link rel="stylesheet" href="./dashboard-wellness.css?v=1">
-<script src="./dashboard-wellness.js?v=1"></script>
-<link rel="stylesheet" href="./dashboard-layout.css?v=1">
-<script src="./dashboard-layout.js?v=1"></script>
+<script src="./dashboard-wellness.js?v=appearance-2"></script>
+<link rel="stylesheet" href="./dashboard-layout.css?v=appearance-2">
+<script src="./dashboard-layout.js?v=appearance-2"></script>
 </body></html>

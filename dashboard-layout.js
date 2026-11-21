@@ -6,6 +6,9 @@
   const content = byId('content');
   const regions = ['Header', 'Sidebar', 'Background', 'Containers', 'Text'];
   const themes = {
+    spider: ['Spider-Man', '#961e32', '#182c52', '#dfebf7', '#fbfdff', '#21334b'],
+    paws: ['PAW Patrol', '#205c99', '#1b426c', '#d7f4f8', '#fffdf3', '#193650'],
+    oz: ['The Wizard of Oz', '#104f48', '#103e39', '#dcefdc', '#fffbee', '#243c37'],
     dolphin: ['Dolphin Cove', '#124965', '#103c52', '#c7ebee', '#f2fbfa', '#173646'],
     barbie: ['Barbie Dreamhouse', '#ac195e', '#641342', '#ffe2f1', '#fff8fc', '#4d183a'],
     santa: ['Santa Wrapping Paper', '#78242d', '#184838', '#cee2cf', '#fff8ed', '#382927'],
@@ -16,6 +19,9 @@
     confetti: ['Birthday Confetti', '#5a4588', '#403360', '#eee2fa', '#fffbff', '#382747']
   };
   const designs = {
+    spider: '<g fill="none" stroke="#294462" stroke-width="1.3"><path d="M1 1l31 28M1 1l14 36M1 1l36 12M1 1v36M1 1h36M1 12q5-3 6-1 3-4 4-4 0-4 1-6M1 23q7-5 9-2 4-6 8-6 0-6 4-7 0-5 2-7M1 34q10-6 14-3 6-9 11-9 0-9 7-11 0-6 3-10"/></g><path fill="#ba213a" d="M25 19q8-5 10 3 2 9-5 14-8-2-9-10-1-5 4-7"/><path fill="white" stroke="#1c2a3e" d="m23 24 6 3-3 2zm8 2 3-5-1 6z"/>',
+    paws: '<path fill="#cf3545" stroke="#efc452" stroke-width="2" d="M20 3q6 5 14 5v11q-1 9-14 16Q7 28 6 19V8q8 0 14-5z"/><g fill="#fff6dc"><ellipse cx="14" cy="15" rx="2.5" ry="3.5"/><ellipse cx="20" cy="12" rx="2.5" ry="3.5"/><ellipse cx="26" cy="15" rx="2.5" ry="3.5"/><path d="M13 23q1-4 6-7 4-1 7 6 2 6-4 4-2-1-4 0-6 2-5-3z"/></g>',
+    oz: '<path fill="#0e7968" d="M7 29V16l4-6 4 6v13zm10 0V10l4-8 4 8v19zm10 0V15l3-5 4 5v14z"/><path fill="#efbd49" d="M18 28h5q-8 4-1 5 10 2 5 6H9q13-5 6-6-6-2 3-5z"/>',
     dolphin: '<path fill="#2384a3" d="M5 24Q14 6 30 13L36 11 33 16 39 16Q39 19 31 20Q24 25 18 24L13 29 14 22Q10 21 8 25L4 28 6 23 2 22Z"/><circle cx="30" cy="16" r="1" fill="#123748"/>',
     barbie: '<path fill="#e65394" d="M6 13 9 23H27L31 12 23 17 19 9 14 17Z"/><path fill="#ff9ac4" d="M28 26q-6-7-9-2-2 4 9 10 10-9 6-12-3-2-6 4"/>',
     santa: '<path fill="#b71d38" d="M8 19q4-17 15-13l7 9-6-2 3 6Z"/><circle cx="31" cy="16" r="3" fill="white"/><circle cx="18" cy="23" r="9" fill="#f3bb94"/><path fill="white" d="M7 17h22v4H7zm1 8q5 2 9 0 5 3 11-1-1 11-11 12-8-3-9-11"/><path stroke="#49332f" d="M13 23h2m5 0h2"/>',
@@ -64,7 +70,11 @@
     setRail();
   });
   toggle.id='railToggle';
-  sidebar.prepend(toggle);
+  const settingsWheel=sidebar.querySelector('.glow-side-settings');
+  const railControls=node('div');
+  railControls.className='rail-controls';
+  settingsWheel.before(railControls);
+  railControls.append(settingsWheel,toggle);
   function setRail(){
     body.classList.toggle('rail-closed',closed);
     toggle.title=closed?'Expand sidebar':'Collapse sidebar';
@@ -113,6 +123,9 @@
     const color=draft?.color||fallback;
     const layers=draft?.designs??(area==='Background'&&theme?[body.dataset.dashboardTheme]:[]);
     const valid=/^#[0-9a-f]{6}$/i.test(color||'');
+    if(area==='Background' && layers.length===1 && layers[0]==='oz') {
+      return 'background-color:'+ (color||themes.oz[3]) +'!important;background-image:url("./oz-landscape.svg")!important;background-size:cover!important;background-position:center bottom!important;background-attachment:fixed!important;background-repeat:no-repeat!important;';
+    }
     if(area==='Text')return valid?'color:'+color+'!important;':'';
     if(!valid&&!layers.length&&!draft)return '';
     return (valid?'background-color:'+color+'!important;':'')+'background-image:'+tile(layers)+'!important;background-repeat:repeat!important;';
@@ -127,6 +140,7 @@
   function openPalette(){
     const route=page,owner=state;
     const d=modal('Customize '+(page==='Overview'?'Home':page));
+    d.append(button('Dashboard themes',()=>{d.close();window.DashboardThemes.open()}));
     const draft=structuredClone(state.dashboardPersonalization?.regions?.[route]||{});
     const preview=node('div');preview.className='layout-preview';
     const fields=node('fieldset');
@@ -175,7 +189,10 @@
     }));
     draw();d.showModal();
   }
-  window.DashboardLayout={chooseSection,openPalette};
+  function calendarPrintButton(){
+    return iconButton('Print calendar entries',printerPath,openPrint);
+  }
+  window.DashboardLayout={chooseSection,openPalette,calendarPrintButton};
   new MutationObserver(applyPage).observe(body,{attributes:true,attributeFilter:['data-dashboard-theme','data-midnight-glitter']});
   const sections=['Accounts','Income','Bills','Activity','Forecast'];
   function calendarRows(from,to){
@@ -248,7 +265,8 @@
     };
     d.append(form);d.showModal();
   }
-  const print=iconButton('Print report','M6 8V3h12v5M6 17H3V9h18v8h-3M6 14h12v7H6zM17 11h2',openPrint);
+  const printerPath='M6 8V3h12v5M6 17H3V9h18v8h-3M6 14h12v7H6zM17 11h2';
+  const print=iconButton('Print report',printerPath,openPrint);
   print.id='reportPrint';
   const expanded=new Set();
   function badges(){

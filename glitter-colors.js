@@ -20,6 +20,7 @@
     ['santa','Santa Wrapping Paper'], ['snowman','Snowman Village'],
     ['nutcracker','Nutcracker Ballet'], ['gingerbread','Gingerbread Bakery'],
     ['evergreen','Christmas Tree Farm'], ['confetti','Birthday Confetti'],
+    ['spider','Spider-Man'], ['paws','PAW Patrol'], ['oz','The Wizard of Oz'],
     ['custom', 'Custom']
   ];
   const key = 'glowcode-dashboard-theme';
@@ -31,7 +32,7 @@
     settings.innerHTML = '<div class="app-dialog-heading"><h2 id="dashboardThemesTitle">Themes</h2><button type="button" class="secondary">Close</button></div>';
     settings.querySelector('button').onclick = () => settings.close();
     document.body.append(settings);
-    window.DashboardThemes = { open() { if (!settings.open) settings.showModal(); } };
+    window.DashboardThemes = { open() { if (!settings.open) settings.showModal(); presets.open = true; } };
   }
   const studioKey = demo ? 'midnight-glitter-preview' : 'glowcode-theme-studio';
   const intensities = [['off','Off'],['subtle','Subtle'],['dreamy','Dreamy'],['full','Full Glitter']];
@@ -220,15 +221,7 @@
     radio.checked = id === applied.theme;
     choices.set(id, radio);
 
-    const sample = document.createElement('span');
-    sample.className = 'theme-preview-sample';
-    sample.setAttribute('aria-hidden', 'true');
-    for (const area of ['nav', 'header', 'panel']) {
-      const part = document.createElement('span');
-      part.className = 'theme-preview-' + area;
-      sample.append(part);
-    }
-    option.append(radio, document.createTextNode(name), sample);
+    option.append(radio, document.createTextNode(name));
     grid.append(option);
   }
 

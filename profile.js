@@ -31,7 +31,7 @@
   photoField.append(file);
   const removePhoto=document.createElement('button');
   removePhoto.type='button';
-  removePhoto.className='secondary';
+  removePhoto.className='quiet-photo-action';
   removePhoto.textContent='Remove photo';
   const photoStatus=document.createElement('p');
   photoStatus.setAttribute('role','status');

@@ -76,6 +76,7 @@
  }
  function allEvents(){
   const d=simpleDialog('appAllEvents','All calendar entries');const body=d.lastElementChild;
+  body.append(window.DashboardLayout.calendarPrintButton());
   const label=document.createElement('label');label.textContent='Find any entry, including past and yearly events';const search=document.createElement('input');search.type='search';search.placeholder='Title or MM/DD/YYYY';label.append(search);const list=document.createElement('div');list.className='app-event-list';body.append(label,list);
   function fill(){
    list.replaceChildren();

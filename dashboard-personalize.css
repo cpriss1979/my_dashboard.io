@@ -86,7 +86,7 @@ body.glow-redesign[data-dashboard-theme="galaxy"] { background-image:radial-grad
 body.glow-redesign[data-dashboard-theme="ocean-glass"] { background-image:repeating-radial-gradient(ellipse at 42% 120%,#5beace30 0 2px,transparent 3px 30px); }
 body.glow-redesign[data-dashboard-theme="pearl-parlor"] { background-image:radial-gradient(circle at 20px 20px,#fffdfa 1px,#f7e4ef 5px,#c88baa 7px,transparent 8px),repeating-linear-gradient(45deg,transparent 0 22px,#ffedf358 23px 25px,transparent 26px 48px);background-size:72px 55px,auto; }
 body.glow-redesign[data-dashboard-theme="pearl-parlor"] .priss-page-tools::after { content:'🧸  ◇  ♡';align-self:center;color:#5a2447;font-size:1rem; }
-body.glow-redesign[data-dashboard-theme="candy-hearts"] { background-image:radial-gradient(circle,#fff2fb77 12%,transparent 13%),linear-gradient(140deg,#ff83ba55,#c8a7ff55);background-size:46px 46px,auto; }
+body.glow-redesign[data-dashboard-theme="candy-hearts"] { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='46' viewBox='0 0 46 46'%3E%3Cpath fill='%23fff2fb' opacity='.65' d='M23 30C6 20 18 12 23 20C30 10 39 21 23 30Z'/%3E%3C/svg%3E"),linear-gradient(140deg,#ff83ba55,#c8a7ff55);background-size:46px 46px,auto; }
 
 body.glow-redesign .sticky-launcher {
   width:48px;height:48px;padding:0!important;

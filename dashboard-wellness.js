@@ -451,7 +451,10 @@
         const nextStep = delta===0?'Keep a movement routine you can repeat comfortably and review your trend over time.':
           delta<0?'Build a movement routine you can repeat comfortably. Review your trend over time and discuss nutrition changes with a clinician or dietitian.':
           'Choose manageable strength workouts and discuss ways to support adequate nutrition with a clinician or dietitian.';
-        profile.append(el('h3',direction),el('p',nextStep));
+        const guidance=el('details');
+        guidance.className='weight-guidance';
+        guidance.append(el('summary',direction),el('p',nextStep));
+        profile.append(guidance);
       }else profile.append(el('p','Enter a current and goal weight to see a suggested next step.'));
       if(data.history?.length){
         const history = el('details');

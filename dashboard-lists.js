@@ -395,15 +395,15 @@
     }catch(e){message.textContent='Import failed: '+e.message;}
   }
   function paint(host) {
-    const account=scope(),panel=$('section',undefined,'pk-panel');
-    const heading=$('div',undefined,'pk-actions');heading.append($('h2','Pokémon collection'),btn('＋ Add card',()=>editor(null,draw)));panel.append(heading);
-    panel.append($('p','Your card binder, price notebook & selling list. Values are manually recorded estimates in USD, not automatic live prices.'));
+    const account=scope(),panel=$('section',undefined,'pk-panel card');
+    const heading=$('div',undefined,'pk-actions');heading.append($('h2','Pokémon collection'),btn('Add card',()=>editor(null,draw)));panel.append(heading);
+    panel.append($('p','Track your cards, sale status and recorded values in USD.'));
     const notice=$('details');notice.append($('summary','Saving, photos & sharing'),$('p','Card details use this dashboard account’s existing save/sync system. Photos are saved in this browser on this device and are not cloud-synced. Export a Pokémon backup regularly; it includes available photos. Import that backup on another device or share it with someone you choose. Owner labels do not grant access to another account. Clearing site data removes local photos.'));panel.append(notice);
     const filters=$('div',undefined,'pk-actions'),search=$('input');search.type='search';search.placeholder='Search name, set, number, notes…';search.setAttribute('aria-label','Search Pokémon cards');
     const ownerFilter=$('select');ownerFilter.setAttribute('aria-label','Filter owner');ownerFilter.add(new Option('All owners',''));[...new Set(records().map(c=>c.owner).filter(Boolean))].sort().forEach(v=>ownerFilter.add(new Option(v,v)));
     const statusFilter=$('select');statusFilter.setAttribute('aria-label','Filter selling status');statusFilter.add(new Option('All statuses',''));statuses.forEach(v=>statusFilter.add(new Option(v,v)));
     const sort=$('select');sort.setAttribute('aria-label','Sort cards');[['new','Newest added'],['name','Card name'],['value','Highest value']].forEach(([v,t])=>sort.add(new Option(t,v)));
-    filters.append(search,ownerFilter,statusFilter,sort);panel.append(filters);
+    filters.classList.add('collection-filters');filters.append(search,ownerFilter,statusFilter,sort);panel.append(filters);
     const summary=$('p',undefined,'pk-summary'),grid=$('div',undefined,'pk-grid'),message=$('p');message.setAttribute('role','status');
     const backup=$('div',undefined,'pk-actions'),file=$('input');file.type='file';file.accept='.json,application/json';file.hidden=true;
     file.onchange=()=>{if(file.files[0])importCards(file.files[0],message,draw);file.value='';};backup.append(btn('Export Pokémon backup',()=>exportCards(message)),btn('Import Pokémon backup',()=>file.click()),file);
@@ -443,7 +443,16 @@
     const host=document.getElementById('content');if(!host)return;
     const tabs=$('div',undefined,'pk-actions pk-tabs');
     for(const [id,label] of [['pokemon','Pokémon cards'],['general','Other collectibles']]){const b=btn(label,()=>{mode=id;render();});b.setAttribute('aria-pressed',String(mode===id));tabs.append(b);}
-    if(mode==='pokemon'){host.replaceChildren(tabs);paint(host);}else host.prepend(tabs);
+    if(mode==='pokemon'){host.replaceChildren();paint(host);}
+    const panel=host.firstElementChild;
+    if(panel){
+      panel.classList.add('collection-panel');
+      panel.prepend(tabs);
+      if(mode==='general'){
+        const title=panel.querySelector('h2');
+        if(title)title.textContent='Other collectibles';
+      }
+    }
   };
   addEventListener('dashboard:account-changing',()=>{document.querySelectorAll('.pk-dialog[open]').forEach(d=>d.close());});
   if(page==='Collections')render();
