@@ -4442,7 +4442,8 @@ document.addEventListener('touchend',e=>{if(!e.target.closest?.('.games-card'))r
  function shell(){
   document.body.classList.remove('phone-is-home');$('phoneHomePages')?.remove();
   document.body.dataset.glowPage=page;
-  $('appSettingsContent').append(document.querySelector('.fb-sync-bar'),recovery,document.querySelector('.footer'));
+  const choices=$('dashboardSettingsChoices');
+  $('appSettingsContent').append(...[document.querySelector('.fb-sync-bar'),choices,recovery,document.querySelector('.footer')].filter(Boolean));
   $('appPageTitle').textContent=titleNames[page]||page;
   const bottom=$('phoneBottomNavigation');bottom.replaceChildren();
   for(const [target,label,icon] of [['Overview','Home','⌂'],['Calendar','Calendar','▦'],['Daily priorities','Tasks','✓'],['Finances','Finances','$'],['More','More','☰']]){
@@ -4992,7 +4993,7 @@ dialog.tfy-dialog.app-action-dialog {
 <link rel="stylesheet" href="./cash-flow.css?v=owner-tabs">
 <script src="./cash-flow-core.js?v=weekday-rules"></script>
 <script src="./finance-tools.js?v=personal-finance-1"></script>
-<script src="./cash-flow.js?v=dashboard-layout-1"></script>
+<script src="./cash-flow.js?v=oz-bill-schedule-1"></script>
 <link rel="stylesheet" href="./glitter-colors.css?v=layout-wellness">
 <script src="./glitter-colors.js?v=appearance-2"></script>
 <link rel="stylesheet" href="./profile.css?v=home-greeting">
@@ -5016,13 +5017,13 @@ dialog.tfy-dialog.app-action-dialog {
 <link rel="stylesheet" href="./dashboard-personalize.css?v=appearance-2">
 <script src="./amortization.js?v=1"></script>
 <script src="./dashboard-lists.js?v=appearance-2"></script>
-<script src="./dashboard-personalize.js?v=central-header-1"></script>
+<script src="./dashboard-personalize.js?v=oz-bill-schedule-1"></script>
 <link rel="stylesheet" href="./bre-planner.css?v=matrix">
 <link rel="stylesheet" href="./dashboard-lists.css?v=stationery-2">
 <script src="./bre-planner.js?v=sidebar-blog"></script>
-<script src="./dashboard-sharing.js?v=sidebar-groups"></script>
+<script src="./dashboard-sharing.js?v=oz-bill-schedule-1"></script>
 <link rel="stylesheet" href="./household.css?v=1">
-<script src="./household.js?v=central-header-1"></script>
+<script src="./household.js?v=oz-bill-schedule-1"></script>
 <link rel="stylesheet" href="./notes-studio.css?v=reflect-palette">
 <script src="./notes-studio.js?v=reflect-palette"></script>
 <link rel="stylesheet" href="./dashboard-planning.css?v=calendar-first">
@@ -5034,6 +5035,6 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./dashboard-blog.js?v=layout-wellness"></script>
 <link rel="stylesheet" href="./dashboard-wellness.css?v=1">
 <script src="./dashboard-wellness.js?v=appearance-2"></script>
-<link rel="stylesheet" href="./dashboard-layout.css?v=central-header-1">
-<script src="./dashboard-layout.js?v=central-header-1"></script>
+<link rel="stylesheet" href="./dashboard-layout.css?v=oz-bill-schedule-1">
+<script src="./dashboard-layout.js?v=oz-bill-schedule-1"></script>
 </body></html>

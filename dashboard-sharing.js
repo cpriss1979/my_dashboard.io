@@ -277,7 +277,7 @@
     if(!custom)return;
     for(const id of ['title','appPageTitle','mobileCurrentPage']){
       const title=document.getElementById(id);
-      if(title)title.textContent='Sharing';
+      if(title)title.textContent='Share';
     }
     document.querySelectorAll('[data-page="Quick notes"]').forEach(note=>{
       note.classList.remove('active');note.removeAttribute('aria-current');

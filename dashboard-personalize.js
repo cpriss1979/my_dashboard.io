@@ -380,6 +380,9 @@
   function setupSettings() {
     if(!settings||!settingsContent)return;
     settings.querySelector('h2').textContent='Settings';
+    const choices=el('div');
+    choices.id='dashboardSettingsChoices';
+    settingsContent.querySelector('.fb-sync-bar').after(choices);
     function section(label,fill){
       const group=el('details',undefined,'settings-group');
       const host=el('div');
@@ -388,12 +391,11 @@
         host.replaceChildren();
         if(group.open)fill(host);
       };
-      settingsContent.before(group);
+      choices.append(group);
       return group;
     }
     homeSettings=section('Home cards',editHome);
     const navigation=section('Navigation',host=>window.DashboardNavigation.options(host,()=>{navigation.open=false}));
-    settingsContent.prepend(el('h3','Account & data'));
     settings.addEventListener('close',()=>{homeSettings.open=false;navigation.open=false});
     const side=document.querySelector('aside .glow-side-settings');
     if(side){side.textContent='⚙';side.title='Settings';side.setAttribute('aria-label','Settings');side.onclick=()=>window.DashboardMobileUI.openSettings()}

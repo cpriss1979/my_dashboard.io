@@ -173,10 +173,11 @@
   }
   function updateNav(){
     const settings=document.getElementById('appSettings');
-    if(settings&&!settings.querySelector('.nav-customize')){
-      const actions=el('div',undefined,'household-actions nav-customize');
-      actions.append(button('Sharing',()=>{settings.close();go('Sharing')}));
-      settings.querySelector('#appSettingsContent')?.prepend(actions);
+    const actions=settings?.querySelector('.fb-sync-actions');
+    if(actions&&!actions.querySelector('#dashboardShare')){
+      const share=button('Share',()=>{settings.close();go('Sharing')});
+      share.id='dashboardShare';
+      actions.append(share);
     }
     window.DashboardSidebar.organize();
     for(const link of document.querySelectorAll('[data-mobile-route]'))hide(link,window.DashboardNavigation.isHidden(link.dataset.mobileRoute));

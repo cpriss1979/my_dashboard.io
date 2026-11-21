@@ -147,7 +147,7 @@
     const layers=draft?.designs??(area==='Background'&&theme?[body.dataset.dashboardTheme]:[]);
     const valid=/^#[0-9a-f]{6}$/i.test(color||'');
     if(area==='Background' && layers.length===1 && layers[0]==='oz') {
-      return 'background-color:'+ (color||themes.oz[3]) +'!important;background-image:url("./oz-landscape.svg")!important;background-size:cover!important;background-position:center bottom!important;background-attachment:fixed!important;background-repeat:no-repeat!important;';
+      return 'background-color:'+ (color||themes.oz[3]) +'!important;background-image:url("./oz-landscape.webp")!important;background-size:cover!important;background-position:66% center!important;background-attachment:fixed!important;background-repeat:no-repeat!important;';
     }
     if(area==='Text')return valid?'color:'+color+'!important;':'';
     if(!valid&&!layers.length&&!draft)return '';
