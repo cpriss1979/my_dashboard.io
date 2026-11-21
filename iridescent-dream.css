@@ -1,0 +1,49 @@
+/* Iridescent Dream: optional visual-only theme; no finance or application logic modified. */
+body[data-dashboard-theme="iridescent"] {
+ --theme-background:#bca9f6; --theme-sidebar:#d8b7f9; --theme-sidebar-end:#8bdcf9;
+ --theme-header:#e5b5f1; --theme-active-start:#b97ff4; --theme-active-end:#73d9f6;
+ --theme-accent:#8f4ed0; --theme-accent-end:#39c9d7;
+ --theme-page-panel:#f0e4ff; --theme-finance-panel:#f6e6ff;
+ --theme-light-text:#ffffff; --theme-panel-text:#291c65;
+ --ui-action:#7b4dbd; --ui-paper:#f8edff;
+ background:#c7b1f6 url('./iridescent-dream.png') center center / cover fixed !important;
+ color:#291c65;
+}
+body[data-dashboard-theme="iridescent"] > aside {
+ background:linear-gradient(160deg,#c9a2f4a8,#84eaf1b0 48%,#dca9f5c0),url('./iridescent-dream.png') center / cover !important;
+ border-right:2px solid #fff8 !important;
+ box-shadow:4px 0 22px #7c59cc77,inset -1px 0 10px #ffffffb0 !important;
+ color:#32216c !important;
+}
+body[data-dashboard-theme="iridescent"] > aside :is(.brand,.app-nav-label,.dashboard-profile-name,nav button,nav a,nav summary) {color:#302067 !important;text-shadow:0 1px 2px #fff9;}
+body[data-dashboard-theme="iridescent"] > aside :is(nav button.active,nav .active,.app-nav-link.active) {
+ background:linear-gradient(105deg,#f8b6f5d9,#ab9bffd9,#8cebf4e8) !important;
+ border:1px solid #fff !important; border-radius:14px !important;
+ box-shadow:0 0 14px #ffe5ff, inset 0 1px 5px #fff !important;
+ color:#2d176e !important;
+}
+body[data-dashboard-theme="iridescent"] :is(header,#appMobileHeader,.app-topbar,.dashboard-header) {
+ background:linear-gradient(115deg,#f7c1edb8,#a5a4ffb5,#83e9f3c2,#fff0b9ba),url('./iridescent-dream.png') center / cover !important;
+ border-color:#ffffffc9 !important;
+ box-shadow:0 2px 18px #ac71eaaa,inset 0 1px 4px #fff !important;
+}
+body[data-dashboard-theme="iridescent"] :is(#content,.glow-overview) :is(.card,.cf-card,.cf-record,.joy-tile,.achievement-tile,.panel,.widget,.tile),
+body[data-dashboard-theme="iridescent"] #content :is(section,article).card {
+ background:linear-gradient(125deg,#f8c9f0bc,#b9adf4c4 30%,#9ae9f3b9 64%,#ffe7b4a8),url('./iridescent-dream.png') center / cover !important;
+ color:#291c65 !important; border:1.5px solid #ffffffdb !important;
+ border-radius:22px !important;
+ box-shadow:0 0 13px #d48cff8a,0 7px 19px #7b6fd54d,inset 0 1px 9px #fff8 !important;
+ backdrop-filter:blur(12px) saturate(1.2);
+}
+body[data-dashboard-theme="iridescent"] #content :is(h1,h2,h3,h4,strong,.card-title) {color:#30176f !important;}
+body[data-dashboard-theme="iridescent"] #content :is(p,span,label,small,li) {text-shadow:0 1px 2px #fff6;}
+body[data-dashboard-theme="iridescent"] :is(#content,dialog) :is(button.primary,button.secondary,button.cf-control):not([disabled]) {
+ background:linear-gradient(115deg,#ec9debdc,#a69bf9dd,#79dfebdf) !important;
+ color:#29165d !important; border:1px solid #fff9 !important;
+ box-shadow:0 0 10px #cc95f880,inset 0 1px 3px #fff9 !important;
+}
+body[data-dashboard-theme="iridescent"] :is(input,textarea,select) {color:#291c65;}
+body[data-dashboard-theme="iridescent"] .theme-preview-option[data-dashboard-theme="iridescent"] {background:linear-gradient(115deg,#f6b9e4,#bba7f5,#8acfff,#8df2e5,#fff0a8);color:#291c65;}
+@media(prefers-reduced-motion:no-preference){
+ body[data-dashboard-theme="iridescent"] #content :is(.card,.cf-card,.joy-tile):hover {box-shadow:0 0 25px #ffb8f4,0 8px 24px #8b82d966,inset 0 1px 10px #fff !important;transition:box-shadow .3s ease;}
+}

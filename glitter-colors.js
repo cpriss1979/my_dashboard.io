@@ -11,6 +11,7 @@
     ['blueberry', 'Blueberry Dream'],
     ['citrus', 'Citrus Pop'],
     ['electric', 'Electric Bloom'],
+    ['iridescent', 'Iridescent Dream ✨'],
     ['rose-ribbon', 'Rose Ribbon'],
     ['galaxy', 'Pink Galaxy'],
     ['ocean-glass', 'Ocean Glass'],
