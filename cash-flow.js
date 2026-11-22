@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const C=window.CashFlowCore,T=window.FinanceTools,frequencies={once:'One time',weekly:'Weekly',biweekly:'Every two weeks',monthly:'Monthly',bimonthly:'Every two months',quarterly:'Quarterly',annually:'Annually'},tabs=['Overview','Income','Bills','Savings','Activity','Forecast','Archive'];
+const C=window.CashFlowCore,T=window.FinanceTools,frequencies={once:'One time',weekly:'Weekly',biweekly:'Every two weeks',monthly:'Monthly',bimonthly:'Every two months',quarterly:'Quarterly',annually:'Annually'},tabs=['Overview','Income','Bills','Savings'];
 const widgetSavings=new URLSearchParams(location.search).get('widget')==='money-tracker';
 let tab=widgetSavings?'Savings':'Overview',horizon=0,m=null,filters={frequency:''},billMonth='',calendarDay='',baseline=null,baselineOwner=null,backupOwner=null,undoing=false,historyLimit=24;const folded=new Map();let backupText='',backupProblem='';
 const today=()=>localDate(new Date()), dollars=n=>n===null||n===undefined?'Not set':money(n/100), name=accountName, uid=()=>crypto.randomUUID();
@@ -1181,20 +1181,8 @@ function bills(root){
  const source=historical?balanceModelOn(m,cutoff):m;
  const report=C.forecast(source,cutoff,0);
  const balances=report.accounts.filter(account=>matchesOwner(account.id));
- const savingsAccounts=report.savings.filter(account=>matchesOwner(account.id));
- if(balances.length||savingsAccounts.length){
-  const available=e('div',undefined,'cf-balance-list');
-  for(const account of balances){
-   const balance=savingsDisclosure(account.name+' · '+(historical&&account.current==null?'No recorded balance':dollars(account.current)),'checking|'+account.id);
-   if(account.current!=null||!historical)balance.append(clearedBreakdown(account));
-   if(!historical)balance.append(b('Transfer to savings',()=>transferToSavings(account.id)));
-   available.append(balance);
-  }
-  for(const account of savingsAccounts)available.append(savingsBalanceCard(account,false,source,!historical));
-  p.append(e('h3',historical?'Available on '+dateLabel(cutoff):'Available now'),e('p','Cleared balances through '+dateLabel(cutoff)+'.'),available);
- }else if(historical){
-  p.append(e('h3','Available on '+dateLabel(cutoff)),e('p','No recorded checking balance for this date.'));
- }
+ const checking=balances.length&&balances.every(a=>Number.isInteger(a.current))
+  ? balances.reduce((sum,a)=>sum+a.current,0):null;
  const previous=C.add(billMonth+'-01',-1).slice(0,7), next=C.add(T.monthEnd(billMonth),1).slice(0,7);
  const monthNav=row(b('‹ '+monthName(previous),()=>changeMonth(previous)),e('h3',monthName(billMonth,true),'cf-month-title'),b(monthName(next)+' ›',()=>changeMonth(next)));
  monthNav.classList.add('cf-month-nav');
@@ -1210,8 +1198,28 @@ function bills(root){
  const monthly=T.billMonthRows(all,billMonth), totals=T.billTotals(monthly);
  const ownerLabel=ownerOptions().find(([id])=>id===selectedOwner())?.[1]||'All accounts';
  const totalGrid=e('div',undefined,'cf-month-totals');
- for(const [label,amount] of [['Total due this month',totals.total],['Paid',totals.cleared],['Payment pending',totals.pending],['Still to pay',totals.planned]]){
-  const total=e('div');total.append(e('span',label),e('strong',dollars(amount)));totalGrid.append(total);
+ totalGrid.style.gridTemplateColumns='repeat(auto-fit,minmax(min(100%,135px),1fr))';
+ const left=checking===null?null:checking-totals.pending-totals.planned;
+ for(const [label,amount] of [['Total due this month',totals.total],['Paid',totals.cleared],['Payment pending',totals.pending],
+  ['Still to pay',totals.planned],['Available checking',checking],['Available left',left]]){
+  const tile=e('div');
+  if(label==='Available checking'){
+   const details=e('details'),summary=e('summary');
+   summary.append(e('span',label),e('strong',dollars(amount)));
+   summary.style.display='grid';
+   details.append(summary,e('p','Cleared through '+dateLabel(cutoff)));
+   for(const account of balances){
+    const balance=savingsDisclosure(account.name+' · '+dollars(account.current),'checking|'+account.id);
+    if(account.current!=null)balance.append(clearedBreakdown(account));
+    if(!historical)balance.append(b('Transfer to savings',()=>transferToSavings(account.id)));
+    details.append(balance);
+   }
+   tile.append(details);
+  }else{
+   tile.append(e('span',label),e('strong',dollars(amount)));
+   if(label==='Available left')tile.title='Available checking minus this month’s pending and unpaid bills.';
+  }
+  totalGrid.append(tile);
  }
  p.append(e('p',monthName(billMonth,true)+' · '+ownerLabel,'cf-totals-scope'),totalGrid);
  const views=row(...['All bills','Unpaid','Pending','Paid'].map(label=>{
@@ -1593,7 +1601,17 @@ function paint(){
  const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);
  if(tab==='Activity')content.append(recoveryControls());
  if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
- if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);const tools=card('Loan tools');tools.append(b('Loan amortization',()=>go('Amortization')));content.append(tools)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
+ if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);
+ const availableButton=b('Available',()=>{
+  const balances=content.querySelector('.cf-payday-overview')||content.querySelector('.cf-card + .cf-card');
+  balances?.scrollIntoView({block:'start'});
+ });
+ const shortcuts=row(availableButton,...['Activity','Forecast','Archive'].map(label=>b(label,()=>{
+  if(label==='Forecast')horizon=0;
+  tab=label;render();
+ })));
+ content.append(shortcuts);
+ const tools=card('Loan tools');tools.append(b('Loan amortization',()=>go('Amortization')));content.append(tools)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
 window.dashboardFinancePrint = {
  options(){
   return {scope:ownerOptions().find(([id])=>id===selectedOwner())[1],
