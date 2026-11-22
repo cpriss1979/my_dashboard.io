@@ -5118,4 +5118,30 @@ html body #content .cf-toolbar .cf-text-navigation summary.cf-nav-text::-webkit-
 #content .cf-clean-recent .cf-record-grid{gap:0!important}
 #content .cf-clean-recent .cf-record-grid>article,#content .cf-clean-recent .cf-record-grid>.cf-record{background:transparent!important;box-shadow:none!important;border:0!important;border-bottom:1px solid #80808040!important;border-radius:0!important;padding:10px 0!important;min-height:0!important}
 </style>
+
+<style id="sidebar-footer-icon-grid-v1">
+body aside .dashboard-utility-bar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px 12px!important;justify-items:center!important;align-items:center!important;padding:12px 9px 7px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+body aside .dashboard-utility-bar .rail-controls{display:contents!important}
+body aside .dashboard-utility-bar > button,body aside .dashboard-utility-bar .rail-controls > button{order:initial!important;display:flex!important;align-items:center!important;justify-content:center!important;min-height:42px!important;width:100%!important;padding:5px!important;margin:0!important;background:transparent!important;background-image:none!important;border:0!important;box-shadow:none!important;border-radius:8px!important;color:#51317c!important;cursor:pointer!important;transition:transform .16s ease,color .16s ease!important}
+body aside .dashboard-utility-bar button:hover{transform:scale(1.14)!important;color:#29135b!important;background:transparent!important;box-shadow:none!important}
+body aside .dashboard-utility-bar button svg{width:26px!important;height:26px!important;stroke:currentColor!important;fill:none!important;stroke-width:1.9!important;stroke-linecap:round!important;stroke-linejoin:round!important;pointer-events:none}
+body aside .dashboard-utility-bar .sidebar-footer-theme{grid-column:1/-1!important;width:auto!important;gap:9px!important;font-size:13px!important;font-weight:600!important;white-space:nowrap!important}
+body aside .dashboard-utility-bar .sidebar-footer-theme svg{width:25px!important;height:25px!important}
+@media(prefers-reduced-motion:reduce){body aside .dashboard-utility-bar button{transition:none!important}}
+</style>
+<script id="sidebar-footer-icon-grid-script-v1">
+(function(){
+const paths={settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.9 1.9-.06-.06A1.7 1.7 0 0 0 16 18.4a1.7 1.7 0 0 0-1 1.56V21h-3v-1.04a1.7 1.7 0 0 0-1-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-1.9-1.9.06-.06A1.7 1.7 0 0 0 7.6 15a1.7 1.7 0 0 0-1.56-1H5v-3h1.04A1.7 1.7 0 0 0 7.6 10a1.7 1.7 0 0 0-.34-1.88L7.2 8.06l1.9-1.9.06.06A1.7 1.7 0 0 0 11 6.6a1.7 1.7 0 0 0 1-1.56V4h3v1.04a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.9 1.9-.06.06A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.56 1H22v3h-1.04A1.7 1.7 0 0 0 19.4 15Z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',notes:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 3v18M11 8h6M11 12h6M11 16h4"/>',close:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M16 9l-3 3 3 3"/>',theme:'<circle cx="13" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="17" cy="10" r="1"/><path d="M13 21a2.5 2.5 0 0 1-1-5h2"/>'};
+const svg=k=>'<svg aria-hidden="true" viewBox="0 0 24 24">'+paths[k]+'</svg>';
+function install(){const aside=document.querySelector('body aside'),bar=aside?.querySelector('.dashboard-utility-bar');if(!bar||bar.dataset.iconGridReady)return false;
+const settings=aside.querySelector('.glow-side-settings'),timer=bar.querySelector('[aria-label="Timer"]'),notes=bar.querySelector('[aria-label="Sticky Notes"]'),close=aside.querySelector('#railToggle');if(!settings||!timer||!notes||!close)return false;
+bar.dataset.iconGridReady='1';
+const buttons=[[settings,'settings','Settings'],[timer,'clock','Clock / Focus timer'],[notes,'notes','Notes'],[close,'close','Close sidebar']];
+buttons.forEach(([b,k,label])=>{bar.appendChild(b);b.innerHTML=svg(k);b.title=label;b.setAttribute('aria-label',label);b.setAttribute('data-footer-icon',k)});
+const theme=document.createElement('button');theme.type='button';theme.className='sidebar-footer-theme';theme.innerHTML=svg('theme')+'<span>Change theme</span>';theme.title='Change theme';theme.setAttribute('aria-label','Change theme');theme.onclick=()=>window.DashboardThemes?.open?.();bar.appendChild(theme);
+return true;}
+if(!install()){let tries=0;const observer=new MutationObserver(()=>{if(install()||++tries>200)observer.disconnect()});observer.observe(document.documentElement,{childList:true,subtree:true});}
+})();
+</script>
+
 </body></html>
