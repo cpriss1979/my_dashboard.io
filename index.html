@@ -5072,4 +5072,13 @@ html body #content .cf-nav-menu:not([open])>.cf-nav-dropdown{display:none!import
  },true);
 })();
 </script>
+<style id="finance-nav-hover-selection">
+html body #content .cf-toolbar .cf-text-navigation :is(button,summary).cf-nav-text.cf-nav-text {
+ background:transparent!important; background-image:none!important; box-shadow:none!important; border:0!important; border-radius:0!important; text-decoration:none!important; color:inherit!important; opacity:.78!important; transition:opacity .15s ease,scale .15s ease; scale:1; cursor:pointer;
+}
+html body #content .cf-toolbar .cf-text-navigation :is(button,summary).cf-nav-text.cf-nav-text[aria-current="page"] {opacity:1!important; font-weight:750!important; color:inherit!important;}
+html body #content .cf-toolbar .cf-text-navigation :is(button,summary).cf-nav-text.cf-nav-text:hover {scale:1.07; opacity:1!important; text-decoration:none!important;}
+
+@media(prefers-reduced-motion:reduce){html body #content .cf-toolbar .cf-text-navigation .cf-nav-text{transition:none!important;}}
+</style>
 </body></html>
