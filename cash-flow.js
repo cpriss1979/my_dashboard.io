@@ -589,27 +589,26 @@ function banner(){const p=card('Accounts');
   tab='Overview';
   historyLimit=24;calendarDay='';render();
  }
- const owner=row();owner.classList.add('cf-owner-switch');
- owner.setAttribute('role','group');owner.setAttribute('aria-label','Account view');
- if(choices.length>5){
-  const control=select('accountView',choices,selectedOwner());
-  control.onchange=()=>changeView(control.value);
-  owner.append(field('Account view',control));
- }else if(choices.length>1){
-  for(const [id,label] of choices){
-   const control=b(label,()=>changeView(id));
-   control.setAttribute('aria-pressed',String(selectedOwner()===id));owner.append(control);
-  }
+ const owner=e('div',undefined,'cf-text-navigation');
+ owner.setAttribute('role','navigation');owner.setAttribute('aria-label','Finance navigation');
+ const overviewLink=b('Overview',()=>changeView(''),'cf-nav-text');
+ overviewLink.setAttribute('aria-current',tab==='Overview'&&!selectedOwner()?'page':'false');owner.append(overviewLink);
+ for(const [id,label] of choices){
+  const menu=e('details',undefined,'cf-nav-menu');
+  const trigger=e('summary',label,'cf-nav-text');
+  if(selectedOwner()===id&&(id||tab!=='Overview'))trigger.setAttribute('aria-current','page');
+  const items=e('div',undefined,'cf-nav-dropdown');
+  for(const x of tabs){const control=b(x,()=>{
+   selectOwner(id);
+   if(x==='Bills'&&tab!=='Bills'){billView='All bills';billSearch='';filters.frequency='';calendarDay='';}
+   tab=x;historyLimit=24;render();
+  },'cf-nav-text');
+  if(selectedOwner()===id&&tab===x)control.setAttribute('aria-current','page');items.append(control);}
+  menu.append(trigger,items);owner.append(menu);
+  menu.addEventListener('toggle',()=>{if(menu.open)for(const other of owner.querySelectorAll('details[open]'))if(other!==menu)other.open=false});
  }
- if(!owner.children.length){const all=b('All accounts',()=>changeView(''));all.setAttribute('aria-pressed','true');owner.append(all)}
  p.append(owner);
-
- const t=row();t.classList.add('cf-tabs');for(const x of tabs){const btn=b(x,()=>{
-  if(x==='Bills'&&tab!=='Bills'){billView='All bills';billSearch='';filters.frequency='';calendarDay='';}
-  if(x==='Forecast'&&tab!=='Forecast')horizon=0;
-  tab=x;render();
- }); 
- btn.setAttribute('aria-pressed',String(tab===x));t.append(btn)}p.append(t);const tools=e('details');tools.append(e('summary','Budget settings'),e('p',m.budgetName||'My budget'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Open Activity → Change history to review a saved change.'));p.append(tools);return p}
+ const tools=e('details');tools.append(e('summary','Budget settings'),e('p',m.budgetName||'My budget'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Open Activity → Change history to review a saved change.'));p.append(tools);return p}
 function visiblePlans(report){
  return report.accounts.filter(account=>matchesOwner(account.id)).map(account=>({
   account,plan:T.paydayPlan(account,today(),C.add(today(),30))
@@ -1610,7 +1609,7 @@ function paint(){
   if(label==='Forecast')horizon=0;
   tab=label;render();
  })));
- content.append(shortcuts);
+ shortcuts.classList.add('cf-text-navigation');for(const control of shortcuts.children)control.classList.add('cf-nav-text');content.append(shortcuts);
  const tools=card('Loan tools');tools.append(b('Loan amortization',()=>go('Amortization')));content.append(tools)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
 window.dashboardFinancePrint = {
  options(){
