@@ -609,7 +609,7 @@ function banner(){const p=card('Accounts');
   menu.addEventListener('toggle',()=>{if(menu.open)for(const other of owner.querySelectorAll('details[open]'))if(other!==menu)other.open=false});
  }
  p.append(owner);
- const tools=e('details');tools.append(e('summary','Budget settings'),e('p',m.budgetName||'My budget'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(b('View pre-update safety copy',()=>showSafetyCopy()),e('p','A device safety copy is saved before your first change. Open Activity → Change history to review a saved change.'));p.append(tools);return p}
+ const tools=e('details');tools.append(e('summary','Budget settings'),e('p',m.budgetName||'My budget'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(e('p','A device safety copy is saved before your first change. Open Activity → Change history to review a saved change.'));p.append(tools);return p}
 function visiblePlans(report){
  return report.accounts.filter(account=>matchesOwner(account.id)).map(account=>({
   account,plan:T.paydayPlan(account,today(),C.add(today(),30))
@@ -716,7 +716,7 @@ function savingsBalanceCard(account,summaryOnly=false,source=m,editable=true){
  item.append(details);
  if(!editable)return item;
  if(summaryOnly){
-  item.append(accountControls(account));
+  item.append(row(b('Edit account',()=>accountForm(m.accounts.find(a=>a.id===account.id)),'cf-clean-link'),b('Delete account',()=>deleteAccount(account.id),'cf-clean-link')),accountControls(account));
   return item;
  }
  const math=e('div',undefined,'cf-payday-math');
@@ -782,6 +782,9 @@ function overview(root,report){
  const plans=visiblePlans(report);
  const savings=report.savings.filter(account=>matchesOwner(account.id));
  const placed=new Set();
+ grid.classList.add('cf-stacked-accounts');
+ const lanes=[e('div',undefined,'cf-account-lane'),e('div',undefined,'cf-account-lane')];
+ const ownerLanes=new Map();
  const deposits=C.events(m,today()).filter(x=>depositDue(x,today()));
  for(const {account,plan} of plans){
   const item=e('article',undefined,'cf-payday-focus');
@@ -806,14 +809,18 @@ function overview(root,report){
   item.append(detail);
   const column=e('div',undefined,'cf-account-column');
   column.append(item);
+  item.append(row(b('Edit account',()=>accountForm(m.accounts.find(a=>a.id===account.id)),'cf-clean-link'),b('Delete account',()=>deleteAccount(account.id),'cf-clean-link')));
   for(const saving of savingsForChecking(account,savings)){
    if(placed.has(saving.id))continue;
    placed.add(saving.id);
    column.append(savingsBalanceCard(saving,true));
   }
-  grid.append(column);
+  const key=account.ownerId||accountPairLabel(account);
+  if(!ownerLanes.has(key))ownerLanes.set(key,ownerLanes.size%2);
+  lanes[ownerLanes.get(key)].append(column);
  }
- for(const saving of savings)if(!placed.has(saving.id))grid.append(savingsBalanceCard(saving,true));
+ for(const saving of savings)if(!placed.has(saving.id))lanes[ownerLanes.get(saving.ownerId||accountPairLabel(saving))??0].append(savingsBalanceCard(saving,true));
+ grid.append(...lanes.filter(l=>l.childElementCount));
  if(!plans.length&&activeAccounts().length)p.append(e('p','No checking accounts in this view.'));
  const actions=row(b('Add account',()=>accountForm()));
  if(activeAccounts().length>1)actions.prepend(b('Transfer money',()=>transferForm(null,{from:scopedChecking()}),'primary'));
@@ -824,7 +831,7 @@ function overview(root,report){
  more.append(e('summary','More finance details'));
  root.append(more);
  overviewMonth(more);
- const recent=card('Recent activity');
+ const recent=card('Recent activity');recent.classList.add('cf-clean-recent');
  const entries=C.events(m,today()).filter(x=>x.status!=='planned'&&matchesTransaction(x))
   .sort((a,b)=>historyDate(b).localeCompare(historyDate(a))).slice(0,4);
  const selection=financeSelection();
@@ -845,6 +852,8 @@ function overview(root,report){
 function deleteAccount(id){
  const account = activeAccounts().find(a=>a.id===id);
  if(!account)return;
+ if(!window.confirm('Delete '+account.name+'? Its linked records will be retained. Reassign active bills and income first.'))return;
+ if([...m.bills,...m.income].some(r=>!r.deleted&&!r.archived&&r.account===id)){window.alert('Reassign or archive active bills and income before deleting this account.');return;}
  safeAction('Delete account',()=>{
   account.deleted = true;
   
@@ -1039,31 +1048,20 @@ function changeMonth(value){
  }
 }
 function monthPicker(){
- const [year,currentMonth]=billMonth.split('-');
- const months=Array.from({length:12},(_,index)=>{
-  const number=String(index+1).padStart(2,'0');
-  return [number,monthName(year+'-'+number)];
- });
- const years=Array.from({length:300},(_,index)=>{
-  const value=String(1900+index);
-  return [value,value];
- });
- const month=select('billMonth',months,currentMonth);
- const yearSelect=select('billYear',years,year);
- function pick(event){
-  const name=event.currentTarget.name;
-  changeMonth(yearSelect.value+'-'+month.value);
-  document.querySelector('#content select[name="'+name+'"]')?.focus({preventScroll:true});
- }
- month.onchange=pick;
- yearSelect.onchange=pick;
- return row(field('Bill month',month),field('Bill year',yearSelect));
+ const picker=e('details',undefined,'cf-month-picker');
+ picker.append(e('summary',monthName(billMonth,true)));
+ const panel=e('div',undefined,'cf-month-picker-panel');
+ let year=Number(billMonth.slice(0,4));
+ const label=e('strong',String(year));
+ const months=e('div',undefined,'cf-month-picker-grid');
+ function paint(){label.textContent=String(year);months.replaceChildren();for(let i=1;i<=12;i++){const key=year+'-'+String(i).padStart(2,'0');const n=b(monthName(key).slice(0,3),()=>changeMonth(key),'cf-clean-link');n.setAttribute('aria-pressed',String(key===billMonth));months.append(n);}}
+ panel.append(row(b('‹',()=>{year=Math.max(1900,year-1);paint()},'cf-clean-link'),label,b('›',()=>{year=Math.min(2199,year+1);paint()},'cf-clean-link')),months);picker.append(panel);paint();return picker;
 }
 function billsForMonth(){
  return C.events(m,T.monthEnd(billMonth),{byDue:true}).filter(item=>item.kind==='bill'&&matchesOwner(item.account));
 }
 function overviewMonth(root){
- const panel=card('Monthly bills');
+ const panel=card('Monthly bills');panel.classList.add('cf-clean-monthly');
  const totals=T.billTotals(T.billMonthRows(billsForMonth(),billMonth));
  const grid=e('div',undefined,'cf-month-totals');
  for(const [label,amount] of [['Total scheduled',totals.total],['Paid',totals.cleared],['Payment pending',totals.pending],['Still to pay',totals.planned]]){
@@ -1175,7 +1173,7 @@ function billsBalanceDate(month,day,now){
 function bills(root){
  const selection=financeSelection('bill entry');
  const selectableBill=item=>selection.attach(billCard(item),item);
- const p=card('Bills & expenses');
+ const p=card('Bills & expenses');p.classList.add('cf-clean-bills');
  const now=today(),cutoff=billsBalanceDate(billMonth,calendarDay,now);
  const historical=cutoff<now;
  const source=historical?balanceModelOn(m,cutoff):m;

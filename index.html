@@ -5002,7 +5002,7 @@ dialog.tfy-dialog.app-action-dialog {
 #content .cf-nav-dropdown{position:absolute;top:100%;left:0;z-index:100;min-width:145px;padding:10px 16px;background:var(--bg,#f4eefb);color:var(--ink);border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 22px #0002;display:flex;flex-direction:column;align-items:flex-start;gap:5px}
 #content .cf-toolbar{overflow:visible!important;position:relative;z-index:5}
 </style>
-<script src="./cash-flow.js?v=20261122-nav-available-1"></script>
+<script src="./cash-flow.js?v=20261122-finance-clean-2"></script>
 <link rel="stylesheet" href="./glitter-colors.css?v=layout-wellness">
 <script src="./glitter-colors.js?v=appearance-2"></script>
 <link rel="stylesheet" href="./profile.css?v=home-greeting">
@@ -5098,5 +5098,24 @@ html body #content .cf-toolbar .cf-text-navigation button.cf-overview-link.cf-na
 html body #content .cf-toolbar .cf-text-navigation summary.cf-nav-text::after{content:none!important;display:none!important}
 html body #content .cf-toolbar .cf-text-navigation summary.cf-nav-text::marker{content:""!important}
 html body #content .cf-toolbar .cf-text-navigation summary.cf-nav-text::-webkit-details-marker{display:none!important}
+</style>
+<style>
+#content .cf-stacked-accounts{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))!important;align-items:start!important;gap:14px!important}
+#content .cf-account-lane,#content .cf-account-column{display:flex!important;flex-direction:column!important;gap:12px!important;min-width:0;align-self:start!important}
+#content .cf-account-column>*{width:100%;box-sizing:border-box;margin:0!important}
+#content :is(.cf-clean-bills,.cf-clean-monthly,.cf-clean-recent) .cf-actions>button,#content button.cf-clean-link{background:transparent!important;background-image:none!important;box-shadow:none!important;border:0!important;border-radius:0!important;color:inherit!important;text-decoration:none!important;font-size:14px!important;min-height:36px;padding:8px 12px!important;transition:transform .15s}
+#content :is(.cf-clean-bills,.cf-clean-monthly,.cf-clean-recent) .cf-actions>button:hover,#content button.cf-clean-link:hover{transform:scale(1.05)}
+#content :is(.cf-clean-bills,.cf-clean-monthly,.cf-clean-recent) .cf-actions>button[aria-pressed=true],#content .cf-month-picker button[aria-pressed=true]{font-weight:750!important;opacity:1!important}
+#content .cf-clean-monthly>.cf-actions>button{min-width:155px}
+#content .cf-month-picker{position:relative;min-width:150px;margin:0!important}
+#content .cf-month-picker>summary{cursor:pointer;padding:8px 12px;font-weight:650;list-style:none}
+#content .cf-month-picker>summary::after{content:' ▾'}
+#content .cf-month-picker-panel{position:absolute;top:100%;left:0;z-index:30;background:var(--card-bg,#f5effc);color:inherit;border:1px solid #bba6ce;border-radius:12px;padding:10px;box-shadow:0 8px 24px #0002;width:240px}
+#content .cf-month-picker-panel>.cf-actions{display:flex;justify-content:space-between;align-items:center}
+#content .cf-month-picker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+#content .cf-clean-bills .cf-month-nav{display:flex!important;align-items:center;justify-content:space-between!important;gap:12px}
+#content .cf-clean-bills .cf-month-title{font-size:clamp(18px,2vw,26px)!important;margin:0!important;text-align:center}
+#content .cf-clean-recent .cf-record-grid{gap:0!important}
+#content .cf-clean-recent .cf-record-grid>article,#content .cf-clean-recent .cf-record-grid>.cf-record{background:transparent!important;box-shadow:none!important;border:0!important;border-bottom:1px solid #80808040!important;border-radius:0!important;padding:10px 0!important;min-height:0!important}
 </style>
 </body></html>
