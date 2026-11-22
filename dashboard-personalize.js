@@ -377,6 +377,32 @@
     }
   }
 
+  const clockFields = [
+    ['digitalClock', 'Time', '#80defa'],
+    ['date', 'Date', '#a5b4cb']
+  ];
+  const clockStyle = el('style');
+  document.head.append(clockStyle);
+
+  function applyClockColors() {
+    const colors = prefs().clockColors || {};
+    clockStyle.textContent = clockFields.filter(([id]) => hex(colors[id]))
+      .map(([id]) => 'html body .date-blessing #' + id + ' { color: ' + colors[id] + ' !important; }')
+      .join('\n');
+  }
+
+  function editClockColors(host) {
+    for (const [id, label, fallback] of clockFields) {
+      host.append(colorFields(label, prefs().clockColors?.[id], fallback, color => {
+        const colors = write().clockColors ??= {};
+        if (color) colors[id] = color;
+        else delete colors[id];
+        applyClockColors();
+        save();
+      }));
+    }
+  }
+
   function setupSettings() {
     if(!settings||!settingsContent)return;
     settings.querySelector('h2').textContent='Settings';
@@ -394,6 +420,7 @@
       choices.append(group);
       return group;
     }
+    section('Time and date colors',editClockColors);
     homeSettings=section('Home cards',editHome);
     const navigation=section('Navigation',host=>window.DashboardNavigation.options(host,()=>{navigation.open=false}));
     settings.addEventListener('close',()=>{homeSettings.open=false;navigation.open=false});
@@ -412,9 +439,11 @@
     }
   }
   setupSettings();
+  addEventListener('dashboard:data-applied',applyClockColors);
   const previousRender=render;
   render=function(){
     previousRender();
+    applyClockColors();
     const tools=el('div',undefined,'priss-page-tools');
 
     if(page==='Overview') {
@@ -442,3 +471,4 @@
   });
   render();
 })();
+
