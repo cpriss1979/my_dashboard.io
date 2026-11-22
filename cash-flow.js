@@ -24,8 +24,7 @@ function accountView(account){return account?'account:'+account.id:''}
 function accountLabel(account){
  const type=account.type==='savings'?'Savings':'Checking';
  const label=account.name.trim().replace(/(?:\s*[-–—]\s*|\s+)(?:checking|savings)$/i,'');
- const owner=label.match(/^(Crystal|Rick)(?:[’']?s)?$/i)?.[1];
- const base=owner?owner[0].toUpperCase()+owner.slice(1).toLowerCase():label;
+ const base=label;
  return base.toLowerCase()===type.toLowerCase()?type:base+' '+type;
 }
 function scopedChecking(){
@@ -39,7 +38,7 @@ function selectedOwner(){
  try{
   const saved=ownerPreferences.has(key)?ownerPreferences.get(key):localStorage.getItem(key);
   const legacy=activeAccounts().find(account=>accountView(account)===saved);
-  const view=['crystal','rick'].includes(saved)?'group:'+saved:
+  const view=m.groups.some(group=>group.id===saved)?'group:'+saved:
    legacy?(viewOwner(legacy)?'group:'+viewOwner(legacy):'unassigned'):saved;
   return ownerOptions().some(([id])=>id===view)?view:'';
  }catch{return ''}
@@ -592,13 +591,14 @@ function banner(){const p=card('Accounts');
  const owner=e('div',undefined,'cf-text-navigation');
  owner.setAttribute('role','navigation');owner.setAttribute('aria-label','Finance navigation');
  const overviewLink=b('Overview',()=>changeView(''),'cf-nav-text');
+ overviewLink.classList.add('cf-overview-link');
  overviewLink.setAttribute('aria-current',tab==='Overview'&&!selectedOwner()?'page':'false');owner.append(overviewLink);
  for(const [id,label] of choices){
   const menu=e('details',undefined,'cf-nav-menu');
   const trigger=e('summary',label,'cf-nav-text');
   if(selectedOwner()===id&&(id||tab!=='Overview'))trigger.setAttribute('aria-current','page');
   const items=e('div',undefined,'cf-nav-dropdown');
-  for(const x of tabs){const control=b(x,()=>{
+  for(const x of tabs.filter(x=>x!=='Overview')){const control=b(x,()=>{
    selectOwner(id);
    if(x==='Bills'&&tab!=='Bills'){billView='All bills';billSearch='';filters.frequency='';calendarDay='';}
    tab=x;historyLimit=24;render();

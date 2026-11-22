@@ -5002,7 +5002,7 @@ dialog.tfy-dialog.app-action-dialog {
 #content .cf-nav-dropdown{position:absolute;top:100%;left:0;z-index:100;min-width:145px;padding:10px 16px;background:var(--bg,#f4eefb);color:var(--ink);border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 22px #0002;display:flex;flex-direction:column;align-items:flex-start;gap:5px}
 #content .cf-toolbar{overflow:visible!important;position:relative;z-index:5}
 </style>
-<script src="./cash-flow.js?v=20261121-text-nav-3"></script>
+<script src="./cash-flow.js?v=20261122-nav-clean-1"></script>
 <link rel="stylesheet" href="./glitter-colors.css?v=layout-wellness">
 <script src="./glitter-colors.js?v=appearance-2"></script>
 <link rel="stylesheet" href="./profile.css?v=home-greeting">
@@ -5080,5 +5080,23 @@ html body #content .cf-toolbar .cf-text-navigation :is(button,summary).cf-nav-te
 html body #content .cf-toolbar .cf-text-navigation :is(button,summary).cf-nav-text.cf-nav-text:hover {scale:1.07; opacity:1!important; text-decoration:none!important;}
 
 @media(prefers-reduced-motion:reduce){html body #content .cf-toolbar .cf-text-navigation .cf-nav-text{transition:none!important;}}
+</style>
+
+<style id="sidebar-utility-order">
+body aside .dashboard-utility-bar > .rail-controls{display:contents!important}
+body aside .dashboard-utility-bar .glow-side-settings{order:1!important}
+body aside .dashboard-utility-bar > button[aria-label="Timer"]{order:2!important}
+body aside .dashboard-utility-bar > button:not([aria-label="Timer"]){order:3!important}
+body aside .dashboard-utility-bar #railToggle{order:4!important}
+/* Override nested rail-control ordering with higher specificity. */
+body.glow-redesign aside .dashboard-utility-bar .rail-controls > .glow-side-settings{order:1!important}
+body.glow-redesign aside .dashboard-utility-bar .rail-controls > #railToggle{order:4!important}
+</style>
+<style id="finance-nav-clean-final">
+html body #content .cf-toolbar .cf-text-navigation :is(button,summary).cf-nav-text.cf-nav-text[aria-current="page"]{font-weight:600!important;opacity:1!important}
+html body #content .cf-toolbar .cf-text-navigation button.cf-overview-link.cf-nav-text{font-weight:750!important}
+html body #content .cf-toolbar .cf-text-navigation summary.cf-nav-text::after{content:none!important;display:none!important}
+html body #content .cf-toolbar .cf-text-navigation summary.cf-nav-text::marker{content:""!important}
+html body #content .cf-toolbar .cf-text-navigation summary.cf-nav-text::-webkit-details-marker{display:none!important}
 </style>
 </body></html>
