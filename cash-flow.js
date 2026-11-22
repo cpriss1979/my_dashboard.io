@@ -598,10 +598,11 @@ function banner(){const p=card('Accounts');
   const trigger=e('summary',label,'cf-nav-text');
   if(selectedOwner()===id&&(id||tab!=='Overview'))trigger.setAttribute('aria-current','page');
   const items=e('div',undefined,'cf-nav-dropdown');
-  for(const x of tabs.filter(x=>x!=='Overview')){const control=b(x,()=>{
+  for(const x of [...tabs.filter(x=>x!=='Overview'),'Available']){const control=b(x,()=>{
    selectOwner(id);
    if(x==='Bills'&&tab!=='Bills'){billView='All bills';billSearch='';filters.frequency='';calendarDay='';}
-   tab=x;historyLimit=24;render();
+   tab=x==='Available'?'Overview':x;historyLimit=24;render();
+   if(x==='Available')document.querySelector('#content .cf-payday-overview')?.scrollIntoView({block:'start'});
   },'cf-nav-text');
   if(selectedOwner()===id&&tab===x)control.setAttribute('aria-current','page');items.append(control);}
   menu.append(trigger,items);owner.append(menu);
