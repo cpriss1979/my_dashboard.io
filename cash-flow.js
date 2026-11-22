@@ -782,95 +782,28 @@ function overview(root,report){
  const plans=visiblePlans(report);
  const savings=report.savings.filter(account=>matchesOwner(account.id));
  const placed=new Set();
- const available=[];
- const events=new Map([...C.events(m,report.end,{byDue:true}),...C.events(m,report.end)].map(item=>[item.id,item]));
- const monthReport=C.forecast(m,today(),30); // A consistent, explicit 30-day window for the overview
+ const deposits=C.events(m,today()).filter(x=>depositDue(x,today()));
  for(const {account,plan} of plans){
   const item=e('article',undefined,'cf-payday-focus');
-  const billRows=[...plan.before.filter(entry=>entry.kind==='bill'),
-   ...plan.bills.filter(entry=>entry.paydayTiming==='before')];
-  const billBalance=account.current===null?null:billRows.reduce((balance,entry)=>balance+entry.delta,account.current);
-  const otherRows=[...plan.before.filter(entry=>entry.kind!=='bill')];
-  const fullBalance=plan.preDeposit;
-  const title=e('h3',name(account.id));
-  const headline=e('strong',dollars(billBalance),'cf-payday-amount');
-  if(billBalance<0)headline.classList.add('cf-shortfall');
-  const expanded=e('details',undefined,'cf-overview-breakdown');
-  expanded.append(e('summary','Balance and payday details'),e('p',plan.hasPayday?'Left after bills, before payday':'Left after bills over the next 30 days'),headline);
-  item.append(title,e('strong',dollars(account.current),'cf-payday-amount'),e('p','Full cleared balance'),clearedBreakdown(account),expanded);
-  const cushion=cushionOverview(account,plan);
-  if(cushion)expanded.append(cushion);
-  const math=e('div',undefined,'cf-payday-math');
-  function mathLine(label,amount,entry){
-   const line=e('div',undefined,'cf-payday-line');
-   const source=entry&&events.get(entry.id);
-   line.append(source?b(label,()=>editEvent(source),'cf-payday-edit'):e('span',label),e('strong',dollars(amount)));
-   return line;
+  const entries=[...plan.before,...plan.bills.filter(x=>x.paydayTiming==='before')];
+  const bills=entries.filter(x=>x.kind==='bill').reduce((sum,x)=>sum+x.delta,0);
+  const other=entries.filter(x=>x.kind!=='bill').reduce((sum,x)=>sum+x.delta,0);
+  item.append(e('h3',name(account.id)));
+  for(const deposit of deposits.filter(x=>x.account===account.id&&(x.expectedDate||x.date)>=account.asOf)){
+   item.append(b('Confirm deposit · '+deposit.name+' · '+dateLabel(deposit.expectedDate||deposit.date)+' · '+dollars(deposit.amount),
+    ()=>confirmDeposit(deposit),'primary'));
   }
-  math.append(mathLine('Cleared balance in dashboard',account.current));
-  for(const entry of billRows)math.append(mathLine(dateLabel(entry.date)+' · '+entry.name,entry.delta,entry));
-  if(!billRows.length)math.append(e('p',plan.hasPayday?'No bills scheduled before the deposit.':'No bills scheduled in this period.'));
-  expanded.append(math);
-  if(otherRows.length){
-   const moves=e('details',undefined,'cf-payday-other');
-   moves.append(e('summary','With other planned activity · '+dollars(fullBalance)));
-   const movement=e('div',undefined,'cf-payday-math');
-   for(const entry of otherRows){
-    const label=dateLabel(entry.date)+' · '+(entry.kind==='transfer'?name(entry.from)+' → '+name(entry.to):entry.name);
-    movement.append(mathLine(label,entry.delta,entry));
-   }
-   moves.open=fullBalance<0;
-   moves.append(movement);
-   expanded.append(moves);
-  }
-  if(plan.firstShort||fullBalance<0){
-   let balance=account.current;
-   const beforeDeposit=[...plan.before,...plan.bills.filter(entry=>entry.paydayTiming==='before')];
-   const trigger=balance>=0?beforeDeposit.find(entry=>(balance+=entry.delta)<0):null;
-   const source=trigger&&events.get(trigger.id);
-   const message=dollars(-balance)+' short on '+dateLabel(trigger?.date||today())+(trigger?' after '+trigger.name:' · cleared balance');
-   expanded.append(source?b(message,()=>editEvent(source),'cf-payday-edit cf-shortfall'):e('p',message,'cf-shortfall'));
-  }
-  expanded.append(e('p',account.nextDeposit?'Next deposit · '+dateLabel(account.nextDeposit.date)+' · '+dollars(account.nextDeposit.amount):'No expected deposit entered'));
-  const details=e('details',undefined,'cf-forecast-details');
-  details.append(e('summary','Payday details'),paydayBreakdown(account,plan));
-  expanded.append(details);
-  const spendable=plan.preDeposit===null?null:Math.max(0,Math.min(plan.lowest,plan.preDeposit)-(account.cushion||0));
-  available.push(spendable);
-  // Display the actual projected result beside today's cleared balance; never hide it behind Forecast.
-  const month=monthReport.accounts.find(a=>a.id===account.id);
-  if(month){
-   const future=month.future||[];
-   const deposits=future.filter(x=>x.delta>0&&['income','money-in'].includes(x.kind)).reduce((sum,x)=>sum+x.delta,0);
-   const bills=future.filter(x=>x.delta<0&&['bill','money-out'].includes(x.kind)).reduce((sum,x)=>sum-x.delta,0);
-   const other=future.filter(x=>!['income','money-in','bill','money-out'].includes(x.kind)).reduce((sum,x)=>sum+x.delta,0);
-   const summary=e('div',undefined,'cf-payday-math');
-   summary.append(balanceFooter('Current cleared balance (money in bank)',month.current),
-    balanceFooter('Expected income over next 30 days (not yet received)',deposits),
-    balanceFooter('Upcoming bills over next 30 days',-bills),
-    balanceFooter('Other planned activity over next 30 days',other),
-    balanceFooter('PROJECTED balance in 30 days',month.projected));
-   const heading=e('h4','30-day money picture · '+dateLabel(today())+' to '+dateLabel(monthReport.end));
-   const note=e('p','Projected balance includes future deposits and expenses. It is NOT the amount currently in your bank account. When a deposit is marked cleared, it moves into your cleared balance and must not be counted twice.');
-   item.append(heading,summary,note);
-  }
-  // Keep cleared money and expected future income visibly separate.
-  // A forecast is not a bank balance, even when the deposit is due today.
-  const explanation=e('details',undefined,'cf-overview-breakdown');
-  explanation.append(e('summary','How available spending is calculated'));
-  const spendMath=e('div',undefined,'cf-payday-math');
-  spendMath.append(balanceFooter('Cleared money in the account',account.current));
-  spendMath.append(balanceFooter('Lowest projected balance before the next deposit',plan.lowest));
-  spendMath.append(balanceFooter('Balance immediately before the next deposit',plan.preDeposit));
-  spendMath.append(balanceFooter('Money reserved as your cushion',account.cushion||0));
-  spendMath.append(balanceFooter('Safe to spend before that deposit',spendable));
-  explanation.append(e('p','This is a conservative spending limit, NOT the balance after your next paycheck. Expected income is not spendable until it is received and recorded as cleared.'),spendMath);
-  if(account.nextDeposit){
-   explanation.append(e('p','Next expected deposit: '+dateLabel(account.nextDeposit.date)+' · '+dollars(account.nextDeposit.amount)+'. This is included in Forecast, not in cleared money.'));
-  }
-  const forecastLink=b('See projected balance and every included transaction',()=>{tab='Forecast';render()},'cf-payday-edit');
-  item.append(balanceFooter('Safe to spend before next deposit',spendable),explanation,
-   e('p','Future deposits and bills are shown separately in Forecast. They do not change your cleared bank balance.'),forecastLink,accountControls(account));
+  item.append(balanceFooter('Recorded checking balance',account.current),
+   balanceFooter(plan.hasPayday?'Bills before payday on '+dateLabel(plan.cutoff):'Bills through '+dateLabel(plan.cutoff),bills));
+  if(other)item.append(balanceFooter('Other planned activity',other));
+  item.append(balanceFooter('Left after bills and planned activity',plan.preDeposit));
+  if(account.cushion)item.append(balanceFooter('Left after keeping '+dollars(account.cushion)+' in checking',
+   plan.preDeposit===null?null:plan.preDeposit-account.cushion));
+  const detail=e('details');
+  detail.append(e('summary','See transactions and account options'),clearedBreakdown(account));
+  for(const entry of entries)detail.append(balanceFooter(dateLabel(entry.date)+' · '+entry.name,entry.delta));
+  detail.append(accountControls(account));
+  item.append(detail);
   const column=e('div',undefined,'cf-account-column');
   column.append(item);
   for(const saving of savingsForChecking(account,savings)){
@@ -885,14 +818,12 @@ function overview(root,report){
  const actions=row(b('Add account',()=>accountForm()));
  if(activeAccounts().length>1)actions.prepend(b('Transfer money',()=>transferForm(null,{from:scopedChecking()}),'primary'));
  p.append(actions,grid);
- if(available.length){
-  const total=available.every(Number.isFinite)?available.reduce((sum,value)=>sum+value,0):null;
-  p.append(e('p',(selectedOwner()?'Safe to spend before next deposit · checking':'Total safe to spend before next deposit · checking')+' · '+dollars(total),'cf-savings-total'),
-   e('small','Conservative estimate based on cleared money, upcoming activity before the next deposit, and cushions. Future income is shown in Forecast, not treated as cleared cash.'));
- }
  p.classList.add('cf-payday-overview');
  root.append(p);
- overviewMonth(root);
+ const more=e('details');
+ more.append(e('summary','More finance details'));
+ root.append(more);
+ overviewMonth(more);
  const recent=card('Recent activity');
  const entries=C.events(m,today()).filter(x=>x.status!=='planned'&&matchesTransaction(x))
   .sort((a,b)=>historyDate(b).localeCompare(historyDate(a))).slice(0,4);
@@ -900,15 +831,15 @@ function overview(root,report){
  recent.append(selection.top,compactList('Latest transactions',entries.map(x=>selection.attach(compactRow(
   x.name,x.amount,[dateLabel(historyDate(x)),x.kind==='transfer'?name(x.from)+' → '+name(x.to):name(x.account),x.kind==='bill'?statusLabel(x):x.status],[b('Edit',()=>editEvent(x)),b('Delete',()=>deleteEvent(x),'link')],x.account||x.from
  ),x))),b('View Activity',()=>{tab='Activity';render()}));
- root.append(recent);
- attention(root,{...report,accounts:plans.map(({account,plan})=>({...account,min:plan.lowest,firstShort:plan.firstShort}))});
+ more.append(recent);
+ attention(more,{...report,accounts:plans.map(({account,plan})=>({...account,min:plan.lowest,firstShort:plan.firstShort}))});
  const suggestions=report.recommendations.filter(t=>matchesOwner(t.to));
  if(suggestions.length){
   const moves=card('Suggested money moves');
   moves.append(group('Protect bill coverage',suggestions.map(t=>tile('Move between checking accounts',t.amount,[name(t.from)+' → '+name(t.to),'Needed by '+dateLabel(t.needBy)],[b('Transfer money',()=>transferForm(null,t))],t.to))));
-  root.append(moves);
+  more.append(moves);
  }
- if(m.bills.some(b=>!b.archived&&!b.deleted&&!b.start&&matchesOwner(b.account)))root.append(e('p','Some bills have unknown planning dates. Add a due or planning date under Bill schedule to include them in projections.','cf-warning'));
+ if(m.bills.some(b=>!b.archived&&!b.deleted&&!b.start&&matchesOwner(b.account)))more.append(e('p','Some bills have unknown planning dates. Add a due or planning date under Bill schedule to include them in projections.','cf-warning'));
 }
 
 function deleteAccount(id){
@@ -940,14 +871,54 @@ function accountControls(account){
  panel.append(actions,details);
  return panel;
 }
+function depositDue(item,day){
+ return item.kind==='income'&&item.status!=='cleared'&&(item.expectedDate||item.date)<=day;
+}
+function confirmDeposit(item){
+ const account=m.accounts.find(a=>a.id===item.account);
+ const matches=(m.ledger||[]).filter(x=>!x.deleted&&!x.reconciliationId&&!x.afterDepositId&&
+  x.account===item.account&&x.direction==='in'&&x.amount===item.amount&&x.date<=today());
+ const options=[...(matches.length?[['','Choose how to record this deposit']]:[]),['new','Add this posted deposit'],...matches.map(x=>[x.id,'Use recorded deposit · '+dateLabel(x.date)+' · '+x.name])];
+ const source=select('source',options,matches.length?'':'new');
+ source.required=true;
+ const date=input('posted','date',item.expectedDate||item.date);
+ date.max=today();
+ const amount=number('amount',item.amount/100,.01);
+ source.onchange=()=>{
+  const match=matches.find(x=>x.id===source.value);
+  date.value=match?.date||item.expectedDate||item.date;
+  amount.value=(match?.amount??item.amount)/100;
+  date.readOnly=amount.readOnly=!!match;
+ };
+ form('Confirm '+item.name+' · '+name(item.account),[
+  field('Deposit record',source),field('Bank posting date',date),field('Posted amount ($)',amount),
+  e('p','If this paycheck is already in Activity, use its recorded deposit.','cf-wide'),
+  field('Already included in the starting balance on '+dateLabel(account.asOf),check('included',false))
+ ],f=>{
+  const current=C.events(m,today()).find(x=>x.id===item.id&&x.account===item.account);
+  if(!current||current.status==='cleared')throw Error('This deposit has changed. Reopen Income.');
+  const match=matches.find(x=>x.id===source.value);
+  if(!match&&source.value!=='new')throw Error('Choose a deposit record.');
+  const posted=match?.date||date.value;
+  if(!posted||posted>today())throw Error('Enter the bank posting date through today.');
+  if(f.included.checked&&posted>account.asOf)throw Error('This deposit came after the starting balance date.');
+  const tags=match?match.afterBalances:f.included.checked?{}:balanceTags([item.account]);
+  m.overrides[item.id]={...current,preferred:current.preferred||current.date,date:posted,posted,
+   amount:match?.amount??cents(amount.value),status:'cleared',cleared:true,afterBalances:tags,
+   notes:match?.notes||current.notes||''};
+  if(match)match.deleted=true;
+ });
+}
 function income(root){
  const p=card('Income');
  p.append(row(b('Add expected deposit',()=>incomeForm(null,'once'),'primary'),b('Set up income rule',()=>incomeForm())));
  const deposits=C.events(m,C.add(today(),90)).filter(x=>x.kind==='income'&&matchesOwner(x.account));
  const depositRow=x=>compactRow(x.name,x.amount,[dateLabel(x.date),name(x.account),x.status],[
-  b('Edit deposit',()=>occurrenceForm(x)),b('Delete',()=>deleteEvent(x),'link')
+  ...(depositDue(x,today())?[b('Confirm deposit',()=>confirmDeposit(x),'primary')]:[]),b('Edit deposit',()=>occurrenceForm(x)),b('Delete',()=>deleteEvent(x),'link')
  ],x.account,[x.notes]);
- const upcoming=deposits.filter(x=>x.status!=='cleared'&&(x.date>=today()||x.status==='pending'));
+ const due=deposits.filter(x=>depositDue(x,today())).sort((a,b)=>b.date.localeCompare(a.date));
+ if(due.length)p.append(compactList('Deposits awaiting confirmation',due.map(depositRow)));
+ const upcoming=deposits.filter(x=>x.status!=='cleared'&&!depositDue(x,today()));
  p.append(compactList('Upcoming deposits',upcoming.sort((a,b)=>a.date.localeCompare(b.date)).map(depositRow)));
  const rules=m.income.filter(x=>!x.deleted&&(x.frequency!=='once'||x.archived)&&matchesOwner(x.account));
  p.append(compactList('Recurring income rules',rules.map(r=>compactRow(
