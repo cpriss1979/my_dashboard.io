@@ -5327,4 +5327,35 @@ function boot(){if(init())return;const obs=new MutationObserver(()=>{if(init())o
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 </script>
+
+<style id="settings-logout-control-style">
+#settingsLogoutControl{display:block!important;width:100%!important;margin:18px 0 8px!important;padding:13px 16px!important;border-radius:12px!important;border:1px solid #b96c92!important;background:#fff1f7!important;color:#713451!important;font:700 15px system-ui!important;cursor:pointer!important;text-align:center!important}
+#settingsLogoutControl:hover{background:#f8dbe9!important}
+</style>
+<script id="settings-logout-control-script">
+(function(){
+ function install(){
+  const headings=[...document.querySelectorAll('h1,h2,h3,[role="heading"]')].filter(el=>el.textContent.trim()==='Settings');
+  for(const h of headings){
+   const panel=h.closest('dialog,[role="dialog"],.modal,.settings-modal,.glow-settings-modal') || h.parentElement?.parentElement;
+   if(!panel||panel.querySelector('#settingsLogoutControl'))continue;
+   // Confirm this is the actual dashboard settings panel, not a sidebar label.
+   if(!panel.textContent.includes('Sign-in & recovery')&&!panel.textContent.includes('Account access'))continue;
+   const btn=document.createElement('button');btn.type='button';btn.id='settingsLogoutControl';btn.textContent='Sign out';
+   btn.addEventListener('click',()=>{
+    const signout=document.getElementById('fbSignOut');
+    const gate=document.getElementById('fbGateSignOut');
+    if(signout){signout.click();return}
+    if(gate){gate.click();return}
+    window.alert('Sign out is not available until account authentication finishes loading.');
+   });
+   const recovery=[...panel.querySelectorAll('summary,h3,h4')].find(el=>el.textContent.trim()==='Sign-in & recovery');
+   const anchor=recovery?.closest('details,.glow-recovery')||recovery;
+   if(anchor)anchor.insertAdjacentElement('beforebegin',btn);else panel.append(btn);
+  }
+ }
+ function start(){install();const observer=new MutationObserver(install);observer.observe(document.body,{childList:true,subtree:true});}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
 </body></html>
