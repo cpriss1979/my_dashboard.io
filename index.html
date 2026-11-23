@@ -5285,4 +5285,46 @@ html body.glow-redesign main header.top #dashboardRailAvatar span{font-size:24px
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
+
+<style id="dashboard-star-account-menu-fix">
+#dashboardStarAccountMenu{position:fixed;z-index:2147483000;min-width:205px;padding:10px;border:1px solid #b9a1d8;border-radius:16px;background:rgba(249,240,255,.97);box-shadow:0 12px 38px #35234d35;backdrop-filter:blur(16px);color:#38235d}
+#dashboardStarAccountMenu[hidden]{display:none!important}
+#dashboardStarAccountMenu button{display:block;width:100%;text-align:left;border:0;border-radius:9px;background:transparent;color:inherit;padding:12px;font:600 14px system-ui;cursor:pointer}
+#dashboardStarAccountMenu button:hover{background:#e8d9f7}
+#dashboardStarAccountMenu .account-menu-note{padding:8px 10px;font:12px system-ui;opacity:.8}
+</style>
+<script id="dashboard-star-account-menu-fix-script">
+(function(){
+function init(){
+ const avatar=document.getElementById('dashboardRailAvatar');
+ if(!avatar)return false;
+ if(avatar.dataset.accountMenuReady)return true;
+ avatar.dataset.accountMenuReady='1';
+ const menu=document.createElement('div');menu.id='dashboardStarAccountMenu';menu.hidden=true;
+ menu.innerHTML='<button type="button" data-action="profile">Edit profile</button><button type="button" data-action="settings">Settings</button><button type="button" data-action="signout">Sign out</button><div class="account-menu-note" hidden></div>';
+ document.body.append(menu);
+ function hide(){menu.hidden=true;avatar.setAttribute('aria-expanded','false')}
+ function show(){const r=avatar.getBoundingClientRect();menu.hidden=false;menu.style.top=Math.min(window.innerHeight-menu.offsetHeight-12,r.bottom+8)+'px';menu.style.left=Math.max(8,Math.min(window.innerWidth-menu.offsetWidth-8,r.right-menu.offsetWidth))+'px';avatar.setAttribute('aria-expanded','true')}
+ avatar.setAttribute('aria-haspopup','menu');
+ avatar.addEventListener('click',function(e){e.stopImmediatePropagation();e.preventDefault();if(menu.hidden)show();else hide()},true);
+ menu.addEventListener('click',function(e){
+ const b=e.target.closest('button');if(!b)return;
+ const action=b.dataset.action;
+ if(action==='signout'){
+  const signout=document.getElementById('fbSignOut');
+  const gateSignout=document.getElementById('fbGateSignOut');
+  const target=signout&&!signout.hidden?signout:gateSignout&&!gateSignout.hidden?gateSignout:null;
+  if(target){hide();target.click()}
+  else {const note=menu.querySelector('.account-menu-note');note.textContent='No Google account is currently signed in. This dashboard is in local-only mode.';note.hidden=false}
+ }else if(action==='profile'){hide();document.querySelector('.dashboard-profile-avatar')?.click()}
+ else if(action==='settings'){hide();document.querySelector('.glow-side-settings')?.click()}
+ });
+ document.addEventListener('click',e=>{if(!menu.contains(e.target)&&e.target!==avatar)hide()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
+ return true;
+}
+function boot(){if(init())return;const obs=new MutationObserver(()=>{if(init())obs.disconnect()});obs.observe(document.body,{subtree:true,childList:true});setTimeout(()=>obs.disconnect(),15000)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
 </body></html>
