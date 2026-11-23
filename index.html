@@ -4187,6 +4187,17 @@ const fieldsBeforeAmPm=fieldsFor;fieldsFor=function(){
   label.append(location);fields.append(label);
  }
 };kind.onchange=fieldsFor;
+
+const fieldsBeforeAllDay=fieldsFor;
+fieldsFor=function(){fieldsBeforeAllDay();if(kind.value!=='events')return;
+ const label=document.createElement('label');label.className='event-all-day-toggle';
+ const box=document.createElement('input');box.type='checkbox';box.name='allDayEvent';
+ label.append(box,document.createTextNode(' All-day event'));
+ const first=form.elements.time?.closest('label');first?.before(label);
+ const update=()=>{for(const name of ['time','endTime']){const input=form.elements[name],clock=document.getElementById(name+'Clock12');if(!input)continue;if(box.checked){input.value='';if(clock)clock.hidden=true}else if(clock)clock.hidden=false}};
+ box.onchange=update;update();
+};kind.onchange=fieldsFor;
+
 const editBeforeAmPm=editEntry;editEntry=function(k,id){editBeforeAmPm(k,id);if(k==='events'){addCalendarAmPmControls();['time','endTime'].forEach(name=>document.getElementById(name+'Clock12')?.refresh())}};
 
 function dateTextToISO(value){const m=value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(!m)return '';const y=Number(m[3]),month=Number(m[1]),day=Number(m[2]);if(y<1000||month<1||month>12||day<1||day>new Date(y,month,0).getDate())return '';return m[3]+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
@@ -4228,6 +4239,13 @@ const calendarBeforeUSHolidays=cal;cal=function(){
  const holidays=dates.flatMap(holidaysOnDate);return root.innerHTML+'<div class="us-holiday-key"><span aria-hidden="true">◆</span> U.S. holidays</div>'+ (holidays.length?'<div class="us-holiday-list">'+holidays.map(x=>'<div><time>'+esc(displayUSDate(x.date))+'</time><span>'+esc(x.title)+'</span></div>').join('')+'</div>':'');
 };render();
 
+
+const editBeforeAllDay=editEntry;
+editEntry=function(k,id){editBeforeAllDay(k,id);if(k==='events'){
+ const event=state.events.find(x=>x.id===id),box=form.elements.allDayEvent;
+ if(box&&event){box.checked=!event.time;box.dispatchEvent(new Event('change'))}
+}};
+
 function chooseYearCalendarDay(date){selected=date;month=new Date(date+'T12:00:00');month.setDate(1);calendarView='month';render()}
 function moveCalendarYear(delta){month=new Date(month.getFullYear()+delta,month.getMonth(),1);render()}
 const calendarBeforeYearTab=cal;cal=function(){
@@ -4243,6 +4261,24 @@ const calendarBeforeYearTab=cal;cal=function(){
 
 const renderBeforeCompactYear=render;render=function(){renderBeforeCompactYear();document.querySelector('main').classList.toggle('calendar-year-active',(page==='Calendar'||page==='Overview')&&calendarView==='year')};render();
 
+
+/* Daily calendar: 24-hour view, preserving the existing month/week/year views. */
+const calendarBeforeDaily=cal;
+cal=function(){
+ if(calendarView==='day'){
+  const day=new Date(selected+'T12:00:00');
+  const heading=day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const events=state.events.filter(e=>eventOnDate(e,selected));
+  const allDay=events.filter(e=>!e.time);
+  const slot=(hour)=>events.filter(e=>e.time&&Number(e.time.split(':')[0])===hour).map(e=>'<div class="day-schedule-event"><strong>'+esc(e.title)+'</strong> <small>'+esc(calendarTimeRange(e))+'</small> <button class="link" onclick="editEntry(\'events\',\''+e.id+'\')">Edit</button></div>').join('');
+  return '<div class="calendar-controls"><div role="group" aria-label="Calendar view"><button class="view-tab chosen" onclick="changeCalendarView(\'day\')">Day</button><button class="view-tab" onclick="changeCalendarView(\'month\')">Month</button><button class="view-tab" onclick="changeCalendarView(\'week\')">Week</button><button class="view-tab" onclick="changeCalendarView(\'year\')">Year</button></div><button class="link" onclick="goToday()">Today</button></div>'+
+  '<div class="cardhead"><button class="link" onclick="moveCalendarDay(-1)">←</button><h3>'+heading+'</h3><button class="link" onclick="moveCalendarDay(1)">→</button></div><div class="day-schedule"><div class="day-schedule-all"><strong>All day</strong><div>'+ (allDay.map(e=>'<span>'+esc(e.title)+'</span>').join('')||'No all-day events')+'</div></div>'+Array.from({length:24},(_,h)=>'<div class="day-schedule-hour"><time>'+new Date(2020,0,1,h).toLocaleTimeString('en-US',{hour:'numeric',hour12:true})+'</time><div>'+slot(h)+'</div></div>').join('')+'</div>';
+ }
+ const html=calendarBeforeDaily();
+ return html.replace(/(<div role="group" aria-label="Calendar view">)/,'$1<button class="view-tab" onclick="changeCalendarView(\'day\')">Day</button>');
+};
+function moveCalendarDay(n){const d=new Date(selected+'T12:00:00');d.setDate(d.getDate()+n);selected=localDate(d);month=new Date(d.getFullYear(),d.getMonth(),1);render()}
+
 function journalDateText(date){return date.slice(5,7)+'/'+date.slice(8,10)+'/'+date.slice(0,4)}
 function journalParseDate(value){const m=value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(!m)return '';const year=Number(m[3]),month=Number(m[1]),day=Number(m[2]);if(year<1000||month<1||month>12||day<1||day>new Date(year,month,0).getDate())return '';return m[3]+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
 function initJournal(){if(!Array.isArray(state.journal))state.journal=[];if(!state.journalDraft)state.journalDraft={id:'',date:journalDateText(localDate(new Date())),title:'',text:'',mood:''}}
@@ -4254,7 +4290,7 @@ function renderJournalPage(){
  content.innerHTML=`<div class="journal-layout"><section class="card journal-library"><div class="cardhead"><h2>Your entries</h2><button type="button" class="secondary" id="journalNew">＋ New entry</button></div><label>Find an entry<input id="journalSearch" type="search" placeholder="Search words or MM/DD/YYYY"></label><div id="journalEntries"></div><p class="muted">Saved only in this browser. Export backup includes your journal and current draft.</p></section><section class="card journal-editor"><form id="journalForm"><div class="cardhead"><h2>${d.id?'Edit entry':'Today’s page'}</h2><span class="journal-count">${state.journal.length} ${state.journal.length===1?'entry':'entries'}</span></div><div class="journal-fields"><label>Date (MM/DD/YYYY)<input name="journalDate" inputmode="numeric" placeholder="MM/DD/YYYY" required value="${esc(d.date)}"></label><label>How are you feeling?<select name="journalMood"><option value="">Choose a mood (optional)</option>${['Grateful','Happy','Peaceful','Hopeful','Thoughtful','Tired','Sad','Anxious'].map(m=>`<option ${d.mood===m?'selected':''}>${m}</option>`).join('')}</select></label></div><label>Title<input name="journalTitle" maxlength="200" placeholder="Give this moment a name" value="${esc(d.title)}"></label><label>Your thoughts<textarea name="journalText" rows="15" required placeholder="What’s on your mind today?">${esc(d.text)}</textarea></label><p id="journalDraftStatus" class="muted">Draft is kept automatically in this browser. Save entry to add it to your journal.</p><div class="journal-buttons"><button class="primary">${d.id?'Save changes':'Save entry'}</button>${d.id?'<button type="button" class="journal-delete" id="journalDelete">Delete entry</button>':''}</div></form></section></div>`;
  const f=document.getElementById('journalForm');
  const emojiLabel=document.createElement('label');
- emojiLabel.textContent='Emoji sticker';
+ emojiLabel.textContent='Emoji sticker';emojiLabel.hidden=true;
  const emojiInput=document.createElement('input');
  emojiInput.name='journalEmoji';emojiInput.maxLength=24;emojiInput.value=d.emoji||'';emojiInput.placeholder='🌸';
  emojiLabel.append(emojiInput);f.elements.journalTitle.closest('label').after(emojiLabel);
@@ -5129,59 +5165,99 @@ body aside .dashboard-utility-bar .sidebar-footer-theme{grid-column:1/-1!importa
 body aside .dashboard-utility-bar .sidebar-footer-theme svg{width:25px!important;height:25px!important}
 @media(prefers-reduced-motion:reduce){body aside .dashboard-utility-bar button{transition:none!important}}
 </style>
-<script id="sidebar-footer-icon-grid-script-v2">
+<script id="sidebar-footer-icon-grid-script-v3">
 (function(){
-const icons={
-settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-notes:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 3v18M11 8h6M11 12h6M11 16h4"/>',
-close:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M16 9l-3 3 3 3"/>',
-theme:'<circle cx="13" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="17" cy="10" r="1"/><path d="M13 21a2.5 2.5 0 0 1-1-5h2"/>'};
-const svg=k=>'<svg aria-hidden="true" viewBox="0 0 24 24">'+icons[k]+'</svg>';
-function setup(){
- const aside=document.querySelector('aside');
- const bar=aside?.querySelector('.dashboard-utility-bar');
- const settings=aside?.querySelector('.glow-side-settings');
- const clock=aside?.querySelector('button[aria-label="Timer"],button[title="Timer"]');
- const notes=aside?.querySelector('button[aria-label="Sticky Notes"]');
- const close=aside?.querySelector('#railToggle');
- if(!bar||!settings||!clock||!notes||!close)return false;
- if(bar.dataset.footerLayoutV2==='ready')return true;
- bar.dataset.footerLayoutV2='ready';
- [[settings,'settings','Settings'],[clock,'clock','Clock'],[notes,'notes','Notes'],[close,'close','Close sidebar']].forEach(([el,key,label])=>{
-   bar.append(el);
-   el.innerHTML=svg(key);
-   el.title=label;
-   el.setAttribute('data-footer-icon',key);
-   if(key!=='close')el.setAttribute('aria-label',label);
- });
- const theme=document.createElement('button');
- theme.type='button';theme.className='sidebar-footer-theme';
- theme.innerHTML=svg('theme')+'<span>Change theme</span>';
- theme.setAttribute('aria-label','Change theme');
- theme.onclick=()=>window.DashboardThemes?.open?.();
- bar.append(theme);
- return true;
-}
-function init(){
- if(setup())return;
- const observer=new MutationObserver(()=>{if(setup())observer.disconnect()});
- observer.observe(document.documentElement,{childList:true,subtree:true});
- window.addEventListener('load',setup,{once:true});
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+ const paths={settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',notes:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 3v18M11 8h6M11 12h6M11 16h4"/>',close:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M16 9l-3 3 3 3"/>',theme:'<circle cx="13" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="17" cy="10" r="1"/><path d="M13 21a2.5 2.5 0 0 1-1-5h2"/>'};
+ const svg=k=>'<svg aria-hidden="true" viewBox="0 0 24 24">'+paths[k]+'</svg>';
+ function install(){const aside=document.querySelector('body>aside'),bar=aside?.querySelector('.dashboard-utility-bar');if(!bar)return false;
+  if(bar.dataset.footerV3)return true;
+  const settings=aside.querySelector('.glow-side-settings'),timer=aside.querySelector('[aria-label="Timer"]'),notes=aside.querySelector('[aria-label="Sticky Notes"]'),close=aside.querySelector('#railToggle');
+  if(!settings||!timer||!notes||!close)return false;
+  bar.dataset.footerV3='1';
+  [[settings,'settings','Settings'],[timer,'clock','Clock'],[notes,'notes','Notes'],[close,'close','Close sidebar']].forEach(([el,k,label])=>{bar.append(el);el.innerHTML=svg(k);el.title=label;el.setAttribute('aria-label',label);el.dataset.footerIcon=k});
+  const theme=document.createElement('button');theme.type='button';theme.className='sidebar-footer-theme';theme.innerHTML=svg('theme')+'<span>Change theme</span>';theme.onclick=()=>window.DashboardThemes?.open?.();bar.append(theme);
+  const old=document.getElementById('pagePalette');if(old)old.style.display='none';
+  return true;
+ }
+ function init(){install();const aside=document.querySelector('body>aside');if(!aside)return;
+  const media=matchMedia('(min-width:751px)');
+  const collapse=()=>{if(media.matches)document.body.classList.add('rail-closed')};
+  const expand=()=>{if(media.matches)document.body.classList.remove('rail-closed')};
+  aside.addEventListener('mouseenter',expand);aside.addEventListener('mouseleave',collapse);
+  collapse();
+  const mo=new MutationObserver(()=>{if(!document.querySelector('.dashboard-utility-bar')?.dataset.footerV3)install()});mo.observe(aside,{childList:true,subtree:true});
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 
-<style id="sidebar-footer-final-v2">
-html body aside .dashboard-utility-bar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:8px 12px!important;width:100%!important;align-items:center!important;justify-items:stretch!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:12px 8px!important}
-html body aside .dashboard-utility-bar>button[data-footer-icon]{position:static!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;min-height:46px!important;order:0!important;padding:8px!important;background:transparent!important;border:0!important;box-shadow:none!important}
-html body aside .dashboard-utility-bar>button[data-footer-icon="settings"]{grid-column:1;grid-row:1}
-html body aside .dashboard-utility-bar>button[data-footer-icon="clock"]{grid-column:2;grid-row:1}
-html body aside .dashboard-utility-bar>button[data-footer-icon="notes"]{grid-column:1;grid-row:2}
-html body aside .dashboard-utility-bar>button[data-footer-icon="close"]{grid-column:2;grid-row:2}
-html body aside .dashboard-utility-bar>.sidebar-footer-theme{grid-column:1/-1!important;grid-row:3!important;justify-self:center!important;display:flex!important;align-items:center!important;gap:8px!important;width:auto!important;min-height:42px!important;border:0!important;background:transparent!important;box-shadow:none!important}
-html body aside .dashboard-utility-bar>button svg{width:28px!important;height:28px!important;stroke:currentColor!important;fill:none!important}
-html body aside .dashboard-utility-bar>button:hover{transform:scale(1.1)!important;background:transparent!important}
+<style id="dashboard-20261122-improvements">
+@media(min-width:751px){body.glow-redesign>aside{transition:width .18s ease,box-shadow .18s ease!important;z-index:95!important}body.glow-redesign.rail-closed>aside{width:62px!important}body.glow-redesign:not(.rail-closed)>aside{box-shadow:4px 0 22px #40235b2b}}
+body.glow-redesign aside .dashboard-utility-bar{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px 9px!important;align-items:center!important;padding:10px 6px!important}
+body.glow-redesign aside .dashboard-utility-bar>button[data-footer-icon]{display:flex!important;align-items:center!important;justify-content:center!important;background:transparent!important;border:0!important;box-shadow:none!important;min-height:42px!important;width:100%!important;padding:5px!important;order:0!important}
+body.glow-redesign aside .dashboard-utility-bar>[data-footer-icon="settings"]{grid-area:1/1!important}body.glow-redesign aside .dashboard-utility-bar>[data-footer-icon="clock"]{grid-area:1/2!important}body.glow-redesign aside .dashboard-utility-bar>[data-footer-icon="notes"]{grid-area:2/1!important}body.glow-redesign aside .dashboard-utility-bar>[data-footer-icon="close"]{grid-area:2/2!important}
+body.glow-redesign aside .dashboard-utility-bar>.sidebar-footer-theme{grid-area:3/1/4/3!important;justify-self:center!important;display:flex!important;align-items:center!important;gap:7px!important;background:transparent!important;border:0!important;box-shadow:none!important;white-space:nowrap!important}
+body.glow-redesign aside .dashboard-utility-bar button svg{width:29px!important;height:29px!important;stroke:currentColor!important;fill:none!important}
+@media(min-width:751px){body.glow-redesign.rail-closed aside .dashboard-utility-bar{display:flex!important;flex-direction:column!important}body.glow-redesign.rail-closed aside .dashboard-utility-bar .sidebar-footer-theme span{display:none!important}body.glow-redesign.rail-closed aside .dashboard-utility-bar button{min-height:39px!important}}
+#content .calendar-controls [role="group"]{display:flex!important;flex-wrap:wrap;gap:5px!important}
+#content .day-schedule{max-height:72vh;overflow-y:auto;border:1px solid #d9c9e9;border-radius:12px;background:#ffffff99}
+#content .day-schedule-hour,#content .day-schedule-all{display:grid;grid-template-columns:88px minmax(0,1fr);min-height:52px;border-bottom:1px solid #d9c9e9}
+#content .day-schedule-hour>time,#content .day-schedule-all>strong{font-size:12px;padding:12px 9px;color:#63458b;border-right:1px solid #d9c9e9}
+#content .day-schedule-hour>div,#content .day-schedule-all>div{padding:6px 10px}
+#content .day-schedule-event{background:#e9ddf8;border-left:3px solid #9871cd;border-radius:7px;margin:3px;padding:7px}
+#content .event-all-day-toggle{display:flex;align-items:center;gap:8px;font-weight:600}
+#content .glow-project-archive{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important}
+#content .glow-project-archive>summary{color:#5e3c8a!important;text-decoration:underline;text-underline-offset:4px;cursor:pointer;font-weight:600}
+#content .project-archive>h2{font-size:1rem!important}
+#content [class*="chore"]:is(.card,.glow-panel,section){border-radius:14px!important;border-color:#cdb7e6!important;box-shadow:0 4px 16px #64458a12!important}
+#content [class*="bible"] button{border-radius:9px!important;padding:8px 12px!important;font-weight:600!important;transition:transform .15s ease}
+#content [class*="bible"] button:hover{transform:translateY(-1px)}
+body.glow-redesign aside nav svg,body.glow-redesign aside nav .layout-icon svg{width:24px!important;height:24px!important}
 </style>
-</body></html>
+<style id="dashboard-flyout-rail-v1">
+@media(min-width:751px){
+html body.glow-redesign>aside{display:none!important}
+html body.glow-redesign>main{margin-left:70px!important;width:calc(100% - 70px)!important;max-width:none!important}
+#dashboardIconRail{position:fixed;z-index:1100;left:0;top:0;bottom:0;width:68px;display:flex;flex-direction:column;align-items:center;padding:14px 7px;gap:7px;background:linear-gradient(165deg,#f0e3fa,#d7d5f7 55%,#c9e9f0);border-right:1px solid #9d82bd;box-shadow:2px 0 13px #38205f1a;overflow-y:auto;scrollbar-width:none}
+#dashboardIconRail::-webkit-scrollbar{display:none}
+#dashboardIconRail button{display:grid;place-items:center;flex:0 0 45px;width:50px;height:45px;padding:7px;border:0!important;border-radius:12px;background:transparent!important;box-shadow:none!important;color:#3a245c!important;cursor:pointer}
+#dashboardIconRail button:hover,#dashboardIconRail button:focus-visible,#dashboardIconRail button[data-open="true"]{background:#ffffffa6!important;color:#25113e!important}
+#dashboardIconRail button svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+#dashboardIconRail .rail-spacer{flex:1 0 12px}
+#dashboardFlyout{position:fixed;z-index:1101;top:10px;left:68px;width:265px;max-height:calc(100vh - 20px);overflow-y:auto;padding:15px;border:1px solid #b7a3d0;border-radius:0 17px 17px 0;background:linear-gradient(160deg,#f5eafd,#e6e0fa 70%,#dff4f5);box-shadow:9px 8px 25px #30204d32;color:#382253;display:none}
+#dashboardFlyout[data-visible="true"]{display:block}
+#dashboardFlyout h3{font-size:17px;color:#382253;margin:2px 4px 12px;font-weight:750}
+#dashboardFlyout button{display:block;width:100%;text-align:left;border:0!important;background:transparent!important;box-shadow:none!important;color:#382253!important;border-radius:9px;padding:11px 12px;font-size:14px;cursor:pointer}
+#dashboardFlyout button:hover,#dashboardFlyout button:focus-visible{background:#ffffffa6!important;color:#24113e!important}
+}
+@media(max-width:750px){#dashboardIconRail,#dashboardFlyout{display:none!important}}
+</style>
+<script id="dashboard-flyout-rail-script-v1">
+(function(){
+const icons={home:'<path d="m3 11 9-8 9 8v10h-7v-7h-4v7H3z"/>',calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 2v6M17 2v6M3 10h18"/>',finances:'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18M16 15h2"/>',journal:'<path d="M5 3h15v18H5zM9 3v18M12 8h5M12 12h5"/>',chores:'<path d="M8 3h11v18H5V6zM8 3v4H5M9 12l2 2 4-4"/>',shopping:'<path d="M4 8h16l-1 13H5zM8 9V6a4 4 0 0 1 8 0v3"/>',habit:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',travel:'<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V4h6v4"/>',projects:'<path d="M3 6h7l2 3h9v12H3z"/>',games:'<path d="M7 8h10c4 0 6 12 2 12l-4-4H9l-4 4C1 20 3 8 7 8zM6 11v4M4 13h4"/>',link:'<path d="M10 13a4 4 0 0 0 6 0l4-4a4 4 0 0 0-6-6l-2 2m2 6a4 4 0 0 0-6 0l-4 4a4 4 0 0 0 6 6l2-2"/>',settings:'<circle cx="12" cy="12" r="3"/><path d="M10 2h4l1 3 3 1 3-1 2 4-2 2v3l2 2-2 4-3-1-3 1-1 3h-4l-1-3-3-1-3 1-2-4 2-2v-3L1 9l2-4 3 1 3-1z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/>',notes:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 3v18M11 8h6M11 12h6M11 16h4"/>',theme:'<circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="17" cy="10" r="1"/><path d="M12 21a3 3 0 0 1 0-6h2"/>',close:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M16 9l-3 3 3 3"/>'};
+const svg=name=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+(icons[name]||icons.link)+'</svg>';
+function init(){if(document.getElementById('dashboardIconRail'))return;
+const rail=document.createElement('div');rail.id='dashboardIconRail';rail.setAttribute('aria-label','Dashboard navigation');
+const fly=document.createElement('div');fly.id='dashboardFlyout';fly.setAttribute('role','menu');
+let closeTimer;
+function hide(){fly.dataset.visible='false';rail.querySelectorAll('[data-open]').forEach(b=>b.dataset.open='false')}
+function delay(){clearTimeout(closeTimer);closeTimer=setTimeout(hide,190)}
+function show(button,label,links){clearTimeout(closeTimer);rail.querySelectorAll('[data-open]').forEach(b=>b.dataset.open='false');button.dataset.open='true';fly.replaceChildren();const h=document.createElement('h3');h.textContent=label;fly.append(h);links.forEach(([name,action])=>{const b=document.createElement('button');b.type='button';b.textContent=name;b.onclick=()=>{hide();action()};fly.append(b)});fly.dataset.visible='true';const rect=button.getBoundingClientRect();fly.style.top=Math.max(10,Math.min(rect.top-8,innerHeight-Math.min(500,80+links.length*43)))+'px'}
+function add(label,icon,links,action){const b=document.createElement('button');b.type='button';b.innerHTML=svg(icon);b.title=label;b.setAttribute('aria-label',label);rail.append(b);if(links){b.addEventListener('mouseenter',()=>show(b,label,links));b.addEventListener('focus',()=>show(b,label,links));b.onclick=()=>show(b,label,links)}else if(action)b.onclick=()=>{hide();action()};return b}
+const nav=target=>{if(typeof window.go==='function')window.go(target);window.scrollTo(0,0)};
+add('Home','home',null,()=>nav('Overview'));
+const groups=window.DashboardSidebar?.groups||[];
+const iconFor={'Planner':'calendar','Finances':'finances','Journal & Faith':'journal','Household':'chores','Shopping':'shopping','Wellness':'habit','Travel':'travel','Hobbies':'projects','Relax & Play':'games','Links':'link'};
+for(const [key,entries] of groups){const links=entries.map(e=>[e[1]||e[0],()=>nav(e[0])]);if(links.length)add(window.DashboardSidebar?.groupLabel?.(key)||key,iconFor[key]||'projects',links)}
+const spacer=document.createElement('div');spacer.className='rail-spacer';rail.append(spacer);
+add('Settings','settings',null,()=>{document.querySelector('.glow-side-settings')?.click()||document.getElementById('settingsButton')?.click()});
+add('Clock','clock',null,()=>nav('Focus timer'));
+add('Notes','notes',null,()=>window.DashboardStickyNotes?.open?.());
+add('Change theme','theme',null,()=>window.DashboardThemes?.open?.());
+add('Close flyout','close',null,hide);
+rail.addEventListener('mouseleave',delay);fly.addEventListener('mouseenter',()=>clearTimeout(closeTimer));fly.addEventListener('mouseleave',delay);document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
+document.body.append(rail,fly);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,350));else setTimeout(init,350);
+})();
+</script></body></html>
