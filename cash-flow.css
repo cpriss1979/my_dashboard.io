@@ -413,3 +413,21 @@ body #content .cf-undo-bar > .cf-actions select { flex: 1 1 12rem; }
 }
 #content .cf-savings-disclosure[open] { padding-bottom: 10px; }
 #content .cf-savings-disclosure .cf-savings-disclosure { margin: 8px 0; background: #f8eff6; }
+
+/* Compact bill register: details are opened by the bill name. */
+body main #content .cf-bill-row {display:block!important;padding:5px 10px!important;border-radius:7px!important;min-width:0;overflow-x:auto;}
+body main #content .cf-bill-row .cf-bill-cells {display:grid!important;grid-template-columns:90px minmax(125px,1.4fr) minmax(110px,1fr) 86px minmax(100px,.8fr) 32px!important;gap:8px!important;align-items:center!important;min-width:585px;}
+body main #content .cf-bill-row .cf-bill-cells>* {grid-column:auto!important;grid-row:auto!important;min-width:0;}
+body main #content .cf-bill-row .cf-bill-name {background:transparent!important;box-shadow:none!important;border:0!important;padding:4px 0!important;min-height:30px!important;color:var(--bill-ink)!important;font-weight:700;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.cf-bill-name:hover{text-decoration:underline;}
+.cf-bill-name::before{content:'› ';}
+.cf-bill-name[aria-expanded=true]::before{content:'⌄ ';}
+.cf-bill-row .cf-account-label,.cf-bill-row .cf-bill-date,.cf-bill-row .cf-bill-indicator{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cf-bill-row .cf-bill-amount{white-space:nowrap;font-size:14px;}
+.cf-clearance{display:flex;justify-content:center;align-items:center;}
+.cf-clearance input,.cf-undo-clearance input{width:18px!important;height:18px!important;min-height:0!important;accent-color:#56876b;}
+.cf-clearance input:disabled{opacity:1!important;}
+.cf-bill-details:not([open]){display:none!important;}
+.cf-bill-details>summary{display:none!important;}
+.cf-bill-details[open]{padding:10px 0;border-top:1px solid var(--bill-line);margin-top:5px;}
+.cf-undo-clearance{display:flex;align-items:center;gap:8px;margin:8px 0;}

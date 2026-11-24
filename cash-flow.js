@@ -949,7 +949,7 @@ function billCard(item){
  const owner=accountOwner(m.accounts.find(a=>a.id===item.account));
  const cells=e('div',undefined,'cf-bill-cells');
  const date=e('span',item.due?dateLabel(item.due):'Needs date','cf-bill-date');
- const title=e('h3',item.name);
+ const title=e('button',item.name,'cf-bill-name');title.type='button';title.setAttribute('aria-expanded','false');
  const account=e('span',item.account?name(item.account):'Choose account','cf-account-label');
  if(owner)account.dataset.cfOwner=owner;
  const savedAccount=m.accounts.find(a=>a.id===item.account);
@@ -957,23 +957,52 @@ function billCard(item){
  const amount=e('strong',dollars(item.amount),'cf-bill-amount');
  const indicator=e('div',undefined,'cf-bill-indicator');
  indicator.append(badge(labels[status]));
- if(item.status==='pending'||item.status==='cleared')indicator.append(e('small',(item.status==='pending'?'Sent ':'Paid ')+dateLabel(historyDate(item))));
- cells.append(date,title,account,amount,indicator);
- const actions=e('div',undefined,'cf-bill-actions');
+ const cleared=input('billCleared','checkbox','',false);
+ cleared.checked=item.status==='cleared';cleared.disabled=cleared.checked;
+ cleared.setAttribute('aria-label','Mark '+item.name+' cleared at bank');
+ const clearance=e('label',undefined,'cf-clearance');clearance.append(cleared);
+ cells.append(date,title,account,amount,indicator,clearance);
  const details=e('details',undefined,'cf-bill-details');
- details.append(e('summary','Details'),e('p','Preferred payment '+dateLabel(item.preferred||item.date)),
+ const summary=e('summary','Details');summary.hidden=true;
+ details.append(summary,e('p','Preferred payment '+dateLabel(item.preferred||item.date)),
+  ...(item.paymentDate?[e('p','Payment sent '+dateLabel(item.paymentDate))]:[]),
   ...(item.posted?[e('p','Posted '+dateLabel(item.posted))]:[]),
   ...(item.estimatedAmount?[e('p','Estimated amount')]:[]),
   ...(item.notes?[e('p',item.notes)]:[]));
+ title.onclick=()=>{details.open=!details.open};
+ details.ontoggle=()=>title.setAttribute('aria-expanded',String(details.open));
  const editHost=e('div');
  const edit=()=>{details.open=true;occurrenceForm(item,editHost)};
  const detailActions=row(b('Edit',edit),b('Delete',()=>deleteEvent(item),'link'));
- if(item.status==='planned')detailActions.append(b('Skip this one',()=>safeAction('Skip bill occurrence',()=>{m.overrides[item.id]={...item,skipped:true}}),'link'));
+ if(item.status==='planned')detailActions.append(b('Record pending payment',()=>payment(item,false)),b('Skip this one',()=>safeAction('Skip bill occurrence',()=>{m.overrides[item.id]={...item,skipped:true}}),'link'));
+ if(item.status==='cleared'){
+  const undo=input('undoClearance','checkbox','',false);undo.checked=true;
+  const label=e('label',undefined,'cf-undo-clearance');label.append(undo,e('span','Cleared at bank (uncheck to reverse)'));
+  undo.onchange=()=>{if(undo.checked)return;if(!confirm('Reverse clearance for '+item.name+'?')){undo.checked=true;return;}
+   safeAction('Reverse bill clearance',()=>{
+    const prior=item.clearancePrevious;
+    const status=prior?.status==='planned'?'planned':'pending';
+    const next={...item,status,paid:status==='pending',cleared:false,posted:status==='pending'?(prior?.posted||item.paymentDate||item.posted):'',date:status==='pending'?(prior?.date||item.paymentDate||item.date):(item.preferred||item.due||item.date)};
+    if(status==='planned'){delete next.paymentDate;delete next.afterBalances;const linked=(m.ledger||[]).find(x=>x.id===item.linkedTransactionId&&x.linkedBillId===item.id);if(linked){linked.deleted=false;delete linked.linkedBillId;}delete next.linkedTransactionId;}
+    else next.paymentDate=prior?.paymentDate||item.paymentDate||item.posted;
+    delete next.clearancePrevious;
+    m.overrides[item.id]=next;
+   });
+  };details.append(label);
+ }
+ cleared.onchange=()=>{
+  cleared.checked=false;
+  if(!item.account){edit();return;}
+  const matches=(m.ledger||[]).filter(x=>!x.deleted&&!x.afterDepositId&&!x.reconciliationId&&x.direction==='out'&&x.account===item.account&&x.amount===item.amount&&x.date<=today());
+  if(matches.length){payment(item,true);return;}
+  if(item.status==='pending'&&historyDate(item)>today()){payment(item,true);return;}
+  safeAction('Clear '+item.name,()=>{
+   T.billPayment(m,C,item,{date:today(),paymentDate:item.status==='pending'?historyDate(item):today(),status:'cleared'});
+   m.overrides[item.id].clearancePrevious={status:item.status,date:item.date,posted:item.posted,paymentDate:item.paymentDate};
+  });
+ };
  details.append(detailActions,editHost);
- if(item.status==='planned'&&!item.due&&item.account)actions.append(b('Set due date',edit));
- if(item.status==='planned')actions.append(item.account?b('Record payment',()=>payment(item,false)):b('Choose account',edit));
- if(item.status==='pending')actions.append(b('Mark cleared',()=>payment(item,true)));
- article.append(cells,actions,details);
+ article.append(cells,details);
  return article;
 }
 function payment(bill,clearing){
@@ -987,9 +1016,10 @@ function payment(bill,clearing){
   ...(!clearing?[field('Payment status',status)]:[]),field('Use matching transaction',existing)
  ],fields=>{
   const actual=fields.paymentDate.value;
-  const paidOn=clearing?historyDate(bill):actual;
+  const paidOn=clearing&&bill.status==='pending'?historyDate(bill):actual;
   if(!actual||actual>today()||actual<paidOn)throw Error('Enter a valid date from payment through today.');
   T.billPayment(m,C,bill,{date:actual,paymentDate:paidOn,status:clearing?'cleared':fields.paymentStatus.value,ledgerId:fields.ledgerId?.value});
+  if(clearing)m.overrides[bill.id].clearancePrevious={status:bill.status,date:bill.date,posted:bill.posted,paymentDate:bill.paymentDate};
  });
  existing.onchange=()=>{
   const matching=choices.find(x=>x.id===existing.value);
@@ -1172,7 +1202,7 @@ function billsBalanceDate(month,day,now){
 }
 function bills(root){
  const selection=financeSelection('bill entry');
- const selectableBill=item=>selection.attach(billCard(item),item);
+ const selectableBill=item=>billCard(item);
  const p=card('Bills & expenses');p.classList.add('cf-clean-bills');
  const now=today(),cutoff=billsBalanceDate(billMonth,calendarDay,now);
  const historical=cutoff<now;
@@ -1230,7 +1260,7 @@ function bills(root){
  const frequency=select('frequency',[['','All frequencies'],...Object.entries(frequencies)],filters.frequency);
  frequency.onchange=()=>{filters.frequency=frequency.value;render()};
  advanced.append(e('summary','Advanced filters'),row(searchField('Search bills',billSearch,value=>{billSearch=value}),field('Frequency',frequency)));
- p.append(advanced,selection.top);
+ p.append(advanced);
  const statusFor={Unpaid:'planned',Pending:'pending',Paid:'cleared'};
  const earlier=billMonth===today().slice(0,7)?all.filter(x=>x.status==='planned'&&x.due&&x.due<billMonth+'-01'):[];
  const matchesFilters=x=>(!statusFor[billView]||x.status===statusFor[billView])&&
