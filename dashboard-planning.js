@@ -56,6 +56,7 @@
     data.mealTargets ??= {};
     data.mealCalories ??= {};
     data.mealCategories ??= {};
+    data.mealItems ??= {};
     return data;
   }
   function section(title) {
@@ -203,7 +204,7 @@
         const date=new Date(start);date.setDate(start.getDate()+day);
         const key=localDate(date);
         meals.forEach((meal,index)=>{
-          if(data.meals[key]?.[meal])return;
+          if(data.meals[key]?.[meal]||data.mealItems?.[key]?.[meal]?.length)return;
           const categories=selected[meal];
           const category=categories[day%categories.length];
           (data.meals[key]??={})[meal]=ideas[meal][category][0];
@@ -239,57 +240,12 @@
      const row=el('tr'),heading=el('th',meal);heading.scope='row';row.append(heading);
      for(const d of dates){
       const key=localDate(d),data=model(),cell=el('td'),named=weekday.format(d)+' '+meal;
-      const category=el('select');
-      for(const label of ['',...Object.keys(ideas[meal]||{}),'Fruit','Vegetables','Protein','Grains','Dairy','Other']){
-       category.add(new Option(label||'Category',label));
-      }
-      category.value=data.mealCategories[key]?.[meal]||'';
-      category.setAttribute('aria-label',named+' category');
-      category.onchange=()=>{
-       if(category.value)(data.mealCategories[key]??={})[meal]=category.value;
-       else if(data.mealCategories[key])delete data.mealCategories[key][meal];
-       const suggestion=ideas[meal]?.[category.value];
-       if(suggestion&&!input.value.trim()){input.value=suggestion[0];input.onchange();}
-       save();
-      };
-      const input=el('input');input.type='text';input.maxLength=150;input.placeholder='Add meal';input.value=data.meals[key]?.[meal]||'';
-      input.setAttribute('aria-label',named);input.setAttribute('list',names.id);
-      const kcal=el('input');kcal.type='number';kcal.min=0;kcal.max=10000;kcal.step=1;kcal.placeholder='Approx. cal';
-      kcal.value=data.mealCalories[key]?.[meal]??'';kcal.setAttribute('aria-label',named+' approximate calories');
-      const target=el('small');
-      const recipe=button('Save recipe',()=>{
-       const idea=Object.values(ideas[meal]||{}).find(entry=>entry[0]===input.value.trim());
-       if(!idea)return;
-       if(!data.recipes.some(item=>item.title===idea[0])){
-        data.recipes.unshift({id:crypto.randomUUID(),title:idea[0],ingredients:idea[1],instructions:idea[2]});
-        names.append(new Option(idea[0]));save();
-       }
-       recipe.textContent='In Recipe box';
-      });
-      function details(){
-       const portion=data.mealTargets[key]?.[meal];
-       target.hidden=!Number.isFinite(portion);
-       target.textContent=target.hidden?'':'Target '+portion+' cal';
-       recipe.hidden=!Object.values(ideas[meal]||{}).some(entry=>entry[0]===input.value.trim());
-       recipe.textContent=data.recipes.some(item=>item.title===input.value.trim())?'In Recipe box':'Save recipe';
-      }
-      input.onchange=()=>{
-       const name=input.value.trim();
-       if(data.meals[key]?.[meal]===name)return;
-       if(data.mealTargets[key])delete data.mealTargets[key][meal];
-       if(data.mealCalories[key])delete data.mealCalories[key][meal];
-       kcal.value='';
-       if(name)(data.meals[key]??={})[meal]=name;
-       else if(data.meals[key])delete data.meals[key][meal];
-       details();dailyTotal(key);save();
-      };
-      kcal.onchange=()=>{
-       if(!kcal.reportValidity())return;
-       if(kcal.value!=='')(data.mealCalories[key]??={})[meal]=kcal.valueAsNumber;
-       else if(data.mealCalories[key])delete data.mealCalories[key][meal];
-       dailyTotal(key);save();
-      };
-      details();cell.append(category,input,kcal,target,recipe);row.append(cell);
+      const items=(data.mealItems??={});const day=(items[key]??={});
+      const entries=day[meal]??=(data.meals[key]?.[meal]||data.mealCalories[key]?.[meal]!=null?[{name:data.meals[key]?.[meal]||'',cal:data.mealCalories[key]?.[meal]??''}]:[]);
+      const list=el('div',undefined,'meal-item-list');
+      function persist(){const namedEntries=entries.filter(x=>x.name.trim());if(namedEntries.length)(data.meals[key]??={})[meal]=namedEntries.map(x=>x.name).join(', ');else if(data.meals[key])delete data.meals[key][meal];const counted=entries.filter(x=>x.cal!==''&&Number.isFinite(Number(x.cal)));if(counted.length)(data.mealCalories[key]??={})[meal]=counted.reduce((sum,x)=>sum+Number(x.cal),0);else if(data.mealCalories[key])delete data.mealCalories[key][meal];dailyTotal(key);save();}
+      function drawItems(){list.replaceChildren();entries.forEach((item,i)=>{const wrap=el('div',undefined,'meal-item');const input=el('input');input.placeholder='Food or drink';input.value=item.name;input.setAttribute('list',names.id);input.setAttribute('aria-label',named+' item '+(i+1));input.onchange=()=>{item.name=input.value;persist()};const kcal=el('input');kcal.type='number';kcal.min=0;kcal.max=10000;kcal.placeholder='Approx. cal';kcal.value=item.cal;kcal.setAttribute('aria-label',named+' calories');kcal.onchange=()=>{if(kcal.reportValidity()){item.cal=kcal.value===''?'':kcal.valueAsNumber;persist()}};wrap.append(input,kcal,button('×',()=>{entries.splice(i,1);persist();drawItems()}));list.append(wrap)});}
+      drawItems();cell.append(list,button('+ Food / drink',()=>{entries.push({name:'',cal:''});drawItems();list.lastElementChild?.querySelector('input')?.focus()}));row.append(cell);
      }
      body.append(row);
     }
@@ -405,27 +361,6 @@
   const previous = render;
   render = function () {
     const target = page;
-    if(target==='Projects'){
-      previous();
-      const archived=state.projects.filter(project=>project.archived);
-      if(!archived.length)return;
-      const [panel]=section('Project Archive');
-      const list=el('details');
-      list.append(el('summary',archived.length+' archived project'+(archived.length===1?'':'s')));
-      const remove=ids=>{
-        if(!confirm(ids.size===1?'Permanently delete this archived project?':'Permanently delete all archived projects?'))return;
-        state.projects=state.projects.filter(project=>!project.archived||!ids.has(project.id));
-        save();render();
-      };
-      for(const project of archived){
-        const row=el('div',undefined,'planning-toolbar');
-        row.append(el('span',project.title||project.name||'Untitled project'),button('Delete',()=>remove(new Set([project.id]))));
-        list.append(row);
-      }
-      list.append(button('Delete all archived projects',()=>remove(new Set(archived.map(project=>project.id)))));
-      panel.append(list);content.append(panel);
-      return;
-    }
     if (!routes.includes(target)) return previous();
     page = 'Quick notes';
     try { previous(); } finally { page = target; }

@@ -15,7 +15,7 @@
     'Shopping List': {
       key:'shoppingList', singular:'shopping item', flag:'Purchased',
       fields:[
-        ['title','Item name','text',true], ['category','Category','text'], ['store','Store','text'],
+        ['title','Item name','text',true], ['store','Store','text'],
         ['quantity','Quantity','count',true,'1'], ['price','Estimated price per item ($)','money'],
         ['notes','Notes','textarea']
       ]
@@ -23,7 +23,7 @@
     'Wish List': {
       key:'wishList', singular:'wish list item', flag:'Acquired',
       fields:[
-        ['title','Item name','text',true], ['category','Category','text'], ['recipient','For whom','text'],
+        ['title','Item name','text',true], ['recipient','For whom','text'],
         ['priority','Priority','priority',false,'Normal'], ['price','Target price ($)','money'],
         ['url','Product link','url'], ['notes','Notes','textarea']
       ]

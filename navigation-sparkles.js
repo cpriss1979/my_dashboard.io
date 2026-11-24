@@ -9,8 +9,7 @@
   ['Shopping',[['Shopping List','Shopping List','tasks'],['Wish List','Wish List','bookmarks'],['Gift Planner','Gift Planner','gift']],'shopping'],
   ['Wellness',[['Exercise','Exercise','habit'],['Calorie Log','Calorie Log','notes']],'habit'],
   ['Travel',[['Packing Checklist','Packing Checklist','tasks']],'travel'],
-  ['Hobbies',[['Collections','Collections','projects']],'projects'],
-  ['Relax & Play',[['Time for You','Little Joys','sun'],['Games','Games','games'],['Badges','Badges','badges']],'games'],
+  ['Free Time',[['Collections','Collections','projects'],['Time for You','Little Joys','sun'],['Games','Games','games'],['Badges','Badges','badges']],'games'],
   ['Links',[['Bookmarks','Bookmarks','bookmarks']],'link']
  ];
  const entries=groups.flatMap(([,links])=>links);
@@ -53,6 +52,7 @@
  function hidden(target){return window.DashboardNavigation?.isHidden(target)===true}
  function groupLabel(key){
   const names=state.sidebarPreferences?.groups||{};
+  if(key==='Free Time')return 'Free Time';
   return names[key]||names[previousNames[key]]||({'Links':'Bookmarks + Links','Journal & Faith':'Reflect'}[key]||key);
  }
  function pageLink([target,label,symbol],pin=false){
