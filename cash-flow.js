@@ -850,13 +850,14 @@ function overview(root,report){
 }
 
 function deleteAccount(id){
- const account = activeAccounts().find(a=>a.id===id);
+ const account=activeAccounts().find(a=>a.id===id);
  if(!account)return;
- if(!window.confirm('Delete '+account.name+'? Its linked records will be retained. Reassign active bills and income first.'))return;
- if([...m.bills,...m.income].some(r=>!r.deleted&&!r.archived&&r.account===id)){window.alert('Reassign or archive active bills and income before deleting this account.');return;}
- safeAction('Delete account',()=>{
-  account.deleted = true;
-  
+ const linked=[...m.bills,...m.income].filter(r=>!r.deleted&&!r.archived&&r.account===id);
+ const message='Delete '+account.name+'?'+(linked.length?' This will also archive '+linked.length+' linked active bill/income records so they no longer recur.':'')+' Historical records will be retained. No other account will be deleted.';
+ if(!window.confirm(message))return;
+ safeAction('Delete account and archive linked schedules',()=>{
+  for(const r of linked)r.archived=true;
+  account.deleted=true;
  });
 }
 function accountControls(account){
