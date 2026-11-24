@@ -729,11 +729,31 @@ function savingsBalanceCard(account,summaryOnly=false,source=m,editable=true){
  return item;
 }
 function accountPairLabel(account){
- return accountLabel(account).replace(/ (?:Checking|Savings)$/,'').trim().toLowerCase();
+ const original=m.accounts.find(a=>a.id===account.id)||account;
+ return original.name.normalize('NFKC').toLowerCase().trim()
+  .replace(/(?:[\s\-–—]+)(?:checking|savings)\s*(?:account)?$/i,'')
+  .replace(/[’']s$/i,'').replace(/[^\p{L}\p{N}]/gu,'');
+}
+function overviewOwnerKey(account){
+ const original=m.accounts.find(a=>a.id===account.id)||account;
+ const owner=viewOwner(original);
+ return owner?'group:'+owner:'name:'+accountPairLabel(original);
+}
+function pairedChecking(saving,checkingAccounts){
+ const label=accountPairLabel(saving);
+ const exact=checkingAccounts.filter(a=>accountPairLabel(a)===label);
+ if(label&&exact.length===1)return exact[0];
+ // Legacy account names may omit the possessive apostrophe (e.g. Crystals).
+ const base=x=>accountPairLabel(x).replace(/s$/,'');
+ const legacy=checkingAccounts.filter(a=>base(a)===base(saving));
+ if(base(saving)&&legacy.length===1)return legacy[0];
+ const key=overviewOwnerKey(saving);
+ const grouped=checkingAccounts.filter(a=>overviewOwnerKey(a)===key);
+ return grouped.length===1?grouped[0]:null;
 }
 function savingsForChecking(checking,savings){
- const grouped=checking.ownerId?savings.filter(account=>account.ownerId===checking.ownerId):[];
- return grouped.length?grouped:savings.filter(account=>accountPairLabel(account)===accountPairLabel(checking));
+ const candidates=activeAccounts().filter(a=>a.type==='checking');
+ return savings.filter(a=>pairedChecking(a,candidates)?.id===checking.id);
 }
 function latestCushionChange(audit,account){
  for(let i=audit.length-1;i>=0;i--){
@@ -781,10 +801,8 @@ function overview(root,report){
  const p=card('Account balances'),grid=e('div',undefined,'cf-payday-grid');
  const plans=visiblePlans(report);
  const savings=report.savings.filter(account=>matchesOwner(account.id));
- const placed=new Set();
  grid.classList.add('cf-stacked-accounts');
- const lanes=[e('div',undefined,'cf-account-lane'),e('div',undefined,'cf-account-lane')];
- const ownerLanes=new Map();
+ const checkingColumns=new Map();
  const deposits=C.events(m,today()).filter(x=>depositDue(x,today()));
  for(const {account,plan} of plans){
   const item=e('article',undefined,'cf-payday-focus');
@@ -810,17 +828,15 @@ function overview(root,report){
   const column=e('div',undefined,'cf-account-column');
   column.append(item);
   item.append(row(b('Edit account',()=>accountForm(m.accounts.find(a=>a.id===account.id)),'cf-clean-link'),b('Delete account',()=>deleteAccount(account.id),'cf-clean-link')));
-  for(const saving of savingsForChecking(account,savings)){
-   if(placed.has(saving.id))continue;
-   placed.add(saving.id);
-   column.append(savingsBalanceCard(saving,true));
-  }
-  const key=account.ownerId||accountPairLabel(account);
-  if(!ownerLanes.has(key))ownerLanes.set(key,ownerLanes.size%2);
-  lanes[ownerLanes.get(key)].append(column);
+  checkingColumns.set(account.id,column);
+  grid.append(column);
  }
- for(const saving of savings)if(!placed.has(saving.id))lanes[ownerLanes.get(saving.ownerId||accountPairLabel(saving))??0].append(savingsBalanceCard(saving,true));
- grid.append(...lanes.filter(l=>l.childElementCount));
+ for(const saving of savings){
+  const checking=pairedChecking(saving,plans.map(p=>p.account));
+  let column=checking&&checkingColumns.get(checking.id);
+  if(!column){column=e('div',undefined,'cf-account-column');grid.append(column);}
+  column.append(savingsBalanceCard(saving,true));
+ }
  if(!plans.length&&activeAccounts().length)p.append(e('p','No checking accounts in this view.'));
  const actions=row(b('Add account',()=>accountForm()));
  if(activeAccounts().length>1)actions.prepend(b('Transfer money',()=>transferForm(null,{from:scopedChecking()}),'primary'));
