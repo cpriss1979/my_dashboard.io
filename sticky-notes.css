@@ -130,3 +130,12 @@ dialog.sticky-dialog {
   .sticky-styling { grid-template-columns: 1fr; }
   .sticky-styling label { margin-top: 4px; }
 }
+
+body .sticky-launcher{display:grid!important;place-items:center;position:fixed!important;right:16px;bottom:16px;width:44px;height:44px;padding:8px!important;border:1px solid #ad94c4!important;border-radius:14px!important;background:var(--theme-page-panel,#f6edff)!important;color:var(--theme-panel-text,#513660)!important;box-shadow:0 4px 16px #35234d30!important;z-index:80;cursor:pointer}
+body dialog.sticky-dialog{width:min(680px,calc(100vw - 28px));max-height:85dvh;padding:24px;border:1px solid #c6aed7;border-radius:22px;background:var(--theme-page-panel,#faf3ff)!important;color:var(--theme-panel-text,#392849)!important;box-shadow:0 18px 60px #25113845;font:inherit}
+.sticky-dialog::backdrop{background:#20132e65;backdrop-filter:blur(3px)}
+.sticky-dialog h2{font-size:24px;letter-spacing:-.5px;margin:0 0 5px}.sticky-subtitle{opacity:.75;margin:0 0 16px;font-size:14px}
+body .sticky-dialog button{background:transparent!important;color:inherit!important;border:1px solid #a58bb9!important;border-radius:10px!important;box-shadow:none!important;padding:8px 14px!important;font-weight:600;cursor:pointer}
+body .sticky-dialog button[aria-pressed=true],body .sticky-dialog>button:first-of-type{background:#79539a!important;color:white!important;border-color:transparent!important}
+.sticky-tray-tabs{display:flex;gap:8px;border-bottom:1px solid #a58bb955;margin:12px 0 16px;padding-bottom:10px}.sticky-tray-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px}.sticky-tray-row{padding:12px;border:1px solid #a58bb955;border-radius:14px;background:#ffffff28}.sticky-tray-row .sticky-preview{width:100%;min-height:100px;margin:0 0 8px;padding:15px}.sticky-tray-row .sticky-icon{min-height:34px;padding:4px 10px!important}.sticky-editor textarea{min-height:130px;border:1px solid #bda6c9;border-radius:12px;padding:12px;resize:vertical}.sticky-editor label{display:grid;gap:5px;font-size:13px;font-weight:600}.sticky-editor select{border:1px solid #bda6c9;border-radius:9px}.sticky-editor .sticky-styling{margin:16px 0}.sticky-editor .sticky-custom-colors{padding:12px;border:1px solid #bda6c9;border-radius:12px;margin-bottom:12px}.sticky-card{box-shadow:0 7px 22px #25113825}.sticky-card .sticky-copy{font-size:14px;line-height:1.5}.sticky-preview-label{font-size:13px;opacity:.8}
+@media(max-width:760px){body .sticky-launcher{bottom:calc(76px + env(safe-area-inset-bottom))}}

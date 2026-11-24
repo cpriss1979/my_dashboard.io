@@ -68,8 +68,12 @@
       window.DashboardNavIcon?.(control,'',symbol);
       control.querySelector('.app-nav-label')?.remove();
     }
-    toolbar.append(settingsButton, launcher, timer);
+    toolbar.append(settingsButton, timer);
   }
+  launcher.className='sticky-launcher';
+  launcher.innerHTML='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 3h16v12l-6 6H4zM14 21v-6h6M8 8h8M8 12h5"/></svg>';
+  document.body.append(launcher);
+  tray.classList.add('sticky-tray'); editor.classList.add('sticky-editor');
   window.DashboardStickyNotes = {open:()=>launcher.click()};
 
   const mobile = matchMedia('(max-width: 760px)');
@@ -201,7 +205,8 @@
   function renderTray() {
     tray.replaceChildren(
       element('h2', 'Sticky notes'),
-      button('New note', makeNote),
+      element('p','Little reminders, right where you need them.','sticky-subtitle'),
+      button('+ New note', makeNote),
       button('Close', () => tray.close())
     );
     const active=notes().filter(note=>!note.done&&visible(note));
@@ -214,7 +219,7 @@
     }
     tray.append(tabs);
     const list=trayTab==='done'?done:active;
-    const group=element('section');
+    const group=element('section',undefined,'sticky-tray-grid');
     if(!list.length)group.append(element('p',trayTab==='done'?'No completed notes yet.':'No sticky notes on this page.'));
       for (const note of list) {
         const row = element('div', undefined, 'sticky-tray-row');

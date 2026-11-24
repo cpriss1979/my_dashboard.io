@@ -5019,8 +5019,8 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./profile.js?v=central-header-1"></script>
 <link rel="stylesheet" href="./widgets/focus.css">
 <script src="./widgets/focus.js?v=savings-bible"></script>
-<link rel="stylesheet" href="./sticky-notes.css?v=2">
-<script src="./sticky-notes.js?v=icon-tools"></script>
+<link rel="stylesheet" href="./sticky-notes.css?v=20261123-redesign">
+<script src="./sticky-notes.js?v=20261123-redesign"></script>
 <link rel="stylesheet" href="./dashboard-colors.css?v=1">
 <script src="./dashboard-colors.js?v=emoji-stickers"></script>
 <link rel="stylesheet" href="./dashboard-personalize.css?v=appearance-2">
@@ -5033,7 +5033,7 @@ dialog.tfy-dialog.app-action-dialog {
 <script src="./dashboard-sharing.js?v=oz-bill-schedule-1"></script>
 <link rel="stylesheet" href="./household.css?v=1">
 <script src="./household.js?v=oz-bill-schedule-1"></script>
-<link rel="stylesheet" href="./notes-studio.css?v=reflect-palette">
+<link rel="stylesheet" href="./notes-studio.css?v=20261123-scroll">
 <script src="./notes-studio.js?v=reflect-palette"></script>
 <link rel="stylesheet" href="./dashboard-planning.css?v=calendar-first">
 <script src="./dashboard-planning.js?v=calendar-first"></script>
@@ -5143,7 +5143,11 @@ function shortcuts(){if(nav.querySelector('.approved-shortcuts'))return;const gr
 search.addEventListener('input',filter);new MutationObserver(shortcuts).observe(nav,{childList:true});shortcuts();
 const paths={settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM10 2h4l1 3 3 1 3-1 2 4-2 3 1 3-2 4-3-1-3 1-1 3h-4l-1-3-3-1-3 1-2-4 2-3-1-3 2-4 3 1 3-1Z',theme:'M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 0-4h-1a2 2 0 0 1 0-4h5a3 3 0 0 0 3-3c0-4-4-7-9-7ZM7 10h.1M10 6h.1M16 7h.1',sync:'M20 7a9 9 0 0 0-15-2L3 8m0-5v5h5M4 17a9 9 0 0 0 15 2l2-3m0 5v-5h-5',share:'M16 21v-3a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v3M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0M17 4a4 4 0 0 1 0 8m5 9v-3a4 4 0 0 0-4-4'};
 function art(path){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="'+path+'"/></svg>'}function tile(label,key,fn){const b=document.createElement('button');b.type='button';b.title=label;b.setAttribute('aria-label',label);b.innerHTML=art(paths[key])+'<span>'+label+'</span>';b.onclick=fn;return b;}
-const oldSettings=bar.querySelector('.glow-side-settings');if(oldSettings){oldSettings.innerHTML=art(paths.settings)+'<span>Settings</span>';bar.append(oldSettings);}const timer=bar.querySelector('[aria-label="Timer"]'),notes=bar.querySelector('[aria-label="Sticky Notes"]');for(const [b,label] of [[timer,'Clock'],[notes,'Sticky']])if(b){const t=document.createElement('span');t.textContent=label;b.append(t);bar.append(b);}bar.append(tile('Themes','theme',()=>window.DashboardThemes.open()),tile('Sync','sync',()=>{window.DashboardMobileUI.openSettings();const retry=document.getElementById('fbRetry');if(retry&&!retry.hidden)retry.click()}),tile('Share','share',()=>go('Sharing')));bar.append(toggle);bar.querySelector('.rail-controls')?.remove();
+const oldSettings=bar.querySelector('.glow-side-settings');if(oldSettings){oldSettings.onclick=()=>window.DashboardMobileUI.openSettings();oldSettings.innerHTML=art(paths.settings)+'<span>Settings</span>';bar.append(oldSettings);}const timer=bar.querySelector('[aria-label="Timer"]'),notes=bar.querySelector('[aria-label="Sticky Notes"]');for(const [b,label] of [[timer,'Clock']])if(b){const t=document.createElement('span');t.textContent=label;b.append(t);bar.append(b);}bar.append(tile('Themes','theme',()=>window.DashboardLayout.openPalette()),tile('Sync','sync',()=>{window.DashboardMobileUI.openSettings();const retry=document.getElementById('fbRetry');if(retry&&!retry.hidden)retry.click()}),tile('Share','share',()=>go('Sharing')));bar.append(toggle);bar.querySelector('.rail-controls')?.remove();
 function toggleLabel(){const closed=document.body.classList.contains('rail-closed');toggle.innerHTML=art(closed?'m9 5 7 7-7 7':'m15 5-7 7 7 7')+'<span>'+(closed?'Open sidebar':'Collapse sidebar')+'</span>';}toggle.addEventListener('click',()=>setTimeout(toggleLabel,0));toggleLabel();
 })();
-</script></body></html>
+</script><style id="notes-rail-refinement">
+body.glow-redesign.rail-closed>aside .approved-brand,body.glow-redesign.rail-closed>aside nav .approved-shortcuts,body.glow-redesign.rail-closed>aside .dashboard-utility-bar>button:not(#railToggle){display:none!important}
+body.glow-redesign.rail-closed>aside .dashboard-utility-bar{margin-top:auto!important;border:0!important}
+#pagePalette{display:none!important}
+</style></body></html>

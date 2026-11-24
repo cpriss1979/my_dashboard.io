@@ -57,3 +57,5 @@ body[data-glow-page="Quick notes"] .home-journal-sparkles { visibility:hidden; }
 }
 #content .brain-dump-page .notes-editor {background:none!important;border:0!important;padding:0}
 #content .brain-dump-page .notes-editor textarea {width:100%;min-height:15rem;box-sizing:border-box;background:#fff;color:#251c2e}
+
+#content .lined-notebook .notes-editor textarea {background-attachment:local,local!important;background-position:0 0,0 0!important;background-origin:padding-box!important;line-height:32px!important;padding-top:0!important;padding-bottom:0!important;overflow-y:auto!important;}
