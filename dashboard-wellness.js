@@ -292,7 +292,7 @@
   function gifts(root) {
     let editing;
     let groupView='';
-    let editingGroup;
+    let editingGroup;let giftTab='Gift groups';
     const key = 'giftPlanner';
     function draw() {
       const grouping=panel('Gift groups');
@@ -364,7 +364,7 @@
         const purchased=priced.filter(item=>['Purchased','Wrapped','Given'].includes(item.status)).reduce((sum,item)=>sum+cents(item),0);
         saved.append(el('p','Group budget · '+usd(selectedGroup.limit)),el('p','Left after planned gifts · '+usd((Math.round(selectedGroup.limit*100)-planned)/100)),
           el('p','Left after purchased gifts · '+usd((Math.round(selectedGroup.limit*100)-purchased)/100)),
-          button('Edit group',()=>{editingGroup=selectedGroup;draw();root.querySelector('input[name=groupName]').focus();}));
+          button('Edit group',()=>{editingGroup=selectedGroup;giftTab='Gift groups';draw();root.querySelector('input[name=groupName]').focus();}));
       }
       if(!records.length) saved.append(el('p','No gifts saved yet.'));
       for(const record of records){
@@ -373,12 +373,12 @@
           el('p',record.status+(record.budget!==''?' · '+usd(Number(record.budget))+' expected':''),'feature-meta'));
         if(record.notes) card.append(el('p',record.notes));
         if(/^https?:\/\//i.test(record.url)) card.append(link('Open product',record.url));
-        card.append(actions(button('Edit',()=>{editing=record;draw();root.querySelector('input[name=title]').focus();}),
+        card.append(actions(button('Edit',()=>{editing=record;giftTab='Add gift';draw();root.querySelector('input[name=title]').focus();}),
           drop(record.title,()=>{if(editing?.id===record.id)editing=undefined;updateList(key,list(key).filter(item=>item.id!==record.id),draw);})));
         catalog.append(card);
       }
       saved.append(catalog);
-      root.replaceChildren(grouping,editor,saved);
+      const nav=el('div',undefined,'refine-tabs');for(const t of ['Gift groups','Add gift','Gift list']){const b=button(t,()=>{giftTab=t;draw()});b.setAttribute('aria-pressed',String(t===giftTab));nav.append(b)}const titleBar=el('h2','🎁 Gift Planner');saved.classList.add('refine-gifts');root.replaceChildren(titleBar,nav, giftTab==='Gift groups'?grouping:giftTab==='Add gift'?editor:saved);
     }
     draw();
   }

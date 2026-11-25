@@ -112,7 +112,7 @@
     const scope=el('select');
     scope.setAttribute('aria-label','Filter '+pageName);
     for(const [value,label] of [['all','All items'],['open',pageName==='Collections'?'Keeping':'Still on list'],['done',definition.flag]])scope.add(new Option(label,value));
-    filter.append(search,scope);
+    filter.append(search,scope);if(pageName!=='Collections'){scope.hidden=true;const tabs=el('div',undefined,'refine-tabs');for(const [v,l] of [['all','All items'],['open','Current'],['done','Purchased']]){const b=button(l,()=>{scope.value=v;for(const x of tabs.children)x.setAttribute('aria-pressed',String(x===b));draw()});b.setAttribute('aria-pressed',String(v==='all'));tabs.append(b)}header.after(tabs);filter.prepend(tabs);panel.classList.add('refine-shopping');}
     const total=el('p',undefined,'inventory-total');
     total.setAttribute('aria-live','polite');
     const list=el('div',undefined,'inventory-list');

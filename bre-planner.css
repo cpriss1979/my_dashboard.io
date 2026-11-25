@@ -22,10 +22,10 @@
 .bre-fund { padding: 1rem; border-radius: .9rem; min-width: 0; }
 #content .bre-fund { background: color-mix(in srgb,var(--paper-color,#f3e9ff) 68%,white) !important; color: #34203b !important; }
 #content .bre-fund :is(h3,p,strong,.link) { color: #34203b !important; overflow-wrap: anywhere; }
-.bre-quadrant[data-quadrant=do] { --matrix-paper: #92c4ae; }
-.bre-quadrant[data-quadrant=schedule] { --matrix-paper: #f3ac92; }
-.bre-quadrant[data-quadrant=delegate] { --matrix-paper: #a3b9ef; }
-.bre-quadrant[data-quadrant=delete] { --matrix-paper: #f69b9b; }
+.bre-quadrant[data-quadrant=do] { --matrix-paper: #69d98b; }
+.bre-quadrant[data-quadrant=schedule] { --matrix-paper: #ffe078; }
+.bre-quadrant[data-quadrant=delegate] { --matrix-paper: #7298e5; }
+.bre-quadrant[data-quadrant=delete] { --matrix-paper: #ff737b; }
 #content .bre-quadrant { display: flex; flex-direction: column; min-width: 0; background: var(--matrix-paper); color: #282431; padding: clamp(.45rem,2vw,1rem); }
 #content .bre-quadrant :is(h3,p,label) { color: #282431!important; margin: 0; }
 #content .bre-quadrant h3 { font-size: clamp(1rem,2.5vw,1.45rem); }

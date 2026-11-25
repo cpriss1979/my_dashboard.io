@@ -79,7 +79,7 @@
     const form = el('form');
     const inputs = {};
     for (const [key, label, type] of [
-      ['title','Recipe name','text'], ['servings','Servings','text'], ['source','Recipe link','url'],
+      ['title','Recipe name','text'], ['servings','Servings','text'], ['source','Recipe link','url'],['image','Recipe image URL','url'],
       ['ingredients','Ingredients','textarea'], ['instructions','Directions','textarea']
     ]) {
       const [wrapper, input] = field(label, type, recipe?.[key]);
@@ -129,14 +129,14 @@
     }));
     bar.append(button('Add recipe', () => recipeEditor()), link('Browse free recipes ↗', 'https://www.budgetbytes.com/index/'), button('Meal Planner', () => go('Meal Planner')));
     const [label, search] = field('Find a recipe','search');
-    const list = el('div', undefined, 'planning-records');
+    const list = el('div', undefined, 'planning-records recipe-tile-grid');
     panel.append(label, list);
     function draw() {
       list.replaceChildren();
       const query = search.value.trim().toLowerCase();
       for (const recipe of model().recipes.filter(item => [item.title,item.ingredients].join(' ').toLowerCase().includes(query))) {
         const row = el('details');
-        row.append(el('summary', recipe.title));
+        const summary=el('summary');if(/^https?:\/\//i.test(recipe.image||'')){const img=el('img');img.src=recipe.image;img.alt=recipe.title;img.loading='lazy';summary.append(img)}else summary.append(el('span','🍽️','recipe-placeholder'));summary.append(el('span',recipe.title));row.append(summary);
         if (recipe.servings) row.append(el('p', 'Serves ' + recipe.servings));
         for (const [key, title] of [['ingredients','Ingredients'],['instructions','Directions']]) {
           if (recipe[key]) row.append(el('h3', title), el('p', recipe[key], 'recipe-copy'));
@@ -169,7 +169,7 @@
       button('Previous week', () => { weekOffset--; render(); }),
       button('This week', () => { weekOffset = 0; render(); }),
       button('Next week', () => { weekOffset++; render(); }),
-      button('Recipe box', () => go('Recipes'))
+      button('Recipe box', () => go('Recipes')),button('Calorie log',()=>go('Calorie Log'))
     );
     panel.append(el('p', weekday.format(start) + ' – ' + weekday.format(end)));
     const setup=el('details');
@@ -353,8 +353,8 @@
       first.before(group);
       group.append(...nodes.filter(Boolean));
     }
-    fold('Writing options',editor.querySelector('.journal-pretty-tools'),editor.querySelector('.journal-custom-paper'));
-    fold('Need a prompt?',editor.querySelector('.journal-prompt-box'));
+    const tools=editor.querySelector('.journal-pretty-tools'), colors=editor.querySelector('.journal-custom-paper'), prompt=editor.querySelector('.journal-prompt-box');
+    if(tools){const group=el('details');group.append(el('summary','Writing options'));tools.before(group);if(prompt){const d=el('details');d.append(el('summary','Need a prompt?'),prompt);group.append(d)}const picker=tools.querySelector('label');if(picker){const d=el('details');d.append(el('summary','Page colors'),picker);group.append(d)}const ink=colors?.querySelectorAll('label')[1];if(ink){const d=el('details');d.append(el('summary','Text colors'),ink);group.append(d)}const fav=tools.querySelector('#journalFavoriteEntry');if(fav){const d=el('details');d.append(el('summary','Favorites'),fav);group.append(d)}tools.hidden=true;if(colors)colors.hidden=true;}
     const search=library.querySelector('label:has(#journalSearch)');
     fold('Search and favorites',search,library.querySelector('.journal-filter-tools'));
   };

@@ -14,12 +14,12 @@
     search.setAttribute('aria-label',search.placeholder);
     const filter=el('select');filter.setAttribute('aria-label','View entries');
     filter.add(new Option(brainDump?'Current entries':'Current notes','all'));
-    filter.add(new Option('Pinned','pinned'));filter.add(new Option('Archive','archive'));
+    filter.add(new Option('Pinned','pinned'));filter.add(new Option('Archive','archive'));filter.hidden=true;const archiveLink=button('Archive',()=>{filter.value=filter.value==='archive'?'all':'archive';archiveLink.textContent=filter.value==='archive'?'Back to current notes':'Archive';draw()});
     header.append(search,filter);
     const stack=el('div',undefined,'notes-stack');
     const editorHost=el('div');
     const message=el('p',undefined,'notes-feedback');message.setAttribute('role','status');
-    library.append(editorHost,header,stack,message);
+    library.append(editorHost,header,stack,message,archiveLink);
     workspace.append(library);
     root.replaceChildren(workspace);
     const owner=state;
@@ -50,13 +50,13 @@
         stack.append(empty);
       }
       for(const {note,index} of results){
-        const card=el('article',undefined,'notes-card');card.dataset.paper=tone(note,index);
+        const card=el('article',undefined,'notes-card');card.dataset.paper='lavender';
         const open=button('',()=>{
           const draft=editorHost.querySelector('form');
           const hasChanges=[...draft.querySelectorAll('input,textarea,select')].some(control=>control.value!==control.dataset.initial);
           if((brainDump&&!editing)||!hasChanges||confirm('Discard the unsaved changes in the editor?'))edit(note);
         },'notes-open');
-        open.append(el('h4',note.title||'Untitled note'),el('p',note.text||''));
+        open.append(el('h4',note.title||'Untitled note'),el('p',note.text||''),el('small',note.noteUpdated?new Date(note.noteUpdated).toLocaleDateString():''));
         const actions=el('div',undefined,'notes-card-actions');
         const pin=button(note.notePinned?'Unpin':'Pin',()=>{
           note.notePinned=!note.notePinned;save();draw();
@@ -71,7 +71,7 @@
           draw();
           message.textContent=note.noteArchived?'Moved to Archive.':'Restored.';
         }));
-        if(note.noteArchived)actions.append(button('Delete permanently',()=>{
+        actions.append(button('Delete',()=>{
           if(state!==owner||!confirm('Permanently delete this archived entry?'))return;
           state.notes=state.notes.filter(item=>item.id!==note.id);
           if(editing===note)edit(null,false);
@@ -120,7 +120,7 @@
         text.setAttribute('aria-label','Brain dump');
         form.append(text,actions);
       }else{
-        form.append(el('h3','Notes'),field('Title (optional)',title),field('Note',text),field('Paper color',color),actions);
+        form.append(el('h3','Notes'),field('Title (optional)',title),field('Note',text),actions);
       }
       if(brainDump&&!note)form.append(draftStatus);
       form.onsubmit=event=>{
