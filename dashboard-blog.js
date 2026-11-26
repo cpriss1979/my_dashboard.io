@@ -205,7 +205,7 @@
     toolbar.append(button('New post', () => edit(), 'primary'));
     const status = element('p', '', 'dashboard-blog-status');
     status.setAttribute('role', 'status');
-    blog.append(toolbar, status);
+    blog.append(status);
     const ordered = posts().filter(post => post && Array.isArray(post.blocks));
     const grid = element('div', undefined, 'dashboard-post-grid');
     const arrange = button(arranging ? 'Done arranging' : 'Arrange posts', () => {
@@ -317,7 +317,7 @@
       article.append(actions);
       grid.append(article);
     }
-    blog.append(grid);
+    blog.append(grid,toolbar);
     document.getElementById('content').replaceChildren(blog);
   }
 

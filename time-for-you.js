@@ -193,7 +193,7 @@
     &&(view.value!=='favorites'||a.favorite)
     &&(!time.value||a.kind===time.value)
     &&(!category.value||categoryFor(a)===category.value)
-    &&(!query||[a.name,a.description,categoryName(a)].join(' ').toLowerCase().includes(query)));
+    &&(!query||[a.name,a.description,categoryName(a)].join(' ').toLowerCase().includes(query))).sort((a,b)=>categoryName(a).localeCompare(categoryName(b))||a.name.localeCompare(b.name));
   }
   function tile(a){
    const card=el('article',undefined,'joy-tile');card.dataset.category=categoryFor(a);
@@ -208,7 +208,7 @@
     fav.setAttribute('aria-pressed',String(Boolean(a.favorite)));
    }
    paintFavorite();
-   meta.append(el('small',categoryName(a)+' · '+duration(a)),fav);
+   meta.append(el('small',({creative:'🎨',play:'🎮',outdoors:'🌿',social:'👥',rest:'☕',music:'♫',faith:'✝'}[categoryFor(a)]||'✦')+' '+categoryName(a)+' · '+duration(a)),fav);
    card.append(meta,el('h4',a.name));
    if(a.description)card.append(el('p',a.description));
    const actions=el('div',undefined,'joy-actions');
@@ -285,7 +285,7 @@
    },'joy-button'));
   }else{
    function showIdea(a){
-    feature.replaceChildren(el('small',a?categoryName(a)+' · '+duration(a):'Surprise me'));
+    feature.replaceChildren(el('small',a?({creative:'🎨',play:'🎮',outdoors:'🌿',social:'👥',rest:'☕',music:'♫',faith:'✝'}[categoryFor(a)]||'✦')+' '+categoryName(a)+' · '+duration(a):'Surprise me'));
     if(!a){feature.append(el('h3','Try a different filter'),el('p','Surprise me uses the available ideas that match your search.'));return}
     feature.append(el('h3',a.name));
     if(a.description)feature.append(el('p',a.description));

@@ -37,7 +37,7 @@
     const owner=state;
     const panel=node('section',undefined,'bre-board');
     const heading=node('div',undefined,'bre-board-heading');
-    heading.append(node('h2','Priority board'),button('Focus timer',()=>go('Focus timer')));
+    heading.append(node('h2','Priority board'));
     const completed=node('input');completed.type='checkbox';completed.checked=showCompleted;
     const completedLabel=node('label','Show completed');
     completedLabel.prepend(completed);
