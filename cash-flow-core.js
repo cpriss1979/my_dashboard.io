@@ -33,7 +33,11 @@ function occurrences(r,end){
  return out
 }
 function init(){return {schema:1,accounts:[],groups:[],income:[],bills:[],transfers:[],ledger:[],overrides:{}}}
-function events(m,end,{byDue=false}={}){
+function cashDate(item){
+ if(item.status==='cleared')return item.posted||item.date;
+ return item.expectedDate||(item.kind==='bill'&&item.status==='planned'?item.preferred||item.date||item.due:item.date);
+}
+function events(m,end,{byDue=false,byExpected=false}={}){
  const rows=[];
  const deletedAccounts = new Set(m.accounts.filter(a=>a.deleted).map(a=>a.id));
  for(const r of [...m.income,...m.bills]){
@@ -52,15 +56,16 @@ function events(m,end,{byDue=false}={}){
  }
  for(const o of Object.values(m.overrides)){
   const rule=[...m.bills,...m.income].find(r=>r.id===o.ruleId);
-  const cutoffDate=byDue&&o.kind==='bill'?(o.due||o.scheduled||o.date):o.date;
+  const cutoffDate=byDue&&o.kind==='bill'?(o.due||o.scheduled||o.date):byExpected?cashDate(o):o.date;
   const archivedFuture=rule?.archived&&(!rule.archivedOn||(o.scheduled||o.due||o.date)>rule.archivedOn);
-  if(!byDue&&!o.date)continue;
+  if(!byDue&&!cutoffDate)continue;
   if((o.status==='planned'&&deletedAccounts.has(o.account))||o.deleted||o.skipped||cutoffDate>end||((archivedFuture||rule?.deleted)&&o.status==='planned'))continue;
   rows.push(o);
  }
+ const linkedTransactions=new Set(rows.filter(item=>item.status==='cleared'&&item.linkedTransactionId).map(item=>item.linkedTransactionId));
  const deposits=new Map(rows.filter(item=>item.kind==='income').map(item=>[item.id,item]));
  for(const entry of m.ledger||[]){
-  if(entry.deleted)continue;
+  if(entry.deleted||linkedTransactions.has(entry.id))continue;
   if(entry.afterDepositId){
    const deposit=deposits.get(entry.afterDepositId);
    if(!deposit||deposit.account!==entry.account||deletedAccounts.has(entry.account))continue;
@@ -79,27 +84,27 @@ function forecast(m,today,horizon){
  const included = row => row.status==='cleared' ||
   ![row.account,row.from,row.to].some(id=>deletedAccounts.has(id));
  const end=add(today,horizon);
- const rows=events(m,end).filter(included);
- const plannerRows=events(m,add(today,366)).filter(included);
+ const rows=events(m,end,{byExpected:true}).filter(included);
+ const plannerRows=events(m,add(today,366),{byExpected:true}).filter(included);
  const allAccounts=m.accounts.filter(a=>!a.deleted).map(a=>{
   const configured=Number.isInteger(a.opening)&&a.asOf<=today;
   let current=configured?a.opening:null;
   const related=list=>list.flatMap(r=>r.kind==='transfer'?(r.from===a.id?[{...r,delta:-r.amount}]:r.to===a.id?[{...r,delta:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'?0:r.amount,unavailable:a.type!=='savings'&&m.accounts.find(from=>from.id===r.from)?.type==='savings'&&r.status!=='cleared'}]:[]):r.account===a.id?[{...r,delta:['bill','money-out'].includes(r.kind)?-r.amount:r.amount}]:[]);
   const relevant=related(rows);
-  const clearedEntries=relevant.filter(r=>configured&&r.status==='cleared'&&(r.date>a.asOf||r.date===a.asOf&&r.afterBalances?.[a.id]===balanceKey(a))&&r.date<=today);
+  const clearedEntries=relevant.filter(r=>configured&&r.status==='cleared'&&(cashDate(r)>a.asOf||cashDate(r)===a.asOf&&r.afterBalances?.[a.id]===balanceKey(a))&&cashDate(r)<=today);
   for(const r of clearedEntries)current+=r.delta;
   const upcoming=list=>{
-   const pending=list.filter(r=>r.status!=='cleared'&&!(r.kind==='income'&&r.status==='planned'&&r.date<today)).map(r=>{
-    const expected=r.kind==='income'&&r.status==='pending'?r.expectedDate||r.date:r.date;
+   const pending=list.filter(r=>(r.status!=='cleared'||cashDate(r)>today)&&!(r.kind==='income'&&r.status==='planned'&&(cashDate(r)<today||cashDate(r)<=a.asOf))).map(r=>{
+    const expected=cashDate(r);
     return {...r,originalDate:r.date,date:expected<today?today:expected};
    });
    const depositDays=new Set(pending.filter(r=>r.kind==='income').map(r=>r.date));
    const order=r=>r.kind==='bill'&&r.paydayTiming==='before'&&depositDays.has(r.date)?-1:priority(r);
    return pending.sort((x,y)=>x.date.localeCompare(y.date)||order(x)-order(y));
   };
-  const future=upcoming(relevant).filter(r=>r.date<=end),planning=upcoming(related(plannerRows)),nextDeposit=planning.find(r=>r.kind==='income');
+  const future=upcoming(relevant).filter(r=>r.date<=end),planning=upcoming(related(plannerRows)),nextDeposit=planning.find(r=>r.kind==='income'&&(r.expectedDate||r.originalDate||r.date)>=today);
   const dueBeforeDeposit=planning.filter(r=>r.kind==='bill'&&r.status==='planned'&&r.due&&(nextDeposit?r.due<nextDeposit.date:r.due<=end));
-  const reserveRows=planning.map(r=>r.kind==='bill'&&r.status==='planned'&&r.due&&r.due<r.date?{...r,date:r.due<today?today:r.due}:r).filter(r=>nextDeposit?r.date<nextDeposit.date:r.date<=end).sort((x,y)=>x.date.localeCompare(y.date)||priority(x)-priority(y));
+  const reserveRows=planning.filter(r=>nextDeposit?r.date<nextDeposit.date:r.date<=end).sort((x,y)=>x.date.localeCompare(y.date)||priority(x)-priority(y));
   let running=current,min=current,firstShort=configured&&current<0?today:null,nextReserve=0,net=0;
   // Same-day deposits are available; transfers fund the recipient before bills are paid.
   for(const r of reserveRows){net+=r.delta;nextReserve=Math.max(nextReserve,-net)}
@@ -132,5 +137,5 @@ function periods(today,end,current,cushion,rows){
 function priority(r){return ['income','money-in'].includes(r.kind)?0:r.kind==='transfer'?(r.delta<0?1:2):3}
 function balanceKey(a){return a.balanceVersion||a.asOf+'|'+a.opening}
 function billDate(r,today){if(!r.start||r.certainty==='unknown')return '';const dates=occurrences(r,add(today,370)).filter(d=>!r.stop||d<r.stop);return dates.find(d=>d>=today)||dates.at(-1)||r.start}
-const api={balanceKey,billDate,add,day,at,payday,weekdayRule,occurrences,init,events,forecast};root.CashFlowCore=api;if(typeof module!=='undefined')module.exports=api;
+const api={balanceKey,billDate,add,day,at,payday,weekdayRule,occurrences,init,events,forecast,cashDate};root.CashFlowCore=api;if(typeof module!=='undefined')module.exports=api;
 })(globalThis);

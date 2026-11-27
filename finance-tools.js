@@ -76,11 +76,7 @@ function financeSetup(model){
 function paydayPlan(account,today,fallbackEnd){
  const hasPayday=!!account.nextDeposit;
  const cutoff=account.nextDeposit?.date||fallbackEnd;
- const items=account.future.map(item=>{
-  const date=item.kind==='bill'&&item.status==='planned'&&item.due&&item.due<item.date
-   ? (item.due<today?today:item.due) : item.date;
-  return {...item,date};
- }).filter(item=>item.date<=cutoff).sort((a,b)=>a.date.localeCompare(b.date));
+ const items=account.future.filter(item=>item.date<=cutoff);
  const before=items.filter(item=>!hasPayday||item.date<cutoff);
  const onDay=hasPayday?items.filter(item=>item.date===cutoff):[];
  const bills=onDay.filter(item=>item.kind==='bill'&&item.delta<0);

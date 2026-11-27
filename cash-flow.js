@@ -279,7 +279,7 @@ function occurrenceForm(o,host){
  const fields=[
  field('Name',input('name','text',o.name)),field('Amount ($)',number('amount',o.amount/100,.01)),field('Account',acct(o.account,bill)),...(bill?[field('Due date',input('due','date',o.due,false)),field('Due-date confidence',select('certainty',[['verified','Verified'],['estimated','Estimated'],['unknown','Unknown']],o.certainty||'unknown'))]:[]),
  field(bill?'Preferred payment date':'Deposit date',input('preferred','date',o.preferred||o.date,!bill)),field(bill?'Recorded / cleared date':'Posting date',input('posted','date',o.posted||'',false)),...(bill?[field('Actual payment date',input('paymentDate','date',o.paymentDate||o.posted||'',false))]:[]),...(bill?[field('Amount is an estimate',check('estimatedAmount',o.estimatedAmount)),field('Paid / sent',check('paid',o.paid||o.status==='pending')),field('Cleared at bank',check('cleared',o.cleared||o.status==='cleared'))]:[field('Deposit status',select('status',[['planned','Planned'],['pending','Pending'],['cleared','Cleared']],o.status))]),
- field('Notes',note('notes',o.notes||'')),
+ ...(!bill?[separateDepositField()]:[]),field('Notes',note('notes',o.notes||'')),
  ...(rule?[field('Apply date, amount, or account change to',select('scope',[['one','This bill only'],['future','This and future bills']],'one'))]:[])];
  form(bill?'Edit bill':'Edit deposit',fields,f=>{
  const status=bill?(f.cleared.checked?'cleared':f.paid.checked?'pending':'planned'):f.status.value;
@@ -292,6 +292,7 @@ function occurrenceForm(o,host){
   if(paidOn>f.posted.value)throw Error('Payment date must be on or before the recorded or cleared date.');
   next.paymentDate=paidOn;
  }
+ if(!bill)checkDuplicateDeposit(next,f.separateDeposit.checked);
  if(rule&&f.scope.value==='future'&&(next.due!==o.due||next.account!==o.account||next.amount!==o.amount)){
   T.splitBillRule(m,C,rule,o,next,uid());
  }else m.overrides[o.id]=next;
@@ -316,12 +317,12 @@ function moneyForm(direction,existing,chosen){const id=existing?.id||uid(),accou
  const pick=select('source',[['','New transaction'],...scheduled.map(o=>[o.id,o.name+' · '+o.date+' · '+dollars(o.amount)])],'');
  const f=form(direction==='in'?'Record a deposit':'Record a purchase',[
  field('Account',select('account',activeAccounts().map(a=>[a.id,name(a.id)]),account)),field('Amount ($)',number('amount',existing?existing.amount/100:'',.01)),
- ...(!existing?[field('Apply to a scheduled '+(direction==='in'?'deposit':'bill')+' (optional)',pick)]:[]),field('Description',input('name','text',existing?.name||(direction==='in'?'Money added':'Money subtracted'))),field('Date',input('date','date',existing?.date||today())),field('Notes',note('notes',existing?.notes||''))
+ ...(!existing?[field('Apply to a scheduled '+(direction==='in'?'deposit':'bill')+' (optional)',pick)]:[]),field('Description',input('name','text',existing?.name||(direction==='in'?'Money added':'Money subtracted'))),field('Date',input('date','date',existing?.date||today())),...(direction==='in'?[separateDepositField()]:[]),field('Notes',note('notes',existing?.notes||''))
  ],fields=>{
   if(fields.date.value>today())throw Error('Use today or an earlier date for money already recorded. Plan future items under Income or Bills.');
   const a=activeAccounts().find(a=>a.id===fields.account.value);if(!a)throw Error('Choose an active account first.');if(a.opening===null)throw Error('Set this account’s starting balance first.');
   const amount=cents(fields.amount.value),src=fields.source?.value;
-  if(src){const item=C.events(m,C.add(today(),90)).find(o=>o.id===src);if(!item||item.status==='cleared')throw Error('That item was already recorded. Reopen the form.');if(item.account!==a.id)throw Error('The account must match the scheduled item.');m.overrides[src]={...item,amount,name:reqName(fields),date:fields.date.value,posted:fields.date.value,...(direction==='out'?{paymentDate:fields.date.value}:{}),preferred:item.preferred||item.date,status:'cleared',paid:direction==='out',cleared:true,notes:value(fields,'notes'),afterBalances:balanceTags([a.id])};return}
+  if(src){const item=C.events(m,C.add(today(),90)).find(o=>o.id===src);if(!item||item.status==='cleared')throw Error('That item was already recorded. Reopen the form.');if(item.account!==a.id)throw Error('The account must match the scheduled item.');if(direction==='in')checkDuplicateDeposit({...item,date:fields.date.value,posted:fields.date.value,amount,status:'cleared'},fields.separateDeposit.checked);m.overrides[src]={...item,amount,name:reqName(fields),date:fields.date.value,posted:fields.date.value,...(direction==='out'?{paymentDate:fields.date.value}:{}),preferred:item.preferred||item.date,status:'cleared',paid:direction==='out',cleared:true,notes:value(fields,'notes'),afterBalances:balanceTags([a.id])};return}
   const next={id,direction,account:a.id,amount,name:reqName(fields),date:fields.date.value,notes:value(fields,'notes'),afterBalances:existing&&existing.account===a.id&&existing.date===fields.date.value?existing.afterBalances:balanceTags([a.id])};
   m.ledger??=[];const i=m.ledger.findIndex(x=>x.id===id);if(i<0)m.ledger.push(next);else m.ledger[i]={...m.ledger[i],...next}
  });if(!existing)pick.onchange=()=>{const item=scheduled.find(x=>x.id===pick.value);if(item){f.elements.account.value=item.account;f.elements.amount.value=item.amount/100;f.elements.name.value=item.name;f.elements.notes.value=item.notes||''}};
@@ -878,6 +879,16 @@ function accountControls(account){
  panel.append(actions,details);
  return panel;
 }
+function checkDuplicateDeposit(item,separate){
+ if(item.kind!=='income'||item.status!=='cleared'||!item.ruleId)return;
+ const duplicate=C.events(m,item.date).find(other=>other.id!==item.id&&other.kind==='income'&&
+  other.status==='cleared'&&other.ruleId===item.ruleId&&other.account===item.account&&
+  other.amount===item.amount&&(other.posted||other.date)===(item.posted||item.date));
+ if(duplicate&&!separate)throw Error('This income schedule already has a cleared deposit of '+dollars(item.amount)+' on '+dateLabel(item.posted||item.date)+'. Check the existing deposit. If the bank received two separate deposits, select “Additional separate bank deposit”.');
+}
+function separateDepositField(){
+ return field('Additional separate bank deposit',check('separateDeposit',false));
+}
 function depositDue(item,day){
  return item.kind==='income'&&item.status!=='cleared'&&(item.expectedDate||item.date)<=day;
 }
@@ -898,7 +909,7 @@ function confirmDeposit(item){
   date.readOnly=amount.readOnly=!!match;
  };
  form('Confirm '+item.name+' · '+name(item.account),[
-  field('Deposit record',source),field('Bank posting date',date),field('Posted amount ($)',amount),
+  field('Deposit record',source),field('Bank posting date',date),field('Posted amount ($)',amount),separateDepositField(),
   e('p','If this paycheck is already in Activity, use its recorded deposit.','cf-wide'),
   field('Already included in the starting balance on '+dateLabel(account.asOf),check('included',false))
  ],f=>{
@@ -909,10 +920,11 @@ function confirmDeposit(item){
   const posted=match?.date||date.value;
   if(!posted||posted>today())throw Error('Enter the bank posting date through today.');
   if(f.included.checked&&posted>account.asOf)throw Error('This deposit came after the starting balance date.');
+  checkDuplicateDeposit({...current,date:posted,posted,amount:match?.amount??cents(amount.value),status:'cleared'},f.separateDeposit.checked);
   const tags=match?match.afterBalances:f.included.checked?{}:balanceTags([item.account]);
   m.overrides[item.id]={...current,preferred:current.preferred||current.date,date:posted,posted,
    amount:match?.amount??cents(amount.value),status:'cleared',cleared:true,afterBalances:tags,
-   notes:match?.notes||current.notes||''};
+   notes:match?.notes||current.notes||'',...(match?{linkedTransactionId:match.id}:{})};
   if(match)match.deleted=true;
  });
 }
@@ -1205,7 +1217,8 @@ function bills(root){
  const now=today(),cutoff=billsBalanceDate(billMonth,calendarDay,now);
  const historical=cutoff<now;
  const source=historical?balanceModelOn(m,cutoff):m;
- const report=C.forecast(source,cutoff,0);
+ const end=T.monthEnd(billMonth);
+ const report=C.forecast(source,cutoff,Math.max(0,C.day(end)-C.day(cutoff)));
  const balances=report.accounts.filter(account=>matchesOwner(account.id));
  const checking=balances.length&&balances.every(a=>Number.isInteger(a.current))
   ? balances.reduce((sum,a)=>sum+a.current,0):null;
@@ -1225,9 +1238,9 @@ function bills(root){
  const ownerLabel=ownerOptions().find(([id])=>id===selectedOwner())?.[1]||'All accounts';
  const totalGrid=e('div',undefined,'cf-month-totals');
  totalGrid.style.gridTemplateColumns='repeat(auto-fit,minmax(min(100%,135px),1fr))';
- const left=checking===null?null:checking-totals.pending-totals.planned;
+ const left=checking===null?null:balances.reduce((sum,account)=>sum+account.projected,0);
  for(const [label,amount] of [['Total due this month',totals.total],['Paid',totals.cleared],['Payment pending',totals.pending],
-  ['Still to pay',totals.planned],['Available checking',checking],['Available left',left]]){
+  ['Still to pay',totals.planned],['Available checking',checking],['Estimated month-end',left]]){
   const tile=e('div');
   if(label==='Available checking'){
    const details=e('details'),summary=e('summary');
@@ -1243,11 +1256,12 @@ function bills(root){
    tile.append(details);
   }else{
    tile.append(e('span',label),e('strong',dollars(amount)));
-   if(label==='Available left')tile.title='Available checking minus this month’s pending and unpaid bills.';
+   if(label==='Estimated month-end')tile.title='Projected through '+dateLabel(end)+'. Carries the cleared balance forward, adds deposits on their expected dates, and subtracts open bills and planned activity once.';
   }
   totalGrid.append(tile);
  }
  p.append(e('p',monthName(billMonth,true)+' · '+ownerLabel,'cf-totals-scope'),totalGrid);
+ const explanation=e('details');explanation.append(e('summary','How this estimate works'),e('p','The recorded balance includes cleared activity through today. The month-end estimate carries that balance forward and includes expected deposits, open bills, purchases and transfers by their dates. Overdue expected deposits require confirmation before they contribute to the estimate. Future deposits add money only on their expected dates. Open activity with a past date is reserved now; paid activity counts once.'));p.append(explanation);
  const views=row(...['All bills','Unpaid','Pending','Paid'].map(label=>{
   const button=b(label,()=>{billView=label;render()});
   button.setAttribute('aria-pressed',String(billView===label));return button;
@@ -1411,7 +1425,7 @@ function timeline(root,report){
   const section=e('section',undefined,'cf-payday-focus');
   section.append(e('h3',name(account.id)));
   const entries=account.future;
-  const deposits=entries.filter(item=>item.kind==='income');
+  const deposits=entries.filter(item=>item.kind==='income'&&(item.expectedDate||item.originalDate||item.date)>=start);
   const first=deposits[0];
   const following=deposits.find(item=>first&&item.date>first.date);
   if(horizon||!first){

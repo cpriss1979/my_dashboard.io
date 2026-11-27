@@ -47,7 +47,7 @@
  }
  function calendar(){
   const layout=document.createElement('div');layout.className='glow-calendar-layout';const calendar=panel('Calendar','calendar');calendar.firstElementChild.remove();
-  const actions=document.createElement('div');actions.className='glow-calendar-toolbar';actions.append(button('＋ Add event',()=>openAdd('events'),'primary'),button('All entries',()=>window.DashboardMobileUI.allEvents()));calendar.append(actions);
+  const actions=document.createElement('div');actions.className='glow-calendar-toolbar';actions.append(button('＋ Add event',()=>openAdd('events'),'primary'));calendar.append(actions);
   const grid=document.createElement('div');grid.innerHTML=cal();calendar.append(grid);
   if(!phone.matches&&calendarView==='month')grid.querySelectorAll('.calendar>button').forEach(day=>{
    const date=day.getAttribute('onclick')?.match(/selectDate\('([^']+)'/ )?.[1];if(!date)return;
@@ -55,7 +55,10 @@
    const events=state.events.filter(e=>eventOnDate(e,date));events.slice(0,2).forEach(e=>cell.append(button(e.title,()=>showEvent(e),'glow-month-event')));if(events.length>2)cell.append(button('+'+(events.length-2)+' more',()=>{selected=date;render()},'glow-month-event'));
   });
   grid.querySelectorAll('.week-event').forEach(el=>{const edit=el.querySelector('button[onclick]'),id=edit?.getAttribute('onclick')?.match(/editEntry\('events','([^']+)'/ )?.[1];if(!id)return;el.onclick=()=>window.DashboardMobileUI.eventDetails(id);el.tabIndex=0;el.setAttribute('role','button');el.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();el.click()}};edit.remove()});
-  layout.append(calendar,agenda(selected));content.replaceChildren(layout);
+  const schedule=agenda(selected);
+  const entries=button('All entries',()=>window.DashboardMobileUI.allEvents(),'calendar-all-entries');
+  schedule.prepend(entries);
+  layout.append(calendar,schedule);content.replaceChildren(layout);
  }
  function projectCard(x,preview=false){const s=document.createElement('article');s.className=preview?'glow-project-preview':'card glow-project-card';const h=document.createElement('div');h.className='cardhead';const title=document.createElement('h3');title.textContent=x.title;h.append(title);s.append(h);const p=document.createElement('p');p.className='glow-project-status';p.textContent=(x.status||'In progress')+' · '+Number(x.progress||0)+'%';s.append(p);const track=document.createElement('div');track.className='bar';const fill=document.createElement('i');fill.style.width=Math.min(100,Math.max(0,Number(x.progress)||0))+'%';track.append(fill);track.setAttribute('role','progressbar');track.setAttribute('aria-label',x.title);track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',Number(x.progress)||0);s.append(track);
   if(!preview){const menu=document.createElement('details');menu.className='glow-overflow';const summary=document.createElement('summary');summary.textContent='•••';summary.setAttribute('aria-label','Project options: '+x.title);menu.append(summary,button('Edit',()=>editEntry('projects',x.id)),button(x.archived?'Restore':'Archive',()=>setProjectArchived(x.id,!x.archived)),button('Delete',()=>{if(confirm('Delete this project?'))remove('projects',x.id)}));h.append(menu)}return s}
