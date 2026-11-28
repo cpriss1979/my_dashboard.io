@@ -1,0 +1,31 @@
+/* Workbook inspired Finance presentation; existing data and controls remain active. */
+#content.finance-workbook{max-width:100%;min-width:0;overflow-x:hidden}
+#content.finance-workbook .finance-workbook-top{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px 16px;margin:0 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel-color,#f4f0df)}
+#content.finance-workbook .finance-workbook-top h2{margin:0;font-size:22px}
+#content.finance-workbook .finance-workbook-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px}
+#content.finance-workbook .finance-workbook-actions button{min-height:38px;padding:7px 11px!important}
+#content.finance-workbook .finance-account-summary{padding:14px!important;margin:0 0 12px!important}
+#content.finance-workbook .person-budget-selectors{display:flex!important;flex-wrap:wrap;align-items:end!important;gap:10px!important}
+#content.finance-workbook .person-budget-selectors label{flex:1;min-width:150px;margin:0!important}
+#content.finance-workbook .simple-budget-totals{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;margin:12px 0!important}
+#content.finance-workbook .simple-budget-totals>div{padding:11px!important;border:1px solid var(--line)!important;border-radius:8px;background:color-mix(in srgb,var(--panel-color,#f4f0df) 88%,white);min-width:0}
+#content.finance-workbook .simple-budget-totals>div:nth-child(1){border-top:4px solid #48a675!important}
+#content.finance-workbook .simple-budget-totals>div:nth-child(2){border-top:4px solid #65a7df!important}
+#content.finance-workbook .simple-budget-totals>div:nth-child(3){border-top:4px solid #e68d79!important}
+#content.finance-workbook .simple-budget-totals>div:nth-child(4){border-top:4px solid #b58bd5!important}
+#content.finance-workbook .simple-budget-totals strong{font-size:clamp(18px,2vw,27px)!important;overflow-wrap:anywhere}
+#content.finance-workbook .glow-finance-tabs{margin:0 0 12px!important;display:flex;flex-wrap:wrap;gap:6px!important}
+#content.finance-workbook .glow-finance-tabs button{min-height:36px;padding:6px 12px!important}
+#content.finance-workbook .finance-collapsible{margin:0 0 11px!important;border:1px solid var(--line)!important;border-radius:10px!important;overflow:hidden}
+#content.finance-workbook .finance-collapsible>summary{padding:10px 13px!important;background:color-mix(in srgb,var(--panel-color,#f4f0df) 90%,white)}
+#content.finance-workbook .finance-collapsible-body{padding:10px 13px!important}
+#content.finance-workbook .finance-section{margin-top:10px!important;padding:13px!important}
+#content.finance-workbook .table-scroll{max-width:100%;overflow:auto}
+#content.finance-workbook table{width:100%;min-width:0!important;table-layout:auto}
+#content.finance-workbook th,#content.finance-workbook td{padding:7px 9px!important;overflow-wrap:anywhere}
+#content.finance-workbook .finance-workbook-tools{display:flex;flex-wrap:wrap;gap:7px;padding:10px 0}
+#content.finance-workbook .finance-workbook-tools details{position:relative}
+#content.finance-workbook .finance-workbook-tools details>summary{cursor:pointer;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--panel-color,#f4f0df)}
+#content.finance-workbook .finance-workbook-tools details>div{position:absolute;z-index:25;top:100%;left:0;min-width:190px;padding:8px;background:var(--panel-color,#f4f0df);border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 24px #0002;display:grid;gap:5px}
+#content.finance-workbook .finance-workbook-tools details button{width:100%;text-align:left}
+@media(max-width:760px){#content.finance-workbook .finance-workbook-top{grid-template-columns:1fr}.finance-workbook-actions{justify-content:flex-start!important}#content.finance-workbook .simple-budget-totals{grid-template-columns:repeat(2,minmax(0,1fr))!important}}

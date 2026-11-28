@@ -5190,13 +5190,12 @@ body.glow-redesign>aside .dashboard-utility-bar>#dashboardFocusShortcut{grid-col
 const oldCal=cal;cal=function(){if(calendarView!=='day'){const h=document.createElement('div');h.innerHTML=oldCal();const g=h.querySelector('[aria-label="Calendar view"]');if(g){const b=document.createElement('button');b.className='view-tab';b.textContent='Day';b.setAttribute('aria-pressed','false');b.setAttribute('onclick',"changeCalendarView('day')");g.prepend(b)}return h.innerHTML}const tabs=['day','month','week','year'].map(v=>`<button class="view-tab" aria-pressed="${v==='day'}" onclick="changeCalendarView('${v}')">${v[0].toUpperCase()+v.slice(1)}</button>`).join('');const events=state.events.filter(e=>eventOnDate(e,selected));const rows=Array.from({length:24},(_,h)=>{const time=String(h).padStart(2,'0')+':00';return `<div class="day-hour"><small>${h%12||12}:00 ${h<12?'AM':'PM'}</small><div class="day-hour-events">${events.filter(e=>e.time&&Number(e.time.slice(0,2))===h).map(e=>`<button onclick="editEntry('events','${esc(e.id)}')">${esc(e.time)} ${esc(e.title)}</button>`).join('')}</div><button aria-label="Add at ${time}" onclick="openAdd('events');form.elements.time.value='${time}'">+</button></div>`}).join('');return `<div class="calendar-controls"><div role="group" aria-label="Calendar view">${tabs}</div><button onclick="goToday()">Today</button></div><div class="day-heading"><button onclick="dashboardMoveDay(-1)">←</button><strong>${esc(selected)}</strong><button onclick="dashboardMoveDay(1)">→</button></div><div>${events.filter(e=>!e.time).map(e=>`<button onclick="editEntry('events','${esc(e.id)}')">All day: ${esc(e.title)}</button>`).join('')}</div>${rows}`};window.dashboardMoveDay=n=>{const d=new Date(selected+'T12:00:00');d.setDate(d.getDate()+n);selected=localDate(d);month=new Date(d.getFullYear(),d.getMonth(),1);render()};
 const toggle=document.getElementById('railToggle');if(toggle){const b=document.createElement('button');b.id='dashboardFocusShortcut';b.type='button';b.title='Focus timer';b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Focus timer</span>' ;b.onclick=()=>go('Focus timer');toggle.before(b)}
 const content=document.getElementById('content');let lastPage=page;const prior=render;render=function(){const changed=page!==lastPage;lastPage=page;const result=prior();if(changed){window.scrollTo(0,0);document.querySelector('main')?.scrollTo(0,0);content.scrollTop=0}return result};
-})();</script>
-<link rel="stylesheet" href="./finance-clarity.css?v=20261128-1">
-<script src="./finance-clarity.js?v=20261128-1"></script>
-</body></html>
+})();</script></body></html>
 
 <link rel="stylesheet" href="./calendar-finance-update.css?v=20261127">
 <script src="./calendar-finance-update.js?v=20261127"></script>
 
 <link rel="stylesheet" href="./master-redesign.css?v=20261128-joys-layout">
 <script src="./master-redesign.js?v=20261128-joys-layout"></script>
+<link rel="stylesheet" href="./finance-workbook.css">
+<script src="./finance-workbook.js"></script>
