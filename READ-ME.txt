@@ -5,5 +5,7 @@ finance-workbook.js
 
 Do not replace index.html. Do not upload this text file or a ZIP to run the update.
 After GitHub Pages finishes deploying, open Finances and choose Workbook.
-The Workbook view brings balances, bills, income and savings onto the same page.
+This version replaces the old account panels with a new screen: slim balance tiles,
+a compact bills table on the left, income and goals on the right, and tools below.
+Click an account balance tile to reconcile it. Click a bill name to edit it.
 Other Finance views remain accessible using the existing tabs and tools.
