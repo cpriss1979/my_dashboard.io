@@ -1161,3 +1161,47 @@ html
   color: var(--mr-ink) !important;
   border-color: var(--mr-line) !important;
 }
+
+/* Readable surfaces and restrained controls across all theme combinations. */
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) > main {background:var(--theme-background,#eeeaf5) !important;background-image:none !important;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) :is(#content,dialog) {color:var(--mr-ink) !important;text-shadow:none !important;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) dialog {background:var(--mr-panel) !important;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) :is(#content,dialog) :is(h1,h2,h3,h4,p,label,summary,small,strong,span,td,th,legend,blockquote,li,output) {text-shadow:none !important;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) > aside :is(button,a,summary,.app-nav-label) {color:var(--theme-light-text,#fff) !important;text-shadow:none !important;filter:none !important;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) > aside :is(button.active,a.active,.app-nav-link.active) {background:var(--mr-accent) !important;color:var(--mr-action-ink,#fff) !important;box-shadow:none !important;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) main #content :is(button,.mr-menu>summary),html body .mr-dialog button {border:0 !important;box-shadow:none !important;text-shadow:none !important;white-space:normal;max-width:100%;height:auto;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) :is(#content,dialog) :is(button.primary,button[aria-pressed=true],button[aria-current=page]) {color:var(--mr-action-ink,#fff) !important;}
+html body #content :is(.mr-tabs,.segmented,.seg) {border:0 !important;box-shadow:none !important;padding:4px;gap:4px;flex-wrap:wrap;}
+html body #content .mr-month {gap:0;grid-auto-rows:150px;border-top:1px solid var(--mr-line);border-left:1px solid var(--mr-line);}
+html body #content .mr-month>small {height:32px;padding:6px;text-align:right;box-sizing:border-box;}
+html body #content .mr-month {grid-template-rows:32px;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) main #content .mr-date,html body #content .mr-date-blank {height:150px !important;min-height:150px !important;border:0 !important;border-right:1px solid var(--mr-line) !important;border-bottom:1px solid var(--mr-line) !important;border-radius:0 !important;background:var(--mr-panel) !important;overflow:auto;align-items:stretch;text-align:right;padding:8px !important;}
+html body #content .mr-events {text-align:left;min-width:0;}
+html body #content .mr-event-name {font-size:.875rem;line-height:1.4;border-left:3px solid var(--mr-accent);padding:2px 5px;background:color-mix(in srgb,var(--mr-accent) 10%,var(--mr-panel));border-radius:4px;color:var(--mr-ink) !important;}
+html body #content .mr-year .mr-month {grid-auto-rows:38px;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) main #content .mr-year :is(.mr-date,.mr-date-blank) {height:38px !important;min-height:38px !important;}
+.mr-canvas {display:block !important;position:relative;margin-top:16px;min-width:0;}
+.mr-canvas>.mr-shortcut,.mr-canvas>.mr-blog-card {position:absolute;box-sizing:border-box;min-width:0;overflow:auto;background:var(--mr-panel);border:0;box-shadow:0 2px 12px #00000012;padding:20px;}
+.mr-canvas .mr-move,.mr-canvas .mr-resize {display:none;touch-action:none;z-index:3;}
+.mr-arranging .mr-move {display:block;position:absolute;left:8px;top:6px;cursor:move !important;}
+.mr-arranging .mr-resize {display:block;position:absolute;right:4px;bottom:4px;cursor:nwse-resize !important;}
+.mr-arranging>.mr-shortcut,.mr-arranging>.mr-blog-card {padding-top:48px;outline:2px dashed var(--mr-accent);}
+.mr-shortcut {cursor:pointer;}
+#content details[data-key="home-sections"] label {display:inline-flex;gap:8px;margin:8px;}
+html body #content :is(.mr-line,.mr-panel-head,.gift-actions) {flex-wrap:wrap;min-width:0;}
+html body #content :is(.mr-table-scroll,.gift-table-scroll) {overflow-x:auto;max-width:100%;}
+html body #content .mr-table-scroll :is(td,th) {min-width:100px;}
+html body #content :is(button,a):focus-visible {outline:2px solid var(--mr-ink) !important;outline-offset:3px;}
+@media(max-width:650px) {
+ html body #content .mr-month {grid-auto-rows:120px;}
+ html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) main #content :is(.mr-date,.mr-date-blank) {height:120px !important;min-height:120px !important;padding:3px !important;}
+ .mr-event-name {font-size:.8rem !important;}
+}
+
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas):is(body,#readabilityFix) main #content button.mr-date {border-radius:0 !important;background:var(--mr-panel) !important;border-right:1px solid var(--mr-line) !important;border-bottom:1px solid var(--mr-line) !important;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) main #content .mr-tabs {border:0 !important;box-shadow:none !important;}
+.mr-canvas .mr-blog-card>.mr-menu {position:static;}
+html body #content :is(.refine-tabs,.feature-actions,.feature-form-actions) {display:flex;flex-wrap:wrap;gap:8px;overflow:visible;max-width:100%;}
+html body #content :is(.refine-gifts,.dashboard-feature-grid,.dashboard-feature-grid>.card) {min-width:0;height:auto;overflow:visible;}
+html body #content .dashboard-feature-grid {grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));}
+html body #content :is(.refine-tabs,.feature-actions,.feature-form-actions) button {flex:0 1 auto;min-width:0;white-space:normal;overflow:visible;}

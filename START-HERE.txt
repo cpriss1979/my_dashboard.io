@@ -1,0 +1,17 @@
+Dashboard readability and layout update — November 28, 2026
+
+For the Master-Redesign dashboard exported November 28 at 2:30 AM.
+Replace these three files in the existing dashboard website folder:
+  index.html
+  master-redesign.js
+  master-redesign.css
+Keep all other existing files. Upload the three replacements to the same hosting location, then refresh the dashboard.
+This is a code update. Do not restore it as a data backup.
+
+Home: Open Choose Home sections to add/remove sections. Click Arrange Home, drag Move to position a card, or drag Resize to change its size. Click Done arranging. The handles also support arrow keys. Layouts use the existing dashboard save system.
+Blog: Click Arrange posts and use the same Move/Resize handles.
+Themes: Apply to all updates the chosen theme and background. Panel text automatically uses a readable dark or light color.
+Calendar: Equal-size cells, thin grid lines, and scrollable contents for busy dates.
+Gift Planner: Controls wrap rather than being clipped.
+
+Validation: JavaScript syntax checked. Local browser checks covered theme editor and Teddy & Pearls application, uniform calendar cell height and square corners, Home resize persistence across navigation, and Gift Planner controls. Full cross-device cloud synchronization and every theme were not tested.

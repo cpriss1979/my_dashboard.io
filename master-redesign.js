@@ -336,6 +336,68 @@
       .toLowerCase()
       .includes(query.toLowerCase());
   }
+  const arranging = new WeakMap();
+  function arrange(grid, key, entries) {
+    grid.classList.add("mr-canvas");
+    const owner = state, layouts = state.redesignLayouts?.[key] || {};
+    let editing = arranging.get(owner) === key;
+    grid.classList.toggle("mr-arranging", editing);
+    const toggle = button("Arrange " + (key === "home" ? "Home" : "posts"), () => {
+      editing = !editing; arranging.set(owner, editing ? key : null); grid.classList.toggle("mr-arranging", editing);
+      toggle.textContent = editing ? "Done arranging" : "Arrange " + (key === "home" ? "Home" : "posts");
+    });
+    if (editing) toggle.textContent = "Done arranging";
+    grid.before(toggle);
+    const width = Math.max(1, grid.clientWidth || 900);
+    const columns = Math.max(1, Math.floor(width / 290));
+    function extent() {
+      grid.style.height = Math.max(260, ...entries.map(([id, el]) => parseFloat(el.style.top) + parseFloat(el.style.height) + 20)) + "px";
+    }
+    entries.forEach(([id, el], i) => {
+      const saved = layouts[id] || {};
+      const w = Math.min(width, saved.w || Math.floor(width / columns) - 14), h = saved.h || 220;
+      const x = Math.max(0, Math.min(saved.x ?? (i % columns) * (width / columns), width - w));
+      const y = saved.y ?? Math.floor(i / columns) * 234;
+      Object.assign(el.style, {left:x+"px", top:y+"px", width:w+"px", height:h+"px"});
+      const move = button("Move", () => {}), resize = button("Resize", () => {});
+      move.className = "mr-move"; resize.className = "mr-resize";
+      move.setAttribute("aria-label", "Move " + id); resize.setAttribute("aria-label", "Resize " + id);
+      el.append(move, resize);
+      function persist() {
+        if (owner !== state) return;
+        change("Arrange " + key, () => {
+          state.redesignLayouts ??= {}; state.redesignLayouts[key] ??= {};
+          state.redesignLayouts[key][id] = {x:parseFloat(el.style.left), y:parseFloat(el.style.top), w:parseFloat(el.style.width), h:parseFloat(el.style.height)};
+        });
+      }
+      for (const [handle, sizing] of [[move,false],[resize,true]]) {
+        handle.onclick = e => {e.preventDefault(); e.stopPropagation();};
+        handle.onpointerdown = e => {
+          if (!editing || e.button !== 0) return;
+          e.preventDefault(); e.stopPropagation(); handle.setPointerCapture(e.pointerId);
+          const start = {x:e.clientX,y:e.clientY,left:parseFloat(el.style.left),top:parseFloat(el.style.top),w:parseFloat(el.style.width),h:parseFloat(el.style.height)};
+          handle.onpointermove = ev => {
+            if (owner !== state) return;
+            const dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+            if (sizing) {el.style.width=Math.max(Math.min(180,width),Math.min(width-start.left,start.w+dx))+"px";el.style.height=Math.max(170,start.h+dy)+"px";}
+            else {el.style.left=Math.max(0,Math.min(width-start.w,start.left+dx))+"px";el.style.top=Math.max(0,start.top+dy)+"px";}
+            extent();
+          };
+          handle.onpointerup = () => {handle.onpointermove=null; handle.onpointerup=null; persist();};
+          handle.onpointercancel = () => {handle.onpointermove=null; render();};
+        };
+        handle.onkeydown = e => {
+          if (!editing || !["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)) return;
+          e.preventDefault(); e.stopPropagation();
+          const dx=e.key==="ArrowLeft"?-20:e.key==="ArrowRight"?20:0, dy=e.key==="ArrowUp"?-20:e.key==="ArrowDown"?20:0;
+          if(sizing){el.style.width=Math.max(Math.min(180,width),Math.min(width-parseFloat(el.style.left),parseFloat(el.style.width)+dx))+"px";el.style.height=Math.max(170,parseFloat(el.style.height)+dy)+"px";}
+          else {el.style.left=Math.max(0,Math.min(width-parseFloat(el.style.width),parseFloat(el.style.left)+dx))+"px";el.style.top=Math.max(0,parseFloat(el.style.top)+dy)+"px";}
+          persist();
+        };
+      }
+    });
+    extent();
+  }
   function home(root) {
     const cards = [
       ["Shopping List", "Grocery List", "Items to buy for the house", "🧺"],
@@ -356,14 +418,28 @@
       ["Finances", "Finances", "Balances, bills, and money activity", "▣"],
       ["Daily priorities", "Tasks", "Important tasks and priorities", "☑"],
     ];
+    for (const route of [...Object.keys(renderers), "Finances", "Bible", "Wish List", "Gift Planner", "Games", "Badges"]) {
+      if (route !== "Overview" && !cards.some(c => c[0] === route)) cards.push([route, names[route] || route, "Open " + (names[route] || route), {Calendar:"▦", Chores:"✓", Blog:"✎"}[route] || "◇"]);
+    }
     const p = panel("Home", "A little space for everything that matters.");
     const grid = node("div", undefined, "mr-home-grid");
-    for (const [route, title, desc, icon] of cards) {
-      const a = node("a", undefined, "mr-shortcut");
-      a.href = "#" + encodeURIComponent(route);
+    const chosen = state.redesignHomeSections || cards.map(c => c[0]);
+    const picker = disclosure("Choose Home sections", "home-sections", [], false);
+    for (const [route,title] of cards) {
+      const label = node("label"), check = node("input"); check.type="checkbox"; check.checked=chosen.includes(route);
+      check.onchange=()=>change("Choose Home sections",()=>{state.redesignHomeSections=check.checked?[...chosen,route]:chosen.filter(r=>r!==route);});
+      label.append(check, document.createTextNode(title)); picker.append(label);
+    }
+    p.append(picker);
+    const entries = [];
+    for (const [route, title, desc, icon] of cards.filter(c=>chosen.includes(c[0]))) {
+      const a = node("article", undefined, "mr-shortcut");
+      a.tabIndex = 0;
+      a.setAttribute("role", "link");
+      a.onkeydown = e => { if(e.target === a && e.key === "Enter" && !grid.classList.contains("mr-arranging")) go(route); };
       a.onclick = (e) => {
         e.preventDefault();
-        go(route);
+        if (!grid.classList.contains("mr-arranging")) go(route);
       };
       a.append(
         node("span", icon, "mr-icon"),
@@ -372,9 +448,11 @@
         node("span", "Open →", "mr-open"),
       );
       grid.append(a);
+      entries.push([route,a]);
     }
     p.append(grid);
     root.append(p);
+    arrange(grid, "home", entries);
     const active = data("projects").filter(
       (x) => !x.archived && x.status !== "Complete",
     );
@@ -847,10 +925,12 @@
   function monthGrid(base, chosen, pick, extra) {
     const wrap = node("div");
     const prev = () => {
+        base.setDate(1);
         base.setMonth(base.getMonth() - 1);
         pick(localDate(base));
       },
       next = () => {
+        base.setDate(1);
         base.setMonth(base.getMonth() + 1);
         pick(localDate(base));
       };
@@ -867,14 +947,14 @@
         button("Next month", next),
       ),
     );
-    const grid = node("div", undefined, "mr-month");
+    const grid = node("div", undefined, "mr-month" + (extra ? " mr-month-events" : ""));
     ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((d) =>
       grid.append(node("small", d)),
     );
     const y = base.getFullYear(),
       m = base.getMonth();
     for (let i = 0; i < new Date(y, m, 1).getDay(); i++)
-      grid.append(node("span"));
+      grid.append(node("span", undefined, "mr-date-blank"));
     for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
       const iso = localDate(new Date(y, m, d)),
         b = button(String(d), () => pick(iso));
@@ -885,6 +965,7 @@
       if (x) b.append(typeof x === "string" ? node("span", x, "mr-dot") : x);
       grid.append(b);
     }
+    while ((grid.children.length - 7) % 7) grid.append(node("span", undefined, "mr-date-blank"));
     wrap.append(grid);
     return wrap;
   }
@@ -934,6 +1015,8 @@
           const list = node("span", undefined, "mr-events");
           eventsOn(d).forEach((x) => {
             const b = node("span", x.title, "mr-event-name");
+            b.title = x.title;
+            if (x.color) b.style.borderLeftColor = x.color;
             list.append(b);
           });
           return list;
@@ -1253,6 +1336,7 @@
       ),
     );
     const grid = node("div", undefined, "mr-blog-grid");
+    const entries = [];
     for (const x of list.filter(
       (x) => !x.archived && (current === "All posts" || x.category === current),
     )) {
@@ -1278,6 +1362,7 @@
         genericActions(list, x, () => editor(x), [["Image", () => editor(x)]]),
       );
       grid.append(c);
+      entries.push([x.id,c]);
     }
     p.append(
       grid,
@@ -1290,6 +1375,7 @@
       ),
     );
     root.append(p);
+    arrange(grid, "blog", entries);
   }
   function image(src, alt) {
     const img = node("img");
@@ -3822,14 +3908,14 @@
       Sidebar: read(side),
       "Top bar": read(bar),
       "Bottom bar": read($(".glow-bottom-nav") || bar),
-      Body: read(main),
+      Body: { background: prop("--theme-background", "#f4edff"), color: ink },
       Containers: {
         background: panel,
-        color: ink,
+        color: readable(panel),
         border: prop("--line", "#ada0c4"),
         accent,
       },
-      Text: { color: ink },
+      Text: { color: readable(panel) },
       theme: document.body.dataset.dashboardTheme,
     };
   }
@@ -3844,9 +3930,27 @@
     regionSheet.textContent = old;
     return result;
   }
+  function readable(background) {
+    const canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#f4edff";
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, 1, 1);
+    const rgb = [...ctx.getImageData(0, 0, 1, 1).data].slice(0,3).map(v => {
+      v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+    });
+    const l = rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
+    return l > .179 ? "#161822" : "#ffffff";
+  }
   function applyRegions() {
+    const selectedTheme = state.redesignAppearance?.selectedTheme;
+    if (selectedTheme && window.DashboardThemeCatalog.get().theme !== selectedTheme)
+      window.DashboardThemeCatalog.setSparkles({theme: selectedTheme, custom: state.redesignAppearance.custom});
     const saved = state.redesignAppearance?.regions;
-    if (!saved) return;
+    if (!saved) {
+      const bg = getComputedStyle(document.body).getPropertyValue("--theme-page-panel").trim() || "#f4edff";
+      document.body.style.setProperty("--mr-ink", readable(bg));
+      return;
+    }
     const rule = (selector, p) => {
       if (!p) return "";
       return (
@@ -3866,7 +3970,7 @@
       "--mr-panel",
       safeColor(colors.background, "#f4edff"),
     );
-    document.body.style.setProperty("--mr-ink", safeColor(ink, "#302344"));
+    document.body.style.setProperty("--mr-ink", readable(safeColor(colors.background, "#f4edff")));
     document.body.style.setProperty(
       "--mr-line",
       safeColor(colors.border, "#ada0c4"),
@@ -3875,6 +3979,7 @@
       "--mr-accent",
       safeColor(colors.accent, "#7362ac"),
     );
+    document.body.style.setProperty("--mr-action-ink", readable(safeColor(colors.accent, "#7362ac")));
     regionSheet.textContent =
       rule(
         "html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas)>aside",
