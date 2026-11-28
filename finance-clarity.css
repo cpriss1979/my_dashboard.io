@@ -1,0 +1,39 @@
+/* Finance clarity pass: compact, stable, and easy to scan. */
+html body main #content.finance-clarity-active{max-width:100%;min-width:0;overflow-x:hidden}
+html body main #content.finance-clarity-active>*{min-width:0}
+html body main #content.finance-clarity-active .finance-clarity-head{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:12px;align-items:center;margin:0 0 12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel-color,var(--card-bg,#eee7fa));position:sticky;top:0;z-index:30}
+html body main #content.finance-clarity-active .finance-clarity-head h2{margin:0;font-size:22px}
+html body main #content.finance-clarity-active .finance-clarity-head p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+html body main #content.finance-clarity-active .finance-clarity-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+html body main #content.finance-clarity-active .finance-clarity-actions button{min-height:40px;padding:8px 12px!important;white-space:nowrap}
+html body main #content.finance-clarity-active .finance-clarity-actions input{width:150px;min-height:40px;margin:0}
+html body main #content.finance-clarity-active .finance-clarity-actions .finance-add{background:var(--green)!important;color:#fff!important}
+html body main #content.finance-clarity-active .finance-clarity-balance{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 12px}
+html body main #content.finance-clarity-active .finance-clarity-balance>div{padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:color-mix(in srgb,var(--panel-color,#eee7fa) 85%,#fff);min-width:0}
+html body main #content.finance-clarity-active .finance-clarity-balance span{display:block;font-size:11px;color:var(--muted)}
+html body main #content.finance-clarity-active .finance-clarity-balance strong{display:block;font-size:21px;margin-top:4px;overflow-wrap:anywhere}
+html body main #content.finance-clarity-active .finance-clarity-nav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;padding:0 2px}
+html body main #content.finance-clarity-active .finance-clarity-nav button{min-height:38px;padding:7px 12px!important}
+html body main #content.finance-clarity-active .finance-clarity-nav button.active{background:var(--green)!important;color:#fff!important}
+html body main #content.finance-clarity-active .finance-account-summary{padding:14px!important;margin:0 0 12px!important}
+html body main #content.finance-clarity-active .finance-account-summary>.finance-month-archive-actions,
+html body main #content.finance-clarity-active .finance-account-summary>.app-finance-help,
+html body main #content.finance-clarity-active .finance-account-summary>.glow-finance-controls,
+html body main #content.finance-clarity-active .finance-account-summary>.glow-savings-summary{display:none!important}
+html body main #content.finance-clarity-active .finance-account-summary .simple-budget-totals{display:none!important}
+html body main #content.finance-clarity-active .finance-account-summary .person-budget-selectors{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+html body main #content.finance-clarity-active .finance-account-summary .person-budget-selectors label{margin:0;min-width:150px;flex:1}
+html body main #content.finance-clarity-active .finance-account-summary .person-budget-selectors button{min-height:40px}
+html body main #content.finance-clarity-active .finance-collapsible{margin:0 0 12px!important;border:1px solid var(--line)!important;border-radius:12px!important;overflow:hidden}
+html body main #content.finance-clarity-active .finance-collapsible>summary{padding:12px 14px!important;background:color-mix(in srgb,var(--panel-color,#eee7fa) 90%,#fff);font-size:17px}
+html body main #content.finance-clarity-active .finance-collapsible-body{padding:12px!important}
+html body main #content.finance-clarity-active .table-scroll{overflow-x:auto;max-width:100%}
+html body main #content.finance-clarity-active table{min-width:0!important;width:100%;table-layout:auto}
+html body main #content.finance-clarity-active th,html body main #content.finance-clarity-active td{padding:8px 9px!important;white-space:normal;overflow-wrap:anywhere}
+html body main #content.finance-clarity-active .finance-collapsible-body>p.muted{margin:6px 0 10px!important;font-size:12px}
+html body main #content.finance-clarity-active .finance-clarity-hidden{display:none!important}
+@media(max-width:850px){html body main #content.finance-clarity-active .finance-clarity-head{grid-template-columns:1fr;position:relative}.finance-clarity-actions{justify-content:flex-start!important}.finance-clarity-balance{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:500px){html body main #content.finance-clarity-active .finance-clarity-balance{grid-template-columns:1fr 1fr!important}.finance-clarity-balance strong{font-size:17px!important}}
+.finance-clarity-dialog{width:min(520px,94vw);max-width:94vw;padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--panel-color,#eee7fa);color:var(--ink)}
+.finance-clarity-dialog h2{margin-top:0}.finance-clarity-dialog-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:16px 0}.finance-clarity-dialog-grid button{min-height:46px}.finance-purchase-result{padding:10px;border-radius:8px;background:color-mix(in srgb,var(--green) 12%,transparent);font-weight:650;min-height:20px}
+html body main #content.finance-clarity-active .finance-purchase-plans{padding:12px!important;margin:0 0 12px!important}.finance-purchase-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}.finance-purchase-row:last-child{border-bottom:0}
