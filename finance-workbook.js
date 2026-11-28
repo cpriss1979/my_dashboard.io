@@ -3,8 +3,12 @@
  let lastPage='';
  function install(){
   const root=document.getElementById('content');if(!root||page!=='Finances'){lastPage=page;return}
+  const summary=root.querySelector('.finance-account-summary');
+  /* The all-accounts view does not render the single-person summary. Keep retrying
+     until Finance has finished painting, then attach the workbook shell to its
+     actual first Finance panel instead of marking an incomplete install complete. */
+  if(!summary){if(root.dataset.financeWorkbook==='1')delete root.dataset.financeWorkbook;return}
   if(root.dataset.financeWorkbook==='1')return;root.dataset.financeWorkbook='1';root.classList.add('finance-workbook');
-  const summary=root.querySelector('.finance-account-summary');if(!summary)return;
   const name=summary.querySelector('.finance-account-name');
   const top=document.createElement('section');top.className='finance-workbook-top';top.innerHTML='<div><h2>Finance workbook</h2><small class="muted">Current month · Select a name or account below to see its details.</small></div><div class="finance-workbook-actions"></div>';
   const actions=top.querySelector('.finance-workbook-actions');
