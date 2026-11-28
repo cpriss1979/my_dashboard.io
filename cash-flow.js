@@ -15,11 +15,10 @@ function viewOwner(account){
 }
 function ownerOptions(){
  const accounts=activeAccounts();
- const groups=m.groups.filter(group=>accounts.some(account=>viewOwner(account)===group.id));
+ const groups=m.groups;
  return [['','All accounts'],
   ...groups.map(group=>['group:'+group.id,group.name+'’s accounts']),
-  ...(accounts.some(account=>!viewOwner(account))?[['unassigned','Unassigned accounts']]:[]),
-  ...accounts.map(account=>[accountView(account),accountLabel(account)])];
+  ...(accounts.some(account=>!viewOwner(account))?[['unassigned','Unassigned accounts']]:[])];
 }
 function accountView(account){return account?'account:'+account.id:''}
 function accountLabel(account){
@@ -40,7 +39,7 @@ function selectedOwner(){
   const saved=ownerPreferences.has(key)?ownerPreferences.get(key):localStorage.getItem(key);
   const legacy=activeAccounts().find(account=>accountView(account)===saved);
   const view=m.groups.some(group=>group.id===saved)?'group:'+saved:
-   legacy?accountView(legacy):saved;
+   legacy?(viewOwner(legacy)?'group:'+viewOwner(legacy):''):saved;
   return ownerOptions().some(([id])=>id===view)?view:'';
  }catch{return ''}
 }
@@ -155,7 +154,7 @@ function tint(n,key){const account=m.accounts.find(a=>a.id===key);if(account){n.
 function tile(title,amount,lines,actions=[],key=title){const n=record(title,'',...actions);n.children[0].append(e('strong',dollars(amount),'cf-amount'));for(const text of lines.filter(Boolean))n.children[0].append(e('p',text));return tint(n,key)}
 function statusLabel(x){return x.status==='cleared'?'Cleared':x.status==='pending'?'Pending':'Planned'}
 function dateLabel(d){return d?d.slice(5,7)+'/'+d.slice(8,10)+'/'+d.slice(0,4):'Unknown'}
-function form(title,fields,submit,host,afterSave){const owner=state,model=m,d=e('section',undefined,'cf-dialog cf-inline-form'),f=e('form'),error=e('p',undefined,'cf-error');error.setAttribute('role','alert');const grid=e('div',undefined,'cf-fields');grid.append(...fields);const s=e('button','Save','primary');s.type='submit';let submitted=false;f.append(grid,error,row(s,b('Cancel',()=>d.close())));d.append(e('h2',title),f);d.addEventListener('close',()=>d.remove(),{once:true});d.close=()=>d.remove();placeFinanceEditor(d,host);
+function form(title,fields,submit,host,afterSave){const owner=state,model=m,d=e('section',undefined,'cf-dialog cf-inline-form'),f=e('form'),error=e('p',undefined,'cf-error');error.setAttribute('role','alert');const grid=e('div',undefined,'cf-fields');grid.append(...fields);const s=e('button','Save','primary');s.type='submit';let submitted=false;f.append(grid,error,row(s,b('Cancel',()=>d.close())));d.append(e('h2',title),f);d.addEventListener('close',()=>d.remove(),{once:true});d.close=()=>{d.remove();syncMoneyAction()};placeFinanceEditor(d,host);syncMoneyAction(title==='Record a deposit'?'in':title==='Record a purchase'?'out':title==='Transfer money'?'transfer':'');
  const first=f.querySelector('input:not([type="checkbox"]):not([type="hidden"]),select,textarea');
  first?.focus({preventScroll:true});
  f.onsubmit=ev=>{ev.preventDefault();if(submitted)return;if(owner!==state||model!==m){error.textContent='The dashboard changed. Close this form and reopen it.';return}try{safetyBackup();submit(f.elements);submitted=true;s.disabled=true;d.close();commit(title);afterSave?.()}catch(err){error.textContent=err.message}};return f}
@@ -312,7 +311,25 @@ function toggleArchive(rule){
 function badge(s){const n=e('span',s,'cf-status');n.dataset.status=s;return n}
 function record(title,description,...actions){const n=e('article',undefined,'cf-record');const copy=e('div');copy.append(e('h3',title),e('p',description));n.append(copy,row(...actions));return tint(n,title)}
 function balanceTags(ids){return Object.fromEntries(ids.map(id=>{const a=m.accounts.find(a=>a.id===id);return [id,C.balanceKey(a)]}))}
-function moneyActions(account){return row(b('Record income',()=>moneyForm('in',null,account),'primary'),b('Record expense',()=>moneyForm('out',null,account)),b('Record transfer',()=>transferForm(null,account?{from:account}:null)))}
+function syncMoneyAction(kind=''){
+ document.querySelectorAll('[data-money-action]').forEach(button=>{const active=button.dataset.moneyAction===kind;button.classList.toggle('primary',active);button.setAttribute('aria-pressed',String(active))});
+}
+function moneyActions(account){const actions=row();for(const [kind,label,open] of [
+ ['in','Record income',()=>moneyForm('in',null,account)],['out','Record expense',()=>moneyForm('out',null,account)],['transfer','Record transfer',()=>transferForm(null,account?{from:account}:null)]
+ ]){const button=b(label,open);button.dataset.moneyAction=kind;button.setAttribute('aria-pressed','false');actions.append(button)}return actions}
+function peopleSettings(){
+ const panel=e('details');panel.append(e('summary','Manage people'));
+ const personForm=person=>form(person?'Rename person':'Add person',[field('Name',input('name','text',person?.name||''))],fields=>{
+  const name=reqName(fields);if(m.groups.some(g=>g.id!==person?.id&&g.name.toLowerCase()===name.toLowerCase()))throw Error('That person already exists.');
+  if(person)person.name=name;else m.groups.push({id:uid(),name});
+ });
+ panel.append(b('Add person',()=>personForm()));
+ for(const person of m.groups)panel.append(record(person.name,'',b('Rename',()=>personForm(person)),b('Remove person',()=>{
+  if(!confirm('Remove '+person.name+' from the people list? Their accounts and financial activity will be kept as unassigned accounts.'))return;
+  safeAction('Remove finance person',()=>{for(const account of m.accounts)if(viewOwner(account)===person.id)account.ownerId='';m.groups=m.groups.filter(g=>g.id!==person.id);selectOwner('')});
+ })));
+ return panel;
+}
 function moneyForm(direction,existing,chosen){const id=existing?.id||uid(),account=existing?.account||chosen||scopedChecking()||(activeAccounts().length===1?activeAccounts()[0].id:'');
  const scheduled=existing?[]:C.events(m,C.add(today(),90)).filter(o=>o.kind===(direction==='in'?'income':'bill')&&o.status!=='cleared');
  const pick=select('source',[['','New transaction'],...scheduled.map(o=>[o.id,o.name+' · '+o.date+' · '+dollars(o.amount)])],'');
@@ -429,13 +446,13 @@ function history(root){
  const rows=C.events(m,historyEnd()).filter(visible).filter(o=>(o.status!=='planned'||o.kind==='transfer')&&(o.kind==='transfer'?(ids.has(o.from)||ids.has(o.to)):ids.has(o.account))).sort(newestFirst);
  const selection=financeSelection();
  p.append(e('p',rows.length+' transactions · newest first'),selection.top);p.append(compactList('Transactions & planned moves',rows.slice(0,historyLimit).map(o=>selection.attach(compactRow(o.name,['bill','money-out'].includes(o.kind)?-o.amount:o.kind==='transfer'&&selectedOwner().startsWith('account:')&&selectedOwner()==='account:'+o.from?-o.amount:o.amount,[dateLabel(historyDate(o)),o.kind==='transfer'?name(o.from)+' → '+name(o.to):name(o.account),statusLabel(o)], [badge(statusLabel(o)),b('Edit',()=>editEvent(o)),...(o.kind==='bill'&&o.status==='pending'?[b('Mark cleared',()=>payment(o,true))]:[]),b('Delete',()=>deleteEvent(o),'link')],o.account||o.from,[o.notes]),o)),true));if(rows.length>historyLimit)p.append(b('Show more transactions',()=>{historyLimit+=24;render()}));p.append(selection.bar);root.append(p);
- {const audit=e('details',undefined,'cf-card');audit.id='cfAudit';audit.append(e('summary','Change history')); audit.append(e('p','Saved changes cover all accounts. Reverse change returns the affected records to their earlier values. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].filter(entry=>!entry.deleted).reverse();audit.append(group('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.recovered?'Restored':x.undone?'Undone':'Saved'),...(!x.undone?[b('Reverse change',()=>{if(confirm('Reverse '+x.label+'?'))undoChange(x)})]:[]),b('Delete history entry',()=>{
+ {const audit=e('details',undefined,'cf-change-history');audit.id='cfAudit';audit.append(e('summary','Change history')); audit.append(e('p','Saved changes cover all accounts. Reverse change returns the affected records to their earlier values. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].filter(entry=>!entry.deleted).reverse();audit.append(compactList('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.recovered?'Restored':x.undone?'Undone':'Saved'),...(!x.undone?[b('Reverse change',()=>{if(confirm('Reverse '+x.label+'?'))undoChange(x)})]:[]),b('Delete history entry',()=>{
   if(confirm('Remove this saved change from the undo history? Its transactions and balances will stay as they are.'))safeAction('Delete history entry',()=>{x.deleted=true});
  },'link'));const details=e('details');details.append(e('summary','Original / new values'));for(const op of x.changes)details.append(e('p',op.key+' · '+(op.after?.name||op.before?.name||op.id)+'\nBefore: '+JSON.stringify(op.before)+'\nAfter: '+JSON.stringify(op.after)));for(const op of x.changes){
  const current=savedRecord(op);
  if(current&&!current.deleted&&!current.skipped&&!current.reconciliationId&&['accounts','groups','income','bills','overrides','transfers','ledger','goals','budgetName','reconciliations'].includes(op.key))
   details.append(b('Edit '+(current.name||op.key),()=>editSavedRecord(op,current)));
- }n.append(details);return n}),false));root.append(audit)}
+ }n.append(details);return n}),false));p.append(audit)}
 }
 function savings(root){
  const report=C.forecast(m,today(),horizon),p=card('Savings');
@@ -595,7 +612,7 @@ function banner(){
   b('Add account',()=>accountForm()),b('Rename budget',budgetNameForm),b('Export dashboard backup',()=>backup()),
   b('Change history',()=>{tab='Activity';render();document.getElementById('cfAudit')?.scrollIntoView({block:'start'})}),
   b('Archive',()=>{tab='Archive';render()}),b('Loan tools',()=>go('Amortization'))));
- p.append(settings);return p;
+ settings.append(peopleSettings());const accountSettings=e('details');accountSettings.append(e('summary','Manage accounts'));for(const account of activeAccounts().filter(a=>matchesOwner(a.id)))accountSettings.append(accountControls(C.forecast(m,today(),horizon).accounts.find(a=>a.id===account.id)||account));settings.append(accountSettings);p.append(settings);return p;
 }
 function visiblePlans(report){
  return report.accounts.filter(account=>matchesOwner(account.id)).map(account=>({
@@ -796,37 +813,9 @@ function overview(root,report){
  const checkingColumns=new Map();
  const deposits=C.events(m,today()).filter(x=>depositDue(x,today()));
  for(const {account,plan} of plans){
-  const item=e('article',undefined,'cf-payday-focus');
-  const entries=[...plan.before,...plan.bills.filter(x=>x.paydayTiming==='before')];
-  const bills=entries.filter(x=>x.kind==='bill').reduce((sum,x)=>sum+x.delta,0);
-  const other=entries.filter(x=>x.kind!=='bill').reduce((sum,x)=>sum+x.delta,0);
-  item.append(e('h3',name(account.id)));
-  for(const deposit of deposits.filter(x=>x.account===account.id&&(x.expectedDate||x.date)>=account.asOf)){
-   item.append(b('Confirm deposit · '+deposit.name+' · '+dateLabel(deposit.expectedDate||deposit.date)+' · '+dollars(deposit.amount),
-    ()=>confirmDeposit(deposit),'primary'));
-  }
-   const pending=account.future.filter(x=>x.status==='pending'&&x.delta<0);
-   const pendingTotal=pending.reduce((sum,x)=>sum+x.delta,0);
-   const afterPending=account.current===null?null:account.current+pendingTotal;
-   const remaining=entries.filter(x=>!pending.some(y=>y.id===x.id));
-   const periodPending=entries.filter(x=>pending.some(y=>y.id===x.id)).reduce((sum,x)=>sum+x.delta,0);
-   const summaryLine=(label,amount,items)=>{
-    const d=e('details',undefined,'cf-summary-line');const title=e('summary');title.append(e('span',label),e('strong',dollars(amount)));d.append(title);
-    if(items.length)for(const x of items)d.append(balanceFooter(dateLabel(x.date)+' · '+x.name,x.delta));
-    else d.append(e('p','No activity included.'));
-    return d;
-   };
-   item.append(summaryLine('Cleared balance',account.current,[{name:'Starting balance',date:account.asOf,delta:account.opening},...account.clearedEntries]),
-    summaryLine('Pending payments',pendingTotal,pending),
-    balanceFooter('After pending payments',afterPending),
-    summaryLine('Upcoming commitments',remaining.filter(x=>x.delta<0).reduce((sum,x)=>sum+x.delta,0),remaining.filter(x=>x.delta<0)));
-   if(remaining.some(x=>x.delta>0))item.append(summaryLine('Expected money in before payday',remaining.filter(x=>x.delta>0).reduce((sum,x)=>sum+x.delta,0),remaining.filter(x=>x.delta>0)));
-   if(pendingTotal!==periodPending)item.append(e('p','The estimate below includes pending payments scheduled within this period.'));
-   item.append(balanceFooter(plan.hasPayday?'Estimated left before next payday':'Estimated left in 30 days',plan.preDeposit));
-   item.append(e('p',plan.hasPayday?'Next payday: '+dateLabel(plan.cutoff)+' · '+dollars(account.nextDeposit.amount):'No payday scheduled. Showing the next 30 days.'));
-   if(account.cushion)item.append(balanceFooter('After keeping your cushion',plan.preDeposit===null?null:plan.preDeposit-account.cushion));
-   const options=e('details');options.append(e('summary','Account options'),accountControls(account));
-   item.append(row(b('Transactions',()=>{selectOwner(accountView(account));tab='Activity';render()}),b('Upcoming',()=>{selectOwner(accountView(account));tab='Forecast';render()})),options);
+  const item=savingsDisclosure('Checking','checking|'+account.id);
+  item.classList.add('cf-checking-disclosure');
+  item.append(balanceFooter('Estimated left before next payday',plan.preDeposit));
    const column=e('div',undefined,'cf-account-column');column.append(item);
   checkingColumns.set(account.id,column);
   grid.append(column);
@@ -874,6 +863,7 @@ function accountControls(account){
   details.append(log);
  }
  const actions=row(b('Reconcile',()=>reconcileForm(account.id)));
+ for(const deposit of C.events(m,today()).filter(x=>x.account===account.id&&depositDue(x,today())))actions.append(b('Confirm deposit · '+deposit.name,()=>confirmDeposit(deposit)));
  if(activeAccounts().length>1)actions.prepend(b('Transfer',()=>transferForm(null,{from:account.id})));
  panel.append(actions,details);
  return panel;
@@ -1219,6 +1209,7 @@ function bills(root){
   schedules.open=!schedules.open;
   event.currentTarget.setAttribute('aria-expanded',String(schedules.open));
  })));
+ p.querySelector('.cf-month-nav')?.nextElementSibling?.classList.add('cf-bills-toolbar');
  const all=billsForMonth();
  const monthly=T.billMonthRows(all,billMonth), totals=T.billTotals(monthly);
  const ownerLabel=ownerOptions().find(([id])=>id===selectedOwner())?.[1]||'All accounts';

@@ -431,3 +431,13 @@ body main #content .cf-bill-row .cf-bill-name {background:transparent!important;
 .cf-bill-details>summary{display:none!important;}
 .cf-bill-details[open]{padding:10px 0;border-top:1px solid var(--bill-line);margin-top:5px;}
 .cf-undo-clearance{display:flex;align-items:center;gap:8px;margin:8px 0;}
+
+/* Finance layout refresh */
+body #content .cf-change-history {margin-top:1rem;border-top:1px solid #80708d44;padding-top:1rem;}
+body #content .cf-change-history .cf-record-grid {display:flex;flex-direction:column;gap:0;}
+body #content .cf-change-history .cf-record {border:0;border-bottom:1px solid #80708d44;border-radius:0;box-shadow:none;padding:1rem 0;}
+body #content .cf-checking-disclosure > summary {font-weight:700;}
+body #content .cf-bills-toolbar {align-items:center;}
+body #content .cf-bills-toolbar > :is(button,details),body #content .cf-bills-toolbar > details > summary {margin-top:0!important;margin-bottom:0!important;min-height:44px;box-sizing:border-box;}
+body #content .cf-bills-toolbar > button,body #content .cf-bills-toolbar > details > summary {display:inline-flex;align-items:center;justify-content:center;}
+body #content [data-money-action][aria-pressed="true"] {background:var(--primary,#4b287e)!important;color:white!important;}
