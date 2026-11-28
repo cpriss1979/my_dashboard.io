@@ -5,10 +5,10 @@
   ['Planner',[['Calendar','Calendar','calendar'],['Daily priorities','Tasks','tasks'],['Projects','Projects','projects'],['Quick notes','Notes','notes']],'calendar'],
   ['Finances',[['Finances','Finances','finances']]],
   ['Journal & Faith',[['Journal','Journal','journal'],['Bible','Bible','bible'],['Blog','Blog','blog'],['Brain Dump','Brain Dump','notes'],['Habit Tracker','Habit Tracker','habit']],'journal'],
-  ['Household',[['Chores','Chores','chores'],['Recipes','Recipes','bible']],'chores'],
-  ['Shopping',[['Shopping List','Shopping List','tasks'],['Wish List','Wish List','bookmarks'],['Gift Planner','Gift Planner','gift']],'shopping'],
+  ['Household',[['Chores','Chores','chores'],['Recipes','Recipes','bible'],['Shopping List','Grocery List','shopping']],'chores'],
+  ['Wishes & Gifts',[['Wish List','My Wish List','bookmarks'],['Gift Planner','Gift Planner','gift']],'shopping'],
   ['Wellness',[['Exercise','Exercise','habit'],['Meal Planner','Meal Planner','calendar']],'habit'],
-  ['Free Time',[['Collections','Collections','projects'],['Time for You','Little Joys','sun'],['Games','Games','games'],['Badges','Badges','badges'],['Packing Checklist','Packing Checklist','tasks']],'games'],
+  ['Free Time',[['Collections','Collections','projects'],['Time for You','Little Joys','sun'],['Games','Games','games'],['Badges','Badges','badges'],['Packing Checklist','Packing Checklists','tasks']],'games'],
   ['Links',[['Bookmarks','Bookmarks','bookmarks']],'link']
  ];
  const entries=groups.flatMap(([,links])=>links);

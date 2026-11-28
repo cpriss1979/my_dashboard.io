@@ -305,6 +305,7 @@
   root.append(archive);
   content.replaceChildren(root);
  }
+ window.DashboardJoy={model,choose,completePending,persist};
  addEventListener('dashboard:account-changing',close);
  function nav(){const n=document.querySelector('aside nav');if(n&&!n.querySelector('[data-time-for-you]')){const b=btn('☀  Time for You',()=>go('Time for You'));b.dataset.timeForYou='';n.append(b)}if(page==='Time for You')n?.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.hasAttribute('data-time-for-you')))}
  const prior=render;render=function(){const mine=page==='Time for You';if(mine)page='Quick notes';try{prior()}finally{if(mine)page='Time for You'}nav();if(mine){document.body.dataset.glowPage='Time for You';document.getElementById('appPageTitle').textContent='Little Joys';document.getElementById('title').textContent='Little Joys';document.getElementById('description').textContent='';paint()}if(earn())save();badges()};

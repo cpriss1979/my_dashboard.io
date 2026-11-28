@@ -70,18 +70,13 @@ function compactList(title,items,open=true){
  return section;
 }
 function compactRow(title,amount,lines,actions,key,details=[]){
- const item=tile(title,amount,lines,[],key);
- if(actions.length){
-  const menu=e('details',undefined,'cf-manage');
-  menu.append(e('summary','Manage'),row(...actions));
-  item.append(menu);
- }
- if(details.length){
-  const extra=e('details',undefined,'cf-row-details');
-  extra.append(e('summary','Details'),...details.filter(Boolean).map(text=>e('p',text)));
-  item.append(extra);
- }
- return item;
+ const item=e('article',undefined,'cf-record cf-transaction-row');tint(item,key);
+ const copy=e('div',undefined,'cf-transaction-copy');copy.append(e('strong',title),e('strong',dollars(amount),'cf-amount'));
+ for(const text of lines.filter(Boolean))copy.append(e('span',text));item.append(copy);
+ const menu=e('details',undefined,'cf-row-menu');menu.append(e('summary','⋯'));
+ const contents=e('div',undefined,'cf-row-menu-items');contents.append(e('strong','Manage'),row(...actions));
+ if(details.filter(Boolean).length)contents.append(e('strong','Details'),...details.filter(Boolean).map(text=>e('p',text)));
+ menu.append(contents);item.append(menu);return item;
 }
 function needsBill(item){
  if(item.status==='pending')return true;
@@ -314,9 +309,11 @@ function balanceTags(ids){return Object.fromEntries(ids.map(id=>{const a=m.accou
 function syncMoneyAction(kind=''){
  document.querySelectorAll('[data-money-action]').forEach(button=>{const active=button.dataset.moneyAction===kind;button.classList.toggle('primary',active);button.setAttribute('aria-pressed',String(active))});
 }
-function moneyActions(account){const actions=row();for(const [kind,label,open] of [
- ['in','Record income',()=>moneyForm('in',null,account)],['out','Record expense',()=>moneyForm('out',null,account)],['transfer','Record transfer',()=>transferForm(null,account?{from:account}:null)]
- ]){const button=b(label,open);button.dataset.moneyAction=kind;button.setAttribute('aria-pressed','false');actions.append(button)}return actions}
+function moneyActions(account){
+ const menu=e('details',undefined,'cf-add-menu');menu.append(e('summary','+ Add'));
+ menu.append(row(b('Income',()=>{menu.open=false;moneyForm('in',null,account)}),b('Expense',()=>{menu.open=false;moneyForm('out',null,account)}),b('Transfer',()=>{menu.open=false;transferForm(null,account?{from:account}:null)})));
+ return menu;
+}
 function peopleSettings(){
  const panel=e('details');panel.append(e('summary','Manage people'));
  const personForm=person=>form(person?'Rename person':'Add person',[field('Name',input('name','text',person?.name||''))],fields=>{
@@ -606,10 +603,12 @@ function banner(){
   button.setAttribute('aria-current',tab===key||(key==='Forecast'&&['Bills','Income'].includes(tab))?'page':'false');nav.append(button);
  }
  p.append(nav);
+ const last=[...(m.audit||[])].reverse().find(x=>!x.deleted&&!x.undone&&x.changes?.length);
+ const undo=b('Undo last action',()=>{if(last)undoChange(last)});undo.disabled=!last;p.append(undo);
  const chosen=activeAccounts().filter(a=>matchesOwner(a.id));
  p.append(moneyActions(chosen.length===1?chosen[0].id:null));
- const settings=e('details',undefined,'cf-settings');settings.append(e('summary','Settings & tools'),row(
-  b('Add account',()=>accountForm()),b('Rename budget',budgetNameForm),b('Export dashboard backup',()=>backup()),
+ const settings=e('details',undefined,'cf-settings');settings.append(e('summary','Manage & tools'),row(
+  b('Manage bills',()=>{tab='Bills';render()}),b('Manage income',()=>{tab='Income';render()}),b('Plan a purchase',()=>plannedPurchaseForm()),b('Add account',()=>accountForm()),b('Rename budget',budgetNameForm),b('Export dashboard backup',()=>backup()),
   b('Change history',()=>{tab='Activity';render();document.getElementById('cfAudit')?.scrollIntoView({block:'start'})}),
   b('Archive',()=>{tab='Archive';render()}),b('Loan tools',()=>go('Amortization'))));
  settings.append(peopleSettings());const accountSettings=e('details');accountSettings.append(e('summary','Manage accounts'));for(const account of activeAccounts().filter(a=>matchesOwner(a.id)))accountSettings.append(accountControls(C.forecast(m,today(),horizon).accounts.find(a=>a.id===account.id)||account));settings.append(accountSettings);p.append(settings);return p;
@@ -1105,6 +1104,7 @@ function financeSelection(noun='transaction'){
  function erase(){
   const count=items.size;
   if(!count)return;
+  if(!confirm('Delete '+count+' selected '+(count===1?noun:'entries')+'? You can undo this action.'))return;
   safeAction('Delete '+count+' '+(count===1?noun:noun==='bill entry'?'bill entries':'transactions'),()=>{
    for(const {item,schedule} of items.values()){
     if(schedule){item.deleted=true;item.archived=true}
@@ -1387,12 +1387,9 @@ function forecastPeriod(start,end,opening,entries,heading,sources,account,prior=
 }
 
 function timeline(root,report){
- const p=card('Upcoming');p.append(row(b('Manage bills & recurring expenses',()=>{tab='Bills';render()}),b('Manage income & recurring deposits',()=>{tab='Income';render()}),b('Plan a purchase',()=>plannedPurchaseForm())));
- const options=row(...[[0,'By payday'],[30,'Next 30 days'],[60,'Next 60 days'],[90,'Next 90 days']].map(([days,label])=>{
-  const button=b(label,()=>{horizon=days;render()});
-  button.setAttribute('aria-pressed',String(horizon===days));return button;
- }));
- options.classList.add('cf-bill-views');p.append(options);
+ const p=card('Upcoming');
+ const range=select('forecastRange',[[0,'By payday'],[30,'Next 30 days'],[60,'Next 60 days'],[90,'Next 90 days']],String(horizon));
+ range.onchange=()=>{horizon=Number(range.value);render()};p.append(field('Forecast range',range));
  const start=today();
  const accounts=report.accounts.filter(account=>matchesOwner(account.id));
  const sources=new Map(C.events(m,report.end).map(item=>[item.id,item]));

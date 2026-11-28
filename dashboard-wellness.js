@@ -515,6 +515,7 @@
     draw();
   }
 
+  window.DashboardWorkoutLibrary={workouts,categories,guides};
   const pages = {'Gift Planner':gifts,'Calorie Log':calories,Exercise:exercise};
   const previous = render;
   render = function () {

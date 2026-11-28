@@ -168,7 +168,7 @@
   function tick(){
     if(document.body.classList.contains('fb-account-locked'))return;
     const data=state.pomodoro;
-    if(!data)return;
+    if(!data||state.masterFocus)return;
     if(data.end&&data.end<=Date.now()){
       data.end=0;data.remaining=0;
       if(data.mode==='focus')data.sessions++;

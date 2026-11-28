@@ -1,0 +1,1163 @@
+/* All color is derived from the selected regions; calendar event colors remain independent. */
+body {
+  --mr-panel: var(
+    --theme-page-panel,
+    var(--panel-color, var(--card-bg, #f4edff))
+  );
+  --mr-ink: var(--theme-panel-text, var(--ink, #302344));
+  --mr-line: var(--line, #b4a7c8);
+  --mr-accent: var(--theme-active-start, var(--accent, #7362ac));
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  :is(
+    .card,
+    .cf-card,
+    .cf-record,
+    .cf-metric,
+    .cf-payday-focus,
+    .cf-savings-disclosure,
+    .joy-tile,
+    .tfy-card,
+    .tfy-history,
+    .habit-card,
+    .bible-panel,
+    .bible-study,
+    .achievement-tile,
+    .planning-page,
+    .household-hero,
+    .mr-panel,
+    .meal-board th,
+    .meal-board td
+  ) {
+  background: var(--mr-panel) !important;
+  background-image: none !important;
+  color: var(--mr-ink) !important;
+  border-color: var(--mr-line) !important;
+  box-shadow: 0 4px 18px #00000008 !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    p,
+    label,
+    summary,
+    small,
+    strong,
+    span,
+    td,
+    th,
+    legend,
+    blockquote,
+    li,
+    output
+  ) {
+  color: inherit;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  :is(input, textarea, select),
+html
+  body
+  dialog:is(
+    .mr-dialog,
+    .app-action-dialog,
+    .inventory-dialog,
+    .tfy-dialog,
+    .recipe-editor,
+    .cf-dialog
+  )
+  :is(input, textarea, select) {
+  background: color-mix(in srgb, var(--mr-panel) 94%, var(--mr-ink)) !important;
+  color: var(--mr-ink) !important;
+  border: 1px solid var(--mr-line) !important;
+  border-radius: 9px !important;
+  font: inherit;
+  min-height: 40px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  :is(input, textarea)::placeholder {
+  color: var(--mr-ink) !important;
+  opacity: 0.65;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  :is(button, .mr-menu > summary),
+html body .mr-dialog :is(button, .mr-menu > summary) {
+  font: inherit !important;
+  font-weight: 600 !important;
+  font-size: 0.93rem !important;
+  min-height: 38px !important;
+  line-height: 1.3 !important;
+  padding: 7px 12px !important;
+  border: 1px solid var(--mr-line) !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--mr-panel) 92%, var(--mr-ink)) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: var(--mr-ink) !important;
+  transform: none !important;
+  cursor: pointer;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  button:hover,
+html body .mr-dialog button:hover {
+  filter: brightness(0.94);
+  transform: none !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  :is(button.primary, button[aria-pressed="true"], button[aria-current="page"]),
+html body .mr-dialog button.primary {
+  background: var(--mr-accent) !important;
+  color: var(--mr-on-accent, #fff) !important;
+}
+html body dialog {
+  background: var(--mr-panel) !important;
+  color: var(--mr-ink) !important;
+  border: 1px solid var(--mr-line) !important;
+  border-radius: 18px;
+}
+html body dialog :is(h1, h2, h3, p, label, small, summary, legend) {
+  color: var(--mr-ink) !important;
+}
+html body dialog::backdrop {
+  background: #17112966;
+  backdrop-filter: blur(4px);
+}
+html body #content {
+  font-size: 16px;
+}
+html body #content .mr-panel {
+  padding: 22px !important;
+  border-radius: 22px !important;
+  overflow: visible;
+  min-width: 0;
+}
+.mr-content {
+  display: grid;
+  gap: 18px;
+}
+.mr-content * {
+  box-sizing: border-box;
+}
+.mr-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.mr-heading {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.mr-heading h2 {
+  margin: 0 !important;
+  font-size: 1.65rem !important;
+}
+.mr-description {
+  margin: 0 0 20px;
+  opacity: 0.78;
+}
+.mr-disclosure {
+  border-top: 1px solid var(--mr-line);
+  padding: 12px 0;
+  min-width: 0;
+}
+.mr-disclosure > summary {
+  cursor: pointer;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.mr-disclosure[open] > summary {
+  margin-bottom: 12px;
+}
+.mr-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border: 0 !important;
+  border-bottom: 1px solid var(--mr-line) !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  min-width: 0;
+  background: transparent !important;
+}
+.mr-copy {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.mr-copy small {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.mr-copy strong {
+  overflow-wrap: anywhere;
+}
+.mr-row > img {
+  width: 75px;
+  height: 75px;
+  object-fit: cover;
+  border-radius: 9px;
+}
+.mr-row > input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px !important;
+  flex: 0 0 20px;
+  accent-color: var(--mr-accent);
+}
+.mr-done .mr-copy {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.mr-menu {
+  position: relative;
+  flex: none;
+  margin: 0;
+}
+html body #content .mr-menu > summary {
+  list-style: none;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem !important;
+  min-width: 38px;
+  padding: 2px 8px !important;
+}
+.mr-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.mr-menu-items {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  z-index: 90;
+  min-width: 200px;
+  max-width: min(300px, 80vw);
+  padding: 7px;
+  background: var(--mr-panel);
+  border: 1px solid var(--mr-line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px #0002;
+  display: grid;
+  gap: 3px;
+  max-height: 60vh;
+  overflow: auto;
+}
+html body #content .mr-menu-items button {
+  text-align: left !important;
+  white-space: normal;
+}
+.mr-segment {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  overflow: hidden;
+  width: fit-content;
+  border: 1px solid var(--mr-line);
+  border-radius: 12px;
+  margin-bottom: 18px;
+}
+html body #content .mr-segment > button {
+  border: 0 !important;
+  border-radius: 0 !important;
+  border-right: 1px solid var(--mr-line) !important;
+  margin: 0 !important;
+}
+.mr-dialog {
+  width: min(760px, calc(100vw - 28px));
+  max-height: calc(100dvh - 30px);
+  padding: 24px;
+  overflow: auto;
+}
+.mr-dialog > img {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+}
+.mr-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+.mr-fields label {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  font-size: 0.9rem;
+  align-content: start;
+}
+.mr-fields input,
+.mr-fields select,
+.mr-fields textarea {
+  width: 100%;
+  padding: 9px;
+}
+.mr-fields label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+}
+.mr-fields input[type="checkbox"] {
+  width: 18px;
+  min-height: 18px !important;
+}
+.mr-wide {
+  grid-column: 1/-1;
+}
+.mr-error {
+  color: #a11747 !important;
+}
+.mr-empty {
+  padding: 24px 0;
+  opacity: 0.7;
+}
+.mr-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+.mr-shortcut {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 5px 12px;
+  border: 1px solid var(--mr-line);
+  padding: 18px;
+  border-radius: 16px;
+  color: var(--mr-ink) !important;
+  text-decoration: none !important;
+  background: linear-gradient(135deg, #ffffff30, #ffffff08);
+  transition: box-shadow 0.15s;
+}
+.mr-shortcut:hover {
+  box-shadow: 0 5px 20px #0001;
+}
+.mr-icon {
+  grid-row: 1/4;
+  display: grid;
+  place-items: center;
+  align-self: start;
+  width: 48px;
+  height: 48px;
+  font-size: 28px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--mr-accent) 14%, transparent);
+}
+.mr-shortcut h3 {
+  font-size: 1rem !important;
+  margin: 0 !important;
+}
+.mr-shortcut p {
+  font-size: 0.85rem;
+  margin: 0;
+  opacity: 0.8;
+}
+.mr-open {
+  font-size: 0.85rem;
+  font-weight: 650;
+  margin-top: 5px;
+}
+html body #content progress {
+  width: 100%;
+  height: 5px;
+  border: 0;
+  accent-color: var(--mr-accent);
+  background: color-mix(in srgb, var(--mr-ink) 10%, transparent);
+}
+.mr-copy progress {
+  margin-top: 4px;
+}
+.mr-notepad,
+.mr-brain {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+html body #content .mr-notepad textarea {
+  background:
+    linear-gradient(
+      90deg,
+      transparent 35px,
+      color-mix(in srgb, var(--mr-accent) 50%, transparent) 35px,
+      color-mix(in srgb, var(--mr-accent) 50%, transparent) 36px,
+      transparent 36px
+    ),
+    repeating-linear-gradient(
+      transparent 0,
+      transparent 31px,
+      color-mix(in srgb, var(--mr-ink) 16%, transparent) 31px,
+      color-mix(in srgb, var(--mr-ink) 16%, transparent) 32px
+    ) !important;
+  line-height: 32px !important;
+  padding: 0 14px 0 48px !important;
+  min-height: 300px;
+}
+.mr-brain textarea {
+  min-height: 260px;
+  padding: 14px;
+  resize: vertical;
+}
+.mr-notepad > button,
+.mr-brain > button {
+  justify-self: start;
+}
+.mr-month {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 12px;
+}
+html body #content .mr-date {
+  min-height: 70px !important;
+  white-space: normal !important;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: visible;
+}
+html body #content .mr-today {
+  box-shadow: inset 0 0 0 2px var(--mr-accent) !important;
+}
+html body #content .mr-selected {
+  background: color-mix(
+    in srgb,
+    var(--mr-accent) 20%,
+    var(--mr-panel)
+  ) !important;
+}
+.mr-dot {
+  font-size: 1rem;
+  color: var(--mr-accent);
+}
+.mr-events {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+}
+.mr-event-name {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.mr-year {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+html body #content .mr-year .mr-date {
+  min-height: 34px !important;
+  padding: 4px !important;
+}
+.mr-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(140px, 1fr));
+  overflow-x: auto;
+  gap: 12px;
+}
+.mr-day {
+  border: 1px solid var(--mr-line);
+  border-radius: 12px;
+  padding: 12px;
+}
+html body #content .mr-event {
+  white-space: normal !important;
+  display: block;
+  width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+  border-left: 4px solid var(--event-color, var(--mr-accent)) !important;
+  margin: 5px 0;
+}
+.mr-blog-grid,
+.mr-recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+  margin: 20px 0;
+  align-items: start;
+}
+.mr-blog-card,
+.mr-recipe {
+  position: relative;
+  border: 1px solid var(--mr-line);
+  border-radius: 14px;
+  padding: 14px;
+  min-width: 0;
+}
+.mr-blog-card > img,
+.mr-recipe > img,
+.mr-food-placeholder {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.mr-food-placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 54px;
+  background: color-mix(in srgb, var(--mr-accent) 10%, transparent);
+}
+.mr-recipe .mr-menu,
+.mr-blog-card .mr-menu {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+}
+.mr-blog-card h3,
+.mr-recipe h3 {
+  font-size: 1.15rem !important;
+}
+.mr-article {
+  white-space: pre-wrap;
+  line-height: 1.8;
+}
+.mr-week-checks {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mr-row:has(.mr-week-checks) {
+  flex-wrap: wrap;
+}
+.mr-table-scroll {
+  overflow: auto;
+  margin-top: 18px;
+}
+.mr-meals {
+  border-collapse: collapse;
+  min-width: 1000px;
+  table-layout: fixed;
+  width: 100%;
+}
+.mr-meals th,
+.mr-meals td {
+  padding: 10px;
+  border: 1px solid var(--mr-line);
+  vertical-align: top;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  background: var(--mr-panel) !important;
+  color: var(--mr-ink) !important;
+}
+.mr-meals .mr-line {
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  font-size: 0.85rem;
+}
+.mr-meals td > button {
+  font-size: 0.8rem !important;
+  padding: 5px !important;
+  margin-top: 8px;
+}
+.mr-focus {
+  max-width: 760px;
+  width: 100%;
+  margin: auto;
+  text-align: center;
+}
+.mr-focus .mr-line,
+.mr-focus .mr-segment {
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+.mr-focus .mr-disclosure {
+  text-align: left;
+  margin-top: 20px;
+}
+.mr-timer-ring {
+  --timer-progress: 0deg;
+  display: grid;
+  place-items: center;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  margin: 24px auto;
+  background: conic-gradient(
+    var(--mr-accent) var(--timer-progress),
+    color-mix(in srgb, var(--mr-accent) 15%, transparent) 0
+  );
+  position: relative;
+}
+.mr-timer-ring:before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: var(--mr-panel);
+}
+.mr-clock {
+  position: relative;
+  font-size: 3.5rem;
+  font-variant-numeric: tabular-nums;
+}
+#masterMiniTimer {
+  position: fixed;
+  bottom: 85px;
+  right: 20px;
+  z-index: 1000;
+  background: var(--mr-panel);
+  color: var(--mr-ink);
+  border: 1px solid var(--mr-line);
+  padding: 12px 20px;
+  border-radius: 30px;
+  box-shadow: 0 5px 24px #0002;
+}
+.mr-timer-flash {
+  outline: 5px solid var(--mr-accent);
+  outline-offset: -5px;
+}
+.mr-theme-preview {
+  border: 1px solid;
+  padding: 20px;
+  border-radius: 14px;
+  margin: 16px 0;
+}
+.mr-theme-editor > .mr-line > label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.mr-theme-editor input[type="checkbox"] {
+  width: 18px;
+}
+.mr-theme-editor .mr-disclosure label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0;
+}
+/* Decorative particles stay behind the writing surface and controls. */
+html
+  body
+  :is(.glitter-layer, .glitter-sparkles, .dashboard-sparkles, .sparkle-layer) {
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: 0.25;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content {
+  position: relative;
+  z-index: 1;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .glow-month-cell {
+  height: auto !important;
+  min-height: 110px !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .glow-month-event {
+  max-height: none !important;
+  overflow: visible !important;
+  white-space: normal !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .cf-record-grid {
+  gap: 8px;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .cf-compact-list
+  .cf-record {
+  border: 0 !important;
+  border-bottom: 1px solid var(--mr-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 10px 0 !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .cf-compact-list
+  .cf-record
+  > div:first-child {
+  min-width: 0;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .cf-compact-list
+  .cf-record
+  h3 {
+  font-size: 1rem !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .cf-compact-list
+  .cf-amount {
+  font-size: 1rem !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .cf-compact-list
+  .cf-record
+  p {
+  font-size: 0.85rem !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .cf-compact-list
+  .cf-record
+  input[type="checkbox"] {
+  margin-right: 12px;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .cf-bills-toolbar {
+  align-items: center !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .cf-bills-toolbar
+  > * {
+  margin: 0 !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .habit-clock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .habit-clock
+  > div {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: transparent !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .bible-books {
+  display: flex;
+  flex-direction: column;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .bible-books
+  button {
+  text-align: left !important;
+}
+@media (max-width: 900px) {
+  .mr-year {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mr-home-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mr-shortcut {
+    grid-template-columns: 40px minmax(0, 1fr);
+    padding: 12px;
+  }
+  .mr-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+}
+@media (max-width: 600px) {
+  html body #content .mr-panel {
+    padding: 16px !important;
+  }
+  .mr-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mr-year {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mr-row {
+    gap: 8px;
+  }
+  .mr-home-grid {
+    gap: 8px;
+  }
+  .mr-shortcut {
+    display: flex;
+    flex-direction: column;
+  }
+  .mr-heading {
+    align-items: flex-start;
+  }
+  .mr-heading h2 {
+    font-size: 1.35rem !important;
+  }
+  html body #content .mr-date {
+    min-height: 50px !important;
+    padding: 5px !important;
+    font-size: 0.8rem !important;
+  }
+  .mr-event-name {
+    font-size: 0.7rem;
+  }
+  .mr-dialog {
+    padding: 18px;
+  }
+  .mr-timer-ring {
+    width: 220px;
+    height: 220px;
+  }
+  .mr-meals {
+    min-width: 1000px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  :is(
+    h1,
+    h2,
+    h3,
+    h4,
+    p,
+    label,
+    small,
+    summary,
+    legend,
+    blockquote,
+    td,
+    th,
+    li,
+    dt,
+    dd
+  ) {
+  color: var(--mr-ink) !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  :is(
+    .cf-month-totals > *,
+    .cf-payday-math,
+    .cf-payday-summary,
+    .cf-summary-line,
+    .joy-hero,
+    .joy-feature,
+    .bible-hero,
+    .inventory-total,
+    .dashboard-feature,
+    .mr-row
+  ) {
+  background: var(--mr-panel) !important;
+  color: var(--mr-ink) !important;
+  border-color: var(--mr-line) !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  .cf-transaction-copy {
+  display: grid;
+  grid-template-columns: minmax(120px, 2fr) minmax(70px, 0.8fr) minmax(
+      90px,
+      1fr
+    ) minmax(100px, 1fr) minmax(70px, 0.7fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  .cf-transaction-row {
+  display: flex !important;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+  overflow: visible !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  main
+  #content
+  .cf-transaction-copy
+  > * {
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  overflow-wrap: anywhere;
+}
+.cf-row-menu {
+  position: relative;
+  flex: none;
+}
+.cf-row-menu > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+.cf-row-menu-items {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 90;
+  width: min(380px, 75vw);
+  background: var(--mr-panel);
+  border: 1px solid var(--mr-line);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 10px 25px #0002;
+}
+.cf-add-menu {
+  position: relative;
+}
+html body #content .cf-add-menu > summary {
+  list-style: none;
+  display: inline-block;
+  cursor: pointer;
+  padding: 8px 14px;
+  background: var(--mr-accent);
+  color: var(--mr-on-accent, #fff) !important;
+  border-radius: 12px;
+}
+.cf-add-menu > .cf-actions {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 80;
+  min-width: 190px;
+  padding: 10px;
+  background: var(--mr-panel);
+  border: 1px solid var(--mr-line);
+  border-radius: 12px;
+  display: grid !important;
+}
+.mr-joy-feature {
+  padding: 18px;
+  border: 1px solid var(--mr-line);
+  border-radius: 16px;
+  margin: 18px 0;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .bible-bookshelf
+  .bible-books
+  button {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--mr-line) !important;
+  border-radius: 0 !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  .bible-bookshelf
+  .bible-books
+  button.bible-book-progress {
+  background: color-mix(
+    in srgb,
+    var(--mr-accent) 14%,
+    var(--mr-panel)
+  ) !important;
+}
+@media (max-width: 700px) {
+  html
+    body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+      body,
+      #masterAreas
+    )
+    main
+    #content
+    .cf-transaction-copy {
+    grid-template-columns: minmax(100px, 1fr) auto;
+    gap: 5px 8px;
+  }
+  .cf-transaction-copy > *:nth-child(n + 3) {
+    font-size: 0.8rem !important;
+  }
+}
+
+.mr-page-undo {
+  justify-self: end;
+}
+.mr-collection-table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+}
+.mr-collection-table :is(th, td) {
+  padding: 10px;
+  border-bottom: 1px solid var(--mr-line);
+}
+html body dialog :is(input, select, textarea) {
+  background: var(--mr-panel) !important;
+  color: var(--mr-ink) !important;
+  border-color: var(--mr-line) !important;
+}
+html
+  body.glow-redesign:is(body, #masterTheme):is(body, #masterColors):is(
+    body,
+    #masterAreas
+  )
+  #content
+  :is(
+    .pk-panel,
+    .pk-tile,
+    .pk-panel details,
+    .cf-row-menu-items,
+    .cf-add-menu > .cf-actions
+  ) {
+  background: var(--mr-panel) !important;
+  color: var(--mr-ink) !important;
+  border-color: var(--mr-line) !important;
+}

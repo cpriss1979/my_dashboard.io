@@ -420,6 +420,7 @@
     presets.open = false;
     glitter.open = false;
   });
+  window.DashboardThemeCatalog={themes:themes.map(x=>[...x]),get:()=>structuredClone(applied),defaults:()=>customPalette(),preview(id,custom,read){const previous=structuredClone(applied),previousBase=base;applied={...applied,theme:id,...(custom?{custom:customPalette(custom)}:{})};applyAppearance();const result=read();applied=previous;base=previousBase;applyAppearance();return result},setSparkles(values){applied={...applied,...values};applyAppearance();storage.setItem(studioKey,JSON.stringify(applied))}};
   resetControls();
   appearance.append(legend, presets, palette, glitter, apply, status);
   settings.append(appearance);
