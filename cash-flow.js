@@ -18,7 +18,8 @@ function ownerOptions(){
  const groups=m.groups.filter(group=>accounts.some(account=>viewOwner(account)===group.id));
  return [['','All accounts'],
   ...groups.map(group=>['group:'+group.id,group.name+'’s accounts']),
-  ...(accounts.some(account=>!viewOwner(account))?[['unassigned','Unassigned accounts']]:[])];
+  ...(accounts.some(account=>!viewOwner(account))?[['unassigned','Unassigned accounts']]:[]),
+  ...accounts.map(account=>[accountView(account),accountLabel(account)])];
 }
 function accountView(account){return account?'account:'+account.id:''}
 function accountLabel(account){
@@ -39,7 +40,7 @@ function selectedOwner(){
   const saved=ownerPreferences.has(key)?ownerPreferences.get(key):localStorage.getItem(key);
   const legacy=activeAccounts().find(account=>accountView(account)===saved);
   const view=m.groups.some(group=>group.id===saved)?'group:'+saved:
-   legacy?(viewOwner(legacy)?'group:'+viewOwner(legacy):'unassigned'):saved;
+   legacy?accountView(legacy):saved;
   return ownerOptions().some(([id])=>id===view)?view:'';
  }catch{return ''}
 }
@@ -51,7 +52,7 @@ function selectOwner(id){
 function matchesOwner(id){
  const owner=selectedOwner();
  const account=m.accounts.find(a=>a.id===id);
- return !owner||(owner.startsWith('group:')?viewOwner(account)===owner.slice(6):Boolean(account)&&!viewOwner(account));
+ return !owner||(owner.startsWith('account:')?id===owner.slice(8):owner.startsWith('group:')?viewOwner(account)===owner.slice(6):Boolean(account)&&!viewOwner(account));
 }
 function matchesTransaction(item){
  return item.kind==='transfer'?matchesOwner(item.from)||matchesOwner(item.to):matchesOwner(item.account);
@@ -152,7 +153,7 @@ function safeAction(label,fn){safetyBackup();fn();commit(label)}
 function group(title,items,open=true){const d=e('details',undefined,'cf-group'),key=tab+'|'+title;d.open=folded.has(key)?folded.get(key):open;d.append(e('summary',title+' · '+items.length));d.addEventListener('toggle',()=>folded.set(key,d.open));const grid=e('div',undefined,'cf-record-grid');items.forEach(n=>grid.append(n));if(!items.length)grid.append(e('p','Nothing here.'));d.append(grid);return d}
 function tint(n,key){const account=m.accounts.find(a=>a.id===key);if(account){n.dataset.cfOwner=accountOwner(account);if(account.accent)n.style?.setProperty('--cf-account-accent',accountAccent(account));}let h=0;for(const ch of String(key))h=(h*31+ch.charCodeAt(0))>>>0;n.dataset.pastel=String(h%5);return n}
 function tile(title,amount,lines,actions=[],key=title){const n=record(title,'',...actions);n.children[0].append(e('strong',dollars(amount),'cf-amount'));for(const text of lines.filter(Boolean))n.children[0].append(e('p',text));return tint(n,key)}
-function statusLabel(x){return x.status==='cleared'?'Paid · Cleared':x.status==='pending'?'Paid · Awaiting clearance':'Unpaid'}
+function statusLabel(x){return x.status==='cleared'?'Cleared':x.status==='pending'?'Pending':'Planned'}
 function dateLabel(d){return d?d.slice(5,7)+'/'+d.slice(8,10)+'/'+d.slice(0,4):'Unknown'}
 function form(title,fields,submit,host,afterSave){const owner=state,model=m,d=e('section',undefined,'cf-dialog cf-inline-form'),f=e('form'),error=e('p',undefined,'cf-error');error.setAttribute('role','alert');const grid=e('div',undefined,'cf-fields');grid.append(...fields);const s=e('button','Save','primary');s.type='submit';let submitted=false;f.append(grid,error,row(s,b('Cancel',()=>d.close())));d.append(e('h2',title),f);d.addEventListener('close',()=>d.remove(),{once:true});d.close=()=>d.remove();placeFinanceEditor(d,host);
  const first=f.querySelector('input:not([type="checkbox"]):not([type="hidden"]),select,textarea');
@@ -311,7 +312,7 @@ function toggleArchive(rule){
 function badge(s){const n=e('span',s,'cf-status');n.dataset.status=s;return n}
 function record(title,description,...actions){const n=e('article',undefined,'cf-record');const copy=e('div');copy.append(e('h3',title),e('p',description));n.append(copy,row(...actions));return tint(n,title)}
 function balanceTags(ids){return Object.fromEntries(ids.map(id=>{const a=m.accounts.find(a=>a.id===id);return [id,C.balanceKey(a)]}))}
-function moneyActions(account){return row(b('Add Money',()=>moneyForm('in',null,account),'primary'),b('Subtract Money',()=>moneyForm('out',null,account)),b('Move Money',()=>transferForm(null,account?{from:account}:null)))}
+function moneyActions(account){return row(b('Record income',()=>moneyForm('in',null,account),'primary'),b('Record expense',()=>moneyForm('out',null,account)),b('Record transfer',()=>transferForm(null,account?{from:account}:null)))}
 function moneyForm(direction,existing,chosen){const id=existing?.id||uid(),account=existing?.account||chosen||scopedChecking()||(activeAccounts().length===1?activeAccounts()[0].id:'');
  const scheduled=existing?[]:C.events(m,C.add(today(),90)).filter(o=>o.kind===(direction==='in'?'income':'bill')&&o.status!=='cleared');
  const pick=select('source',[['','New transaction'],...scheduled.map(o=>[o.id,o.name+' · '+o.date+' · '+dollars(o.amount)])],'');
@@ -403,7 +404,7 @@ function savingsActivity(account,events){
 }
 function history(root){
  plannedPurchases(root);
- const p=card('Activity'),ids=new Set(m.accounts.map(a=>a.id));
+ const p=card('Transactions'),ids=new Set(m.accounts.map(a=>a.id));
  {
   const controls=row(searchField('Search transactions',historyFilters.search,v=>{historyFilters.search=v;historyLimit=24}));
   for(const key of ['from','to']){
@@ -427,8 +428,8 @@ function history(root){
   [item.name,item.notes,name(item.account),name(item.from),name(item.to)].join(' ').toLowerCase().includes(historyFilters.search);
  const rows=C.events(m,historyEnd()).filter(visible).filter(o=>(o.status!=='planned'||o.kind==='transfer')&&(o.kind==='transfer'?(ids.has(o.from)||ids.has(o.to)):ids.has(o.account))).sort(newestFirst);
  const selection=financeSelection();
- p.append(e('p',rows.length+' transactions · newest first'),selection.top);p.append(compactList('Transactions & planned moves',rows.slice(0,historyLimit).map(o=>selection.attach(compactRow(o.name,o.amount,[dateLabel(historyDate(o)),o.kind==='transfer'?name(o.from)+' → '+name(o.to):name(o.account),o.kind==='bill'?statusLabel(o):o.status], [badge(o.kind==='bill'?statusLabel(o):o.status),b('Edit',()=>editEvent(o)),...(o.kind==='bill'&&o.status==='pending'?[b('Mark Cleared',()=>payment(o,true))]:[]),b('Delete',()=>deleteEvent(o),'link')],o.account||o.from,[o.notes]),o)),true));if(rows.length>historyLimit)p.append(b('Show more transactions',()=>{historyLimit+=24;render()}));p.append(selection.bar);root.append(p);
- {const audit=card('Change history');audit.append(e('p','Saved changes cover all accounts. Reverse change returns the affected records to their earlier values. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].filter(entry=>!entry.deleted).reverse();audit.append(group('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.recovered?'Restored':x.undone?'Undone':'Saved'),...(!x.undone?[b('Reverse change',()=>{if(confirm('Reverse '+x.label+'?'))undoChange(x)})]:[]),b('Delete history entry',()=>{
+ p.append(e('p',rows.length+' transactions · newest first'),selection.top);p.append(compactList('Transactions & planned moves',rows.slice(0,historyLimit).map(o=>selection.attach(compactRow(o.name,['bill','money-out'].includes(o.kind)?-o.amount:o.kind==='transfer'&&selectedOwner().startsWith('account:')&&selectedOwner()==='account:'+o.from?-o.amount:o.amount,[dateLabel(historyDate(o)),o.kind==='transfer'?name(o.from)+' → '+name(o.to):name(o.account),statusLabel(o)], [badge(statusLabel(o)),b('Edit',()=>editEvent(o)),...(o.kind==='bill'&&o.status==='pending'?[b('Mark cleared',()=>payment(o,true))]:[]),b('Delete',()=>deleteEvent(o),'link')],o.account||o.from,[o.notes]),o)),true));if(rows.length>historyLimit)p.append(b('Show more transactions',()=>{historyLimit+=24;render()}));p.append(selection.bar);root.append(p);
+ {const audit=e('details',undefined,'cf-card');audit.id='cfAudit';audit.append(e('summary','Change history')); audit.append(e('p','Saved changes cover all accounts. Reverse change returns the affected records to their earlier values. If the same record was edited later, use Edit to make a correction.'));const entries=[...(m.audit||[])].filter(entry=>!entry.deleted).reverse();audit.append(group('Saved changes',entries.map(x=>{const n=record(x.label,new Date(x.at).toLocaleString(),badge(x.recovered?'Restored':x.undone?'Undone':'Saved'),...(!x.undone?[b('Reverse change',()=>{if(confirm('Reverse '+x.label+'?'))undoChange(x)})]:[]),b('Delete history entry',()=>{
   if(confirm('Remove this saved change from the undo history? Its transactions and balances will stay as they are.'))safeAction('Delete history entry',()=>{x.deleted=true});
  },'link'));const details=e('details');details.append(e('summary','Original / new values'));for(const op of x.changes)details.append(e('p',op.key+' · '+(op.after?.name||op.before?.name||op.id)+'\nBefore: '+JSON.stringify(op.before)+'\nAfter: '+JSON.stringify(op.after)));for(const op of x.changes){
  const current=savedRecord(op);
@@ -577,40 +578,25 @@ function budgetNameForm() {
  dialog.showModal();
  budgetName.select();
 }
-function banner(){const p=card('Accounts');
- if(!activeAccounts().length){
-  p.append(e('p','Add a checking account to start your budget. Then add your income, bills, and savings goals.'),
-   b('Start my budget',()=>accountForm(null,'checking','My checking'),'primary'));
+function banner(){
+ const p=card('Finances');p.classList.add('cf-toolbar','cf-simple-toolbar');
+ const chooser=select('accountView',ownerOptions(),selectedOwner());
+ chooser.onchange=()=>{selectOwner(chooser.value);historyLimit=24;render()};
+ p.append(field('Viewing accounts',chooser));
+ const nav=e('nav',undefined,'cf-simple-tabs');nav.setAttribute('aria-label','Finance views');
+ for(const [key,label] of [['Overview','Summary'],['Activity','Transactions'],['Forecast','Upcoming'],['Savings','Savings goals']]){
+  const button=b(label,()=>{tab=key;render()});
+  button.setAttribute('aria-current',tab===key||(key==='Forecast'&&['Bills','Income'].includes(tab))?'page':'false');nav.append(button);
  }
- p.classList.add('cf-toolbar');
- const choices=ownerOptions();
- function changeView(id){
-  selectOwner(id);
-  tab='Overview';
-  historyLimit=24;calendarDay='';render();
- }
- const owner=e('div',undefined,'cf-text-navigation');
- owner.setAttribute('role','navigation');owner.setAttribute('aria-label','Finance navigation');
- const overviewLink=b('Overview',()=>changeView(''),'cf-nav-text');
- overviewLink.classList.add('cf-overview-link');
- overviewLink.setAttribute('aria-current',tab==='Overview'&&!selectedOwner()?'page':'false');owner.append(overviewLink);
- for(const [id,label] of choices){
-  const menu=e('details',undefined,'cf-nav-menu');
-  const trigger=e('summary',label,'cf-nav-text');
-  if(selectedOwner()===id&&(id||tab!=='Overview'))trigger.setAttribute('aria-current','page');
-  const items=e('div',undefined,'cf-nav-dropdown');
-  for(const x of tabs.filter(x=>x!=='Overview'&&(x!=='Forecast'||id!==''))){const control=b(x,()=>{
-   selectOwner(id);
-   if(x==='Bills'&&tab!=='Bills'){billView='All bills';billSearch='';filters.frequency='';calendarDay='';}
-   tab=x;historyLimit=24;if(x==='Forecast')horizon=0;render();
-   if(x==='Available')document.querySelector('#content .cf-payday-overview')?.scrollIntoView({block:'start'});
-  },'cf-nav-text');
-  if(selectedOwner()===id&&tab===x)control.setAttribute('aria-current','page');items.append(control);}
-  menu.append(trigger,items);owner.append(menu);
-  menu.addEventListener('toggle',()=>{if(menu.open)for(const other of owner.querySelectorAll('details[open]'))if(other!==menu)other.open=false});
- }
- p.append(owner);
- const tools=e('details');tools.append(e('summary','Budget settings'),e('p',m.budgetName||'My budget'),b('Rename budget',budgetNameForm),e('p','Starting balances are snapshots; record only later activity. For scheduled bills or deposits, choose the existing item in Add Money or Subtract Money to avoid a duplicate.'),b('Export dashboard backup',()=>backup()));tools.append(e('p','A device safety copy is saved before your first change. Open Activity → Change history to review a saved change.'));p.append(tools);return p}
+ p.append(nav);
+ const chosen=activeAccounts().filter(a=>matchesOwner(a.id));
+ p.append(moneyActions(chosen.length===1?chosen[0].id:null));
+ const settings=e('details',undefined,'cf-settings');settings.append(e('summary','Settings & tools'),row(
+  b('Add account',()=>accountForm()),b('Rename budget',budgetNameForm),b('Export dashboard backup',()=>backup()),
+  b('Change history',()=>{tab='Activity';render();document.getElementById('cfAudit')?.scrollIntoView({block:'start'})}),
+  b('Archive',()=>{tab='Archive';render()}),b('Loan tools',()=>go('Amortization'))));
+ p.append(settings);return p;
+}
 function visiblePlans(report){
  return report.accounts.filter(account=>matchesOwner(account.id)).map(account=>({
   account,plan:T.paydayPlan(account,today(),C.add(today(),30))
@@ -704,8 +690,11 @@ function savingsBalanceCard(account,summaryOnly=false,source=m,editable=true){
  const unassigned=account.current==null?null:Math.max(0,account.current-assigned);
  const transferable=unassigned==null?null:Math.min(unassigned,Math.max(0,account.current-(account.cushion||0)));
  const item=savingsDisclosure(account.name+' · '+(unassigned==null?'No recorded balance':dollars(unassigned)+' available after designating'),'savings|'+account.id);
- item.append(balanceFooter('Full cleared balance',account.current),accountFunds(account,source,editable));
- item.append(balanceFooter('Left to designate',unassigned),balanceFooter('Free to transfer',transferable));
+ item.open=true;
+ if(account.current!=null&&assigned>account.current)item.append(e('p','Goals exceed savings by '+dollars(assigned-account.current)+'. Assigning money to a goal does not deposit money into this account.','cf-shortfall'));
+ item.append(balanceFooter('Cleared balance',account.current),balanceFooter('Set aside for goals',assigned));
+ if(!summaryOnly)item.append(accountFunds(account,source,editable));
+ item.append(balanceFooter('Unassigned savings',unassigned),balanceFooter('Free to transfer',transferable));
  const details=e('details',undefined,'cf-overview-breakdown');
  details.append(e('summary','How these amounts are calculated'),balanceFooter('Cleared savings',account.current));
  for(const fund of (source.goals||[]).filter(g=>g.account===account.id&&!g.deleted&&!g.archived&&g.reserved>0)){
@@ -717,7 +706,8 @@ function savingsBalanceCard(account,summaryOnly=false,source=m,editable=true){
  item.append(details);
  if(!editable)return item;
  if(summaryOnly){
-  item.append(row(b('Edit account',()=>accountForm(m.accounts.find(a=>a.id===account.id)),'cf-clean-link'),b('Delete account',()=>deleteAccount(account.id),'cf-clean-link')),accountControls(account));
+  const options=e('details');options.append(e('summary','Account options'),accountControls(account));
+  item.append(row(b('Transactions',()=>{selectOwner(accountView(account));tab='Activity';render()}),b('Savings goals',()=>{selectOwner(accountView(account));tab='Savings';render()})),options);
   return item;
  }
  const math=e('div',undefined,'cf-payday-math');
@@ -815,20 +805,29 @@ function overview(root,report){
    item.append(b('Confirm deposit · '+deposit.name+' · '+dateLabel(deposit.expectedDate||deposit.date)+' · '+dollars(deposit.amount),
     ()=>confirmDeposit(deposit),'primary'));
   }
-  item.append(balanceFooter('Recorded checking balance',account.current),
-   balanceFooter(plan.hasPayday?'Bills before payday on '+dateLabel(plan.cutoff):'Bills through '+dateLabel(plan.cutoff),bills));
-  if(other)item.append(balanceFooter('Other planned activity',other));
-  item.append(balanceFooter('Left after bills and planned activity',plan.preDeposit));
-  if(account.cushion)item.append(balanceFooter('Left after keeping '+dollars(account.cushion)+' in checking',
-   plan.preDeposit===null?null:plan.preDeposit-account.cushion));
-  const detail=e('details');
-  detail.append(e('summary','See transactions and account options'),clearedBreakdown(account));
-  for(const entry of entries)detail.append(balanceFooter(dateLabel(entry.date)+' · '+entry.name,entry.delta));
-  detail.append(accountControls(account));
-  item.append(detail);
-  const column=e('div',undefined,'cf-account-column');
-  column.append(item);
-  item.append(row(b('Edit account',()=>accountForm(m.accounts.find(a=>a.id===account.id)),'cf-clean-link'),b('Delete account',()=>deleteAccount(account.id),'cf-clean-link')));
+   const pending=account.future.filter(x=>x.status==='pending'&&x.delta<0);
+   const pendingTotal=pending.reduce((sum,x)=>sum+x.delta,0);
+   const afterPending=account.current===null?null:account.current+pendingTotal;
+   const remaining=entries.filter(x=>!pending.some(y=>y.id===x.id));
+   const periodPending=entries.filter(x=>pending.some(y=>y.id===x.id)).reduce((sum,x)=>sum+x.delta,0);
+   const summaryLine=(label,amount,items)=>{
+    const d=e('details',undefined,'cf-summary-line');const title=e('summary');title.append(e('span',label),e('strong',dollars(amount)));d.append(title);
+    if(items.length)for(const x of items)d.append(balanceFooter(dateLabel(x.date)+' · '+x.name,x.delta));
+    else d.append(e('p','No activity included.'));
+    return d;
+   };
+   item.append(summaryLine('Cleared balance',account.current,[{name:'Starting balance',date:account.asOf,delta:account.opening},...account.clearedEntries]),
+    summaryLine('Pending payments',pendingTotal,pending),
+    balanceFooter('After pending payments',afterPending),
+    summaryLine('Upcoming commitments',remaining.filter(x=>x.delta<0).reduce((sum,x)=>sum+x.delta,0),remaining.filter(x=>x.delta<0)));
+   if(remaining.some(x=>x.delta>0))item.append(summaryLine('Expected money in before payday',remaining.filter(x=>x.delta>0).reduce((sum,x)=>sum+x.delta,0),remaining.filter(x=>x.delta>0)));
+   if(pendingTotal!==periodPending)item.append(e('p','The estimate below includes pending payments scheduled within this period.'));
+   item.append(balanceFooter(plan.hasPayday?'Estimated left before next payday':'Estimated left in 30 days',plan.preDeposit));
+   item.append(e('p',plan.hasPayday?'Next payday: '+dateLabel(plan.cutoff)+' · '+dollars(account.nextDeposit.amount):'No payday scheduled. Showing the next 30 days.'));
+   if(account.cushion)item.append(balanceFooter('After keeping your cushion',plan.preDeposit===null?null:plan.preDeposit-account.cushion));
+   const options=e('details');options.append(e('summary','Account options'),accountControls(account));
+   item.append(row(b('Transactions',()=>{selectOwner(accountView(account));tab='Activity';render()}),b('Upcoming',()=>{selectOwner(accountView(account));tab='Forecast';render()})),options);
+   const column=e('div',undefined,'cf-account-column');column.append(item);
   checkingColumns.set(account.id,column);
   grid.append(column);
  }
@@ -838,7 +837,7 @@ function overview(root,report){
   if(!column){column=e('div',undefined,'cf-account-column');grid.append(column);}
   column.append(savingsBalanceCard(saving,true));
  }
- if(!plans.length&&activeAccounts().length)p.append(e('p','No checking accounts in this view.'));
+ if(!plans.length&&!savings.length&&activeAccounts().length)p.append(e('p','No checking accounts in this view.'));
  const actions=row(b('Add account',()=>accountForm()));
  if(activeAccounts().length>1)actions.prepend(b('Transfer money',()=>transferForm(null,{from:scopedChecking()}),'primary'));
  p.append(actions,grid);
@@ -952,7 +951,7 @@ function dueLabel(x){return x.due?(x.certainty==='estimated'?'Estimated ':'')+da
 function billCard(item){
  const status=item.status==='cleared'?'paid':item.status==='pending'?'pending':
   !item.due?'needs-date':item.due<today()?'overdue':item.due<=C.add(today(),30)?'due-soon':'upcoming';
- const labels={paid:'Paid',pending:'Payment pending','needs-date':'Needs date',overdue:'Overdue',
+ const labels={paid:'Cleared',pending:'Pending','needs-date':'Needs date',overdue:'Overdue',
   'due-soon':item.due===today()?'Due today':'Due soon',upcoming:'Upcoming'};
  const article=e('article',undefined,'cf-bill-row');
  article.dataset.billStatus=status;
@@ -967,10 +966,8 @@ function billCard(item){
  const amount=e('strong',dollars(item.amount),'cf-bill-amount');
  const indicator=e('div',undefined,'cf-bill-indicator');
  indicator.append(badge(labels[status]));
- const cleared=input('billCleared','checkbox','',false);
- cleared.checked=item.status==='cleared';cleared.disabled=cleared.checked;
- cleared.setAttribute('aria-label','Mark '+item.name+' cleared at bank');
- const clearance=e('label',undefined,'cf-clearance');clearance.append(cleared);
+ const clearance=e('div',undefined,'cf-clearance');
+ if(item.status!=='cleared')clearance.append(b(item.status==='pending'?'Mark cleared':'Record payment',()=>payment(item,item.status==='pending')));
  cells.append(date,title,account,amount,indicator,clearance);
  const details=e('details',undefined,'cf-bill-details');
  const summary=e('summary','Details');summary.hidden=true;
@@ -1000,17 +997,6 @@ function billCard(item){
    });
   };details.append(label);
  }
- cleared.onchange=()=>{
-  cleared.checked=false;
-  if(!item.account){edit();return;}
-  const matches=(m.ledger||[]).filter(x=>!x.deleted&&!x.afterDepositId&&!x.reconciliationId&&x.direction==='out'&&x.account===item.account&&x.amount===item.amount&&x.date<=today());
-  if(matches.length){payment(item,true);return;}
-  if(item.status==='pending'&&historyDate(item)>today()){payment(item,true);return;}
-  safeAction('Clear '+item.name,()=>{
-   T.billPayment(m,C,item,{date:today(),paymentDate:item.status==='pending'?historyDate(item):today(),status:'cleared'});
-   m.overrides[item.id].clearancePrevious={status:item.status,date:item.date,posted:item.posted,paymentDate:item.paymentDate};
-  });
- };
  details.append(detailActions,editHost);
  article.append(cells,details);
  return article;
@@ -1349,8 +1335,8 @@ function forecastPeriod(start,end,opening,entries,heading,sources,account,prior=
  }
  const components=()=>[line(openingLabel,opening,false),line('Add expected deposits',total(deposits)),
   line('Subtract planned and pending bills',total(bills)),line('Left after bills',afterBills,false)];
- const headline=breakdown('Left after planned and pending bills',afterBills,components());
- headline.querySelector('strong').className=afterBills<0?'cf-payday-amount cf-shortfall':'cf-payday-amount';
+ const headline=breakdown('Estimated balance after all activity',closing,[...components(),line('Other activity',total(other)),line('Estimated balance',closing,false)]);
+ headline.querySelector('strong').className=closing<0?'cf-payday-amount cf-shortfall':'cf-payday-amount';
  panel.append(e('h4',heading),e('p',range),headline);
  const math=e('div',undefined,'cf-payday-math');
  function category(label,items,empty){
@@ -1362,7 +1348,6 @@ function forecastPeriod(start,end,opening,entries,heading,sources,account,prior=
   category('Other forecast activity',other,'No other activity in this period.'),
   breakdown('Projected balance with all activity',closing,[...components(),line('Other forecast activity',total(other)),
    line('Projected balance',closing,false)]));
- panel.append(math);
 
  const firstShort=opening<0?null:entries.find(item=>item.balance<0);
  if(firstShort){
@@ -1391,8 +1376,8 @@ function forecastPeriod(start,end,opening,entries,heading,sources,account,prior=
   beforeDay=day.at(-1).balance;
  }
 
- const details=e('details',undefined,'cf-payday-other');
- details.append(e('summary','See included bills and activity · '+entries.length));
+ const details=e('details',undefined,'cf-payday-other');details.open=true;
+ details.append(e('summary','Scheduled activity · '+entries.length));
  if(!entries.length)details.append(e('p','No forecast activity in this period.'));
  for(const item of entries){
   const pending=item.status==='pending'?' · pending':'';
@@ -1411,7 +1396,7 @@ function forecastPeriod(start,end,opening,entries,heading,sources,account,prior=
 }
 
 function timeline(root,report){
- const p=card('Cash-flow forecast');
+ const p=card('Upcoming');p.append(row(b('Manage bills & recurring expenses',()=>{tab='Bills';render()}),b('Manage income & recurring deposits',()=>{tab='Income';render()}),b('Plan a purchase',()=>plannedPurchaseForm())));
  const options=row(...[[0,'By payday'],[30,'Next 30 days'],[60,'Next 60 days'],[90,'Next 90 days']].map(([days,label])=>{
   const button=b(label,()=>{horizon=days;render()});
   button.setAttribute('aria-pressed',String(horizon===days));return button;
@@ -1639,11 +1624,10 @@ function paint(){
  }
  lastScope=scope;
  const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);
- if(tab==='Activity')content.append(recoveryControls());
+
  if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
  if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);
- const shortcuts=row(b('Activity',()=>{tab='Activity';render()}));content.append(shortcuts);
- const tools=card('Loan tools');tools.append(b('Loan amortization',()=>go('Amortization')));content.append(tools)}if(tab!=='Archive'){const footer=row(b('Archive',()=>{tab='Archive';render()}));footer.classList.add('cf-archive-footer');content.append(footer)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
+ }if(tab!=='Archive'){const footer=row(b('Archive',()=>{tab='Archive';render()}));footer.classList.add('cf-archive-footer');content.append(footer)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
 window.dashboardFinancePrint = {
  options(){
   return {scope:ownerOptions().find(([id])=>id===selectedOwner())[1],
