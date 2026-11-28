@@ -598,7 +598,7 @@ function banner(){
  chooser.onchange=()=>{selectOwner(chooser.value);historyLimit=24;render()};
  p.append(field('Viewing accounts',chooser));
  const nav=e('nav',undefined,'cf-simple-tabs');nav.setAttribute('aria-label','Finance views');
- for(const [key,label] of [['Overview','Summary'],['Activity','Transactions'],['Forecast','Upcoming'],['Savings','Savings goals']]){
+ for(const [key,label] of [['Overview','Workbook'],['Activity','Transactions'],['Forecast','Upcoming'],['Savings','Savings goals']]){
   const button=b(label,()=>{tab=key;render()});
   button.setAttribute('aria-current',tab===key||(key==='Forecast'&&['Bills','Income'].includes(tab))?'page':'false');nav.append(button);
  }
@@ -607,10 +607,10 @@ function banner(){
  const undo=b('Undo last action',()=>{if(last)undoChange(last)});undo.disabled=!last;p.append(undo);
  const chosen=activeAccounts().filter(a=>matchesOwner(a.id));
  p.append(moneyActions(chosen.length===1?chosen[0].id:null));
- const settings=e('details',undefined,'cf-settings');settings.append(e('summary','Manage & tools'),row(
-  b('Manage bills',()=>{tab='Bills';render()}),b('Manage income',()=>{tab='Income';render()}),b('Plan a purchase',()=>plannedPurchaseForm()),b('Add account',()=>accountForm()),b('Rename budget',budgetNameForm),b('Export dashboard backup',()=>backup()),
+ const settings=e('details',undefined,'cf-settings');settings.append(e('summary','Accounts & tools'),row(
+  b('Manage bills',()=>{tab='Bills';render()}),b('Manage income',()=>{tab='Income';render()}),b('Plan a purchase',()=>plannedPurchaseForm()),b('Add account',()=>accountForm()),b('Export dashboard backup',()=>backup()),
   b('Change history',()=>{tab='Activity';render();document.getElementById('cfAudit')?.scrollIntoView({block:'start'})}),
-  b('Archive',()=>{tab='Archive';render()}),b('Loan tools',()=>go('Amortization'))));
+  b('Archive',()=>{tab='Archive';render()})));
  settings.append(peopleSettings());const accountSettings=e('details');accountSettings.append(e('summary','Manage accounts'));for(const account of activeAccounts().filter(a=>matchesOwner(a.id)))accountSettings.append(accountControls(C.forecast(m,today(),horizon).accounts.find(a=>a.id===account.id)||account));settings.append(accountSettings);p.append(settings);return p;
 }
 function visiblePlans(report){
@@ -812,7 +812,7 @@ function overview(root,report){
  const checkingColumns=new Map();
  const deposits=C.events(m,today()).filter(x=>depositDue(x,today()));
  for(const {account,plan} of plans){
-  const item=savingsDisclosure('Checking','checking|'+account.id);
+  const item=savingsDisclosure(account.name+' · Available '+dollars(account.current),'checking|'+account.id);item.open=true;
   item.classList.add('cf-checking-disclosure');
   item.append(balanceFooter('Estimated left before next payday',plan.preDeposit));
    const column=e('div',undefined,'cf-account-column');column.append(item);
@@ -1614,8 +1614,12 @@ function paint(){
  const content=document.getElementById('content');try{safetyBackup()}catch(err){backupProblem=err.message}m=T.financeSetup(state.cashFlow||C.init());billMonth||=today().slice(0,7);baseline=snapshot();baselineOwner=state;const toolbar=banner();content.replaceChildren(toolbar);
 
  if(backupProblem)content.append(e('p',backupProblem,'cf-warning'));const report=['Overview','Forecast'].includes(tab)?C.forecast(m,today(),366):null;
- if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {overview(content,report);
- }if(tab!=='Archive'){const footer=row(b('Archive',()=>{tab='Archive';render()}));footer.classList.add('cf-archive-footer');content.append(footer)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
+ if(tab==='Income')income(content);else if(tab==='Bills')bills(content);else if(tab==='Savings')savings(content);else if(tab==='Activity')history(content);else if(tab==='Forecast')timeline(content,report);else if(tab==='Archive')archive(content);else {
+ content.classList.add('workbook-layout');
+ overview(content,report);
+ const body=e('div',undefined,'workbook-body'),left=e('div',undefined,'workbook-bills'),right=e('div',undefined,'workbook-side');
+ bills(left);income(right);savings(right);body.append(left,right);content.append(body);
+ }if(tab!=='Overview')content.classList.remove('workbook-layout');if(tab!=='Archive'){const footer=row(b('Archive',()=>{tab='Archive';render()}));footer.classList.add('cf-archive-footer');content.append(footer)}for(const section of content.querySelectorAll('.cf-card')){const long=[...section.children].filter(n=>n.tagName==='P'&&n.textContent.length>190&&!n.classList.contains('cf-warning'));if(long.length){const help=e('details');help.append(e('summary','How this works'));long.forEach(n=>help.append(n));section.append(help)}}}
 window.dashboardFinancePrint = {
  options(){
   return {scope:ownerOptions().find(([id])=>id===selectedOwner())[1],
@@ -1669,3 +1673,5 @@ window.dashboardFinanceActions=()=>{
 };
 const prior=render;render=function(){prior();if(page==='Finances')paint()};render();
 })();
+
+(function(){const style=document.createElement("style");style.id="finance-workbook-layout-v2";style.textContent="\nhtml body.glow-redesign main #content.workbook-layout .cf-simple-toolbar{display:flex!important;flex-wrap:wrap!important;align-items:center;gap:8px!important;padding:12px 15px!important;margin:0 0 12px!important}\nhtml body.glow-redesign main #content.workbook-layout .cf-card{padding:14px!important;margin:0 0 12px!important;border-radius:10px!important;min-width:0!important}\nhtml body.glow-redesign main #content.workbook-layout .cf-card h2{font-size:20px!important;margin:0 0 10px!important}\nhtml body.glow-redesign main #content.workbook-layout .cf-settings{width:100%;margin:0!important}\nhtml body.glow-redesign main #content.workbook-layout .cf-settings>summary{font-size:13px!important;padding:4px!important}\nhtml body.glow-redesign main #content.workbook-layout .workbook-body{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:12px;align-items:start}\nhtml body.glow-redesign main #content.workbook-layout .workbook-body>div{min-width:0;overflow-wrap:anywhere}\nhtml body.glow-redesign main #content.workbook-layout .cf-record-grid{display:flex!important;flex-direction:column;gap:4px!important}\nhtml body.glow-redesign main #content.workbook-layout .cf-record-grid>div,html body.glow-redesign main #content.workbook-layout .cf-record-grid>article{padding:7px 9px!important;margin:0!important;min-height:0!important}\nhtml body.glow-redesign main #content.workbook-layout .cf-bill-cells{display:flex!important;flex-wrap:wrap;align-items:center;gap:7px!important}\nhtml body.glow-redesign main #content.workbook-layout .cf-bill-name{flex:1;min-width:110px}\nhtml body.glow-redesign main #content.workbook-layout button{padding:6px 10px!important;min-height:34px!important;font-size:13px!important}\nhtml body.glow-redesign main #content.workbook-layout p{margin:5px 0!important;font-size:13px!important}\nhtml body.glow-redesign main #content.workbook-layout .workbook-bills>.cf-card{border-top:4px solid #dd9d8e!important}\nhtml body.glow-redesign main #content.workbook-layout .workbook-side>.cf-card:first-child{border-top:4px solid #8bbadd!important}\nhtml body.glow-redesign main #content.workbook-layout .workbook-side>.cf-card:last-child{border-top:4px solid #bba1d5!important}\nhtml body.glow-redesign main #content.workbook-layout .cf-payday-overview{border-top:4px solid #8db99c!important}\nhtml body.glow-redesign main #content.workbook-layout .cf-stacked-accounts{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))!important;gap:10px!important}\n@media(max-width:1100px){html body.glow-redesign main #content.workbook-layout .workbook-body{grid-template-columns:minmax(0,1fr)}}\n";document.head.append(style)})();

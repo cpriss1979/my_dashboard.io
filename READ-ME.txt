@@ -1,52 +1,9 @@
-POKEMON COLLECTION ADD-ON
+Upload these TWO files to the ROOT of your GitHub repository, replacing the existing files:
 
-INSTALL
-1. Unzip this download.
-2. Upload dashboard-lists.js to the same GitHub repository folder as index.html,
-   replacing the existing dashboard-lists.js. Commit the change.
-3. Reload your dashboard after GitHub Pages finishes updating.
-   On a Mac browser, Command+Shift+R reloads without the usual cache.
-4. Open Collections > Pokémon cards.
+cash-flow.js
+finance-workbook.js
 
-Only dashboard-lists.js needs uploading. No index.html edits are required for
-existing dashboards that already load dashboard-lists.js. This version was
-built against your My-Dashboard-Family-Lists-and-Profile package. Your existing
-Collections, Shopping List and Wish List remain in the file. Regular collections
-are under Other collectibles. Existing collectibles are not converted to cards.
-
-FEATURES
-Front/back photos, card identity, owner labels, quantities, condition and grade,
-purchase cost, location, asking/sold prices, selling status, search and filters,
-price-search links, dated value history, editing, duplication and deletion.
-Unsold value totals exclude Sold records and use the latest dated estimate.
-Values and sale prices are per card in USD. Use separate records for copies in
-different conditions or when only some copies are sold.
-
-PRICE LOOKUP
-Check / record value opens searches for sold listings and card prices. Confirm
-the exact printing and condition yourself, then enter the value, date and source.
-Prices are not automatically fetched, verified or updated. A saved $0 is valid;
-a card with no recorded value is counted as unvalued.
-
-SAVING AND SHARING
-Card records use your dashboard's existing account/save system. This add-on does
-not add authentication or a new cloud service. Existing cloud sync behavior and
-limits still apply. Owner labels do not make another person's account accessible.
-
-Photos are compressed JPEGs stored in this browser's IndexedDB on this device.
-They do NOT cloud-sync. Use Export Pokémon backup to download card records and
-available photos together. This separate export is needed for photos; the main
-dashboard backup may include card metadata but does not include these photos.
-Keep the exported JSON file before clearing browser data or changing devices.
-Import Pokémon backup restores the cards/photos to the selected dashboard
-account. Matching card IDs are updated after confirmation; other cards stay.
-You can choose to send a backup to Bre; the app does not share it automatically.
-Photos missing on this device cannot be included in its export.
-JPG, PNG and WebP uploads up to 20 MB each are supported. Convert HEIC to JPG.
-Backups up to 150 MB can be imported.
-
-VALIDATION
-JavaScript syntax check passed. Automated core checks passed for backup
-validation, unsafe URL rejection, valuation ordering, account scope and storage
-failure rollback. The environment blocked Chromium from starting, so interactive
-browser behavior and real Firebase synchronization could not be verified here.
+Do not replace index.html. Do not upload this text file or a ZIP to run the update.
+After GitHub Pages finishes deploying, open Finances and choose Workbook.
+The Workbook view brings balances, bills, income and savings onto the same page.
+Other Finance views remain accessible using the existing tabs and tools.
