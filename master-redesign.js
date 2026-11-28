@@ -348,16 +348,22 @@
     });
     if (editing) toggle.textContent = "Done arranging";
     grid.before(toggle);
+    toggle.dataset.arrangeControl = key;
     const width = Math.max(1, grid.clientWidth || 900);
     const columns = Math.max(1, Math.floor(width / 290));
     function extent() {
       grid.style.height = Math.max(260, ...entries.map(([id, el]) => parseFloat(el.style.top) + parseFloat(el.style.height) + 20)) + "px";
     }
-    entries.forEach(([id, el], i) => {
+    const occupied = [];
+    [...entries].sort((a,b)=>Number(Boolean(layouts[b[0]]))-Number(Boolean(layouts[a[0]]))).forEach(([id, el], i) => {
       const saved = layouts[id] || {};
-      const w = Math.min(width, saved.w || Math.floor(width / columns) - 14), h = saved.h || 220;
+      const w = Math.min(width, saved.w || Math.floor(width / columns) - 14), h = saved.h || (key === "home" ? 170 : 220);
       const x = Math.max(0, Math.min(saved.x ?? (i % columns) * (width / columns), width - w));
-      const y = saved.y ?? Math.floor(i / columns) * 234;
+      let y = saved.y ?? Math.floor(i / columns) * 234;
+      while (occupied.some(r => x < r.x+r.w+12 && x+w+12 > r.x && y < r.y+r.h+12 && y+h+12 > r.y)) {
+        y = Math.max(...occupied.filter(r => x < r.x+r.w+12 && x+w+12 > r.x && y < r.y+r.h+12 && y+h+12 > r.y).map(r=>r.y+r.h+14));
+      }
+      occupied.push({x,y,w,h});
       Object.assign(el.style, {left:x+"px", top:y+"px", width:w+"px", height:h+"px"});
       const move = button("Move", () => {}), resize = button("Resize", () => {});
       move.className = "mr-move"; resize.className = "mr-resize";
@@ -367,7 +373,7 @@
         if (owner !== state) return;
         change("Arrange " + key, () => {
           state.redesignLayouts ??= {}; state.redesignLayouts[key] ??= {};
-          state.redesignLayouts[key][id] = {x:parseFloat(el.style.left), y:parseFloat(el.style.top), w:parseFloat(el.style.width), h:parseFloat(el.style.height)};
+          for (const [entryId, item] of entries) state.redesignLayouts[key][entryId] = {x:parseFloat(item.style.left), y:parseFloat(item.style.top), w:parseFloat(item.style.width), h:parseFloat(item.style.height)};
         });
       }
       for (const [handle, sizing] of [[move,false],[resize,true]]) {
@@ -427,10 +433,10 @@
     const picker = disclosure("Choose Home sections", "home-sections", [], false);
     for (const [route,title] of cards) {
       const label = node("label"), check = node("input"); check.type="checkbox"; check.checked=chosen.includes(route);
-      check.onchange=()=>change("Choose Home sections",()=>{state.redesignHomeSections=check.checked?[...chosen,route]:chosen.filter(r=>r!==route);});
+      check.onchange=()=>change("Choose Home sections",()=>{if(check.checked && state.redesignLayouts?.home) delete state.redesignLayouts.home[route];state.redesignHomeSections=check.checked?[...chosen,route]:chosen.filter(r=>r!==route);});
       label.append(check, document.createTextNode(title)); picker.append(label);
     }
-    p.append(picker);
+
     const entries = [];
     for (const [route, title, desc, icon] of cards.filter(c=>chosen.includes(c[0]))) {
       const a = node("article", undefined, "mr-shortcut");
@@ -453,6 +459,9 @@
     p.append(grid);
     root.append(p);
     arrange(grid, "home", entries);
+    const controls = node("section", undefined, "mr-home-controls");
+    const arrangeControl = p.querySelector('[data-arrange-control="home"]');
+    controls.append(picker, disclosure("Arrange Home", "home-arrange", [arrangeControl]));
     const active = data("projects").filter(
       (x) => !x.archived && x.status !== "Complete",
     );
@@ -478,6 +487,7 @@
         ),
       ]),
     );
+    root.append(controls);
   }
   function projects(root) {
     const list = data("projects"),
@@ -708,11 +718,13 @@
         ),
       );
       const normal = entries.filter((x) => !isArchived(x) && !isPinned(x));
-      area.append(
-        ...(normal.length
-          ? normal.map(row)
-          : [empty("Your saved writing will appear here.")]),
-      );
+      const pinned = area.querySelector('[data-mr-fold="notes-pinned:' + brain + '"]');
+      const normalFold = disclosure("Other notes · " + normal.length, "notes-normal:" + brain,
+        normal.length ? normal.map(row) : [empty("Your saved writing will appear here.")], !pinned.open);
+      if (pinned.open) normalFold.open = false;
+      pinned.addEventListener("toggle", () => { if (pinned.open) normalFold.open = false; });
+      normalFold.addEventListener("toggle", () => { if (normalFold.open) pinned.open = false; });
+      area.append(normalFold);
       area.append(
         disclosure(
           brain ? "Archived brain dumps" : "Archived notes",
@@ -1011,13 +1023,30 @@
     }
     if (mode === "Month")
       p.append(
-        monthGrid(new Date(selected + "T12:00:00"), selected, pick, (d) => {
+        monthGrid(new Date(selected + "T12:00:00"), selected, (d) => { view = "Day"; pick(d); }, (d) => {
           const list = node("span", undefined, "mr-events");
           eventsOn(d).forEach((x) => {
             const b = node("span", x.title, "mr-event-name");
             b.title = x.title;
             if (x.color) b.style.borderLeftColor = x.color;
             list.append(b);
+          });
+          const more = node("span", "", "mr-event-more"); list.append(more);
+          requestAnimationFrame(() => {
+            if (!list.isConnected) return;
+            const fit = () => {
+              const items = [...list.querySelectorAll(".mr-event-name")];
+              items.forEach(el => el.hidden = false); more.hidden = true;
+              const available = list.parentElement.clientHeight - 40;
+              let count = Math.max(0, Math.floor((available - 24) / 25));
+              if (items.length * 25 <= available) count = items.length;
+              items.forEach((el,i) => el.hidden = i >= count);
+              more.textContent = "+" + Math.max(0,items.length-count);
+              more.hidden = items.length <= count;
+            };
+            fit();
+            const observer = new ResizeObserver(() => { if (!list.isConnected) observer.disconnect(); else fit(); });
+            observer.observe(list.parentElement);
           });
           return list;
         }),
@@ -3520,251 +3549,80 @@
   }
   function joys(root) {
     const api = window.DashboardJoy;
-    if (!api) {
-      root.append(empty("Reopen Little Joys to load your ideas."));
-      return;
-    }
-    const m = api.model(),
-      p = panel(
-        "Little Joys",
-        "A small pause can brighten your day.",
-        button("Surprise me", surprise, true),
-      );
-    let featured = null;
-    const feature = node("div", undefined, "mr-joy-feature"),
-      host = node("div", undefined, "mr-recipe-grid");
-    function categoryName(x) {
-      return x.category || "Personal";
-    }
+    if (!api) { root.append(empty("Reopen Little Joys to load your ideas.")); return; }
+    const m = api.model();
+    const categories = ["Beauty and style", "Cozy", "Creative", "Music", "Outdoors", "Relaxation", "Social", "Spiritual", "Personal", "Play"];
+    const categoryName = x => ({beauty:"Beauty and style",rest:"Relaxation",faith:"Spiritual",outside:"Outdoors",outdoors:"Outdoors",creative:"Creative",music:"Music",social:"Social",play:"Play",cozy:"Cozy",personal:"Personal",spiritual:"Spiritual"}[String(x.category).toLowerCase()] || x.category || "Personal");
+    const minutes = x => x.minutes || (x.kind === "short" ? 10 : 30);
+    const metadata = x => categoryName(x) + " · " + minutes(x) + " minutes";
+    const active = () => m.activities.filter(x => x.enabled !== false && !x.hidden);
+    const p = panel("Little Joys", "Choose something small that could make today feel better.");
+    p.classList.add("mr-joy-page");
+    const feature = node("article", undefined, "mr-joy-feature"), host = node("div", undefined, "mr-joy-grid");
+    let featured = active().find(x=>x.id===m.featuredIdea) || active()[0];
     function editor(x) {
-      editForm(
-        x ? "Edit idea" : "Add an idea",
-        [
-          ["name", "Title", "text", x?.name, [], true],
-          ["description", "Description", "textarea", x?.description],
-          [
-            "category",
-            "Category",
-            "select",
-            x?.category || "Personal",
-            [
-              "Beauty and style",
-              "Cozy",
-              "Creative",
-              "Music",
-              "Outside",
-              "Relaxation",
-              "Social",
-              "Spiritual",
-              "Personal",
-            ],
-          ],
-          [
-            "minutes",
-            "Time length",
-            "select",
-            String(x?.minutes || 10),
-            [
-              ["5", "Quick break"],
-              ["10", "10 minutes"],
-              ["30", "30 minutes"],
-              ["60", "Longer"],
-            ],
-          ],
-          ["image", "Image / icon URL", "url", x?.image],
-        ],
-        (v) =>
-          change("Save idea", () => {
-            const values = {
-              ...v,
-              minutes: Number(v.minutes),
-              kind: Number(v.minutes) <= 10 ? "short" : "long",
-            };
-            if (x) Object.assign(x, values);
-            else
-              m.activities.push({
-                id: id(),
-                ...values,
-                enabled: true,
-                custom: true,
-              });
-          }),
-      );
+      editForm(x ? "Edit idea" : "Add an idea", [
+        ["name","Idea title","text",x?.name,[],true],
+        ["description","Description","textarea",x?.description],
+        ["category","Category","select",x ? categoryName(x) : "Personal",categories],
+        ["minutes","Time length","select",String(x ? minutes(x) : 10),[["5","Quick break"],["10","10 minutes"],["30","30 minutes"],["60","Longer"]]],
+        ["image","Optional image or icon","text",x?.image]
+      ], v => change("Save idea",()=>{
+        const values={...v,minutes:Number(v.minutes),kind:Number(v.minutes)<=10?"short":"long"};
+        if(x) Object.assign(x,values); else m.activities.push({id:id(),...values,enabled:true,custom:true});
+      }), "Save idea");
     }
     function choose(x) {
-      api.choose(x);
+      change("Choose idea",()=>{
+        m.featuredIdea=x.id;
+        m.pending={activityId:x.id,name:x.name,kind:x.kind,category:x.category,before:null,startedAt:now()};
+        (m.history ??= []).push({id:id(),at:now(),type:"chosen",activity:x.name,activityId:x.id,category:x.category,kind:x.kind});
+      });
     }
-    function active() {
-      return m.activities.filter(
-        (x) =>
-          x.enabled &&
-          !x.hidden &&
-          [x.name, x.description, categoryName(x)]
-            .join(" ")
-            .toLowerCase()
-            .includes(query.toLowerCase()),
-      );
+    function actions(x) { return menu([
+      ["Choose",()=>choose(x)],
+      ["Choose with optional check-in",()=>api.choose(x)],
+      [x.favorite?"Unfavorite":"Add to favorites",()=>change("Favorite idea",()=>x.favorite=!x.favorite)],
+      ["Edit",()=>editor(x)],
+      ["Duplicate",()=>change("Duplicate idea",()=>m.activities.push({...structuredClone(x),id:id(),name:x.name+" copy",custom:true,hidden:false}))],
+      [x.custom?"Delete":"Hide idea",()=>{if(x.custom){if(confirm("Delete this custom idea?"))change("Delete idea",()=>m.activities.splice(m.activities.indexOf(x),1));}else change("Hide idea",()=>x.hidden=true);}]
+    ],"Options for "+x.name); }
+    function card(x) {
+      const c=node("article",undefined,"mr-joy-card");
+      c.append(actions(x),node("h3",x.name),node("small",metadata(x)));
+      if(x.description)c.append(node("p",x.description));
+      c.append(button("Choose",()=>choose(x)));return c;
     }
     function show(x) {
-      featured = x;
-      feature.replaceChildren();
-      if (!x) {
-        feature.append(empty("Add an idea or change your filters."));
-        return;
-      }
-      feature.append(
-        node("small", categoryName(x)),
-        node("h3", x.name),
-        node("p", x.description || ""),
-        button("Choose this idea", () => choose(x)),
-      );
+      feature.replaceChildren();featured=x;
+      if(!x){feature.append(empty("Add an idea to get started."));return;}
+      const chosen=m.pending?.activityId===x.id;
+      feature.append(actions(x),node("small",metadata(x)),node("h3",x.name));
+      if(x.description)feature.append(node("p",x.description));
+      if(chosen){const status=node("p","Chosen — added to Activity history.","mr-save-status");status.setAttribute("role","status");feature.append(status);}
+      feature.append(line(button(chosen?"Do it again":"Choose this idea",()=>choose(x),true),
+        chosen?button("Choose another",surprise):null,
+        chosen?button(x.favorite?"Unfavorite":"Mark as favorite",()=>change("Favorite idea",()=>x.favorite=!x.favorite)):null,
+        chosen?button("I did this",()=>api.completePending()):null,
+        chosen?button("Let this one go",()=>change("Cancel chosen idea",()=>m.pending=null)):null));
+      if(m.pending && !chosen) feature.append(line(node("small","In progress: "+m.pending.name),button("Complete activity",()=>api.completePending())));
     }
-    function surprise() {
-      const list = active();
-      show(list[Math.floor(Math.random() * list.length)]);
-    }
-    function tile(x) {
-      return compact(
-        x,
-        categoryName(x) +
-          " · " +
-          (x.minutes || (x.kind === "short" ? 10 : 30)) +
-          " minutes",
-        menu([
-          [
-            x.favorite ? "Unfavorite" : "Favorite",
-            () => change("Favorite idea", () => (x.favorite = !x.favorite)),
-          ],
-          ["Edit", () => editor(x)],
-          [
-            "Duplicate",
-            () =>
-              change("Duplicate idea", () =>
-                m.activities.push({
-                  ...structuredClone(x),
-                  id: id(),
-                  custom: true,
-                  name: x.name + " copy",
-                }),
-              ),
-          ],
-          [
-            x.custom ? "Delete" : "Hide built-in idea",
-            () => {
-              if (
-                confirm(
-                  x.custom ? "Delete this idea?" : "Hide this built-in idea?",
-                )
-              )
-                change("Hide idea", () => {
-                  if (x.custom)
-                    m.activities = m.activities.filter((y) => y !== x);
-                  else x.hidden = true;
-                });
-            },
-          ],
-        ]),
-      );
-    }
-    const browse = disclosure("Browse ideas", "joy-browse", [], false);
-    function draw() {
-      host.replaceChildren();
-      const list = active().filter(
-        (x) =>
-          (!filter.value ||
-            (filter.value === "Favorites" && x.favorite) ||
-            String(x.minutes || (x.kind === "short" ? 10 : 30)) ===
-              filter.value) &&
-          (!cat.value || categoryName(x) === cat.value),
-      );
-      for (const x of list) {
-        const c = node("article", undefined, "mr-recipe");
-        c.append(
-          tile(x),
-          button("Choose", () => choose(x)),
-        );
-        host.append(c);
-      }
-    }
-    const [fl, filter] = field("Time / favorites", "select", "", [
-      ["", "Any time"],
-      ["5", "Quick break"],
-      ["10", "10 minutes"],
-      ["30", "30 minutes"],
-      ["60", "Longer"],
-      ["Favorites", "Favorites"],
-    ]);
-    const [cl, cat] = field("Category", "select", "", [
-      ["", "All categories"],
-      ...new Set(m.activities.map(categoryName)),
-    ]);
-    filter.onchange = draw;
-    cat.onchange = draw;
-    browse.append(search("Search ideas", draw), line(fl, cl), host);
-    p.append(
-      line(
-        button("Favorites", () => {
-          browse.open = true;
-          filter.value = "Favorites";
-          draw();
-        }),
-        button("Add an idea", () => editor()),
-      ),
-      feature,
-      browse,
-    );
-    if (m.pending) {
-      feature.append(
-        node("p", "Chosen: " + m.pending.name),
-        button("I did this", () => api.completePending()),
-        button("Let this one go", () =>
-          change("Cancel chosen idea", () => (m.pending = null)),
-        ),
-      );
-    } else show(active()[0]);
-    p.append(
-      disclosure(
-        "Favorites",
-        "joy-favorites",
-        m.activities.filter((x) => x.favorite && !x.hidden).map(tile),
-      ),
-      disclosure(
-        "Activity history · " + m.completed.length,
-        "joy-history",
-        m.completed
-          .slice()
-          .reverse()
-          .map((x) =>
-            compact(
-              x,
-              dateText(x.completedAt),
-              menu([
-                [
-                  "Delete record",
-                  () => removeItem(m.completed, x, "activity record"),
-                ],
-              ]),
-            ),
-          ),
-      ),
-      disclosure(
-        "Hidden built-in ideas",
-        "joy-hidden",
-        m.activities
-          .filter((x) => x.hidden)
-          .map((x) =>
-            compact(
-              x,
-              "",
-              button("Restore", () =>
-                change("Restore idea", () => (x.hidden = false)),
-              ),
-            ),
-          ),
-      ),
-    );
-    draw();
-    root.append(p);
+    function surprise(){const list=active().filter(x=>x!==featured);const x=list[Math.floor(Math.random()*list.length)]||active()[0];if(x){m.featuredIdea=x.id;save();}show(x);}
+    const favoritesList=m.activities.filter(x=>x.favorite&&!x.hidden);
+    const favorites=disclosure("Favorites · "+favoritesList.length,"joy-favorites",favoritesList.length?favoritesList.map(x=>compact({...x,title:"♡ "+x.name},metadata(x),actions(x))):[empty("No favorite ideas yet.")]);
+    p.querySelector(".mr-heading").append(line(button("Surprise me",surprise,true),button("Favorites",()=>{favorites.open=true;favorites.scrollIntoView({behavior:"smooth",block:"nearest"});}),button("Add an idea",()=>editor())));
+    const browse=disclosure("Browse ideas","joy-browse",[],false);
+    const [fl,filter]=field("Time","select","",[["","Any time"],["5","Quick break"],["10","10 minutes"],["30","30 minutes"],["60","Longer"]]);
+    const [cl,cat]=field("Category","select","",[["","All categories"],...new Set([...categories,...m.activities.map(categoryName)])]);
+    function draw(){host.replaceChildren();const list=active().filter(x=>[x.name,x.description,categoryName(x)].join(" ").toLowerCase().includes(query.toLowerCase())&&(!cat.value||categoryName(x)===cat.value)&&(!filter.value||(filter.value==="5"?minutes(x)<=5:filter.value==="60"?minutes(x)>30:minutes(x)===Number(filter.value))));host.append(...(list.length?list.map(card):[empty("No ideas match your filters.")]));}
+    filter.onchange=draw;cat.onchange=draw;
+    const searchLabel=node("label","Search ideas");searchLabel.append(search("Search ideas",draw));
+    browse.append(searchLabel,line(fl,cl),host);
+    const hidden=m.activities.filter(x=>x.hidden);
+    if(hidden.length)browse.append(disclosure("Hidden ideas · "+hidden.length,"joy-hidden",hidden.map(x=>compact(x,"",button("Restore",()=>change("Restore idea",()=>x.hidden=false))))));
+    const records=[...m.completed.map(x=>({...x,displayDate:x.completedAt,status:"Completed"})),...m.history.filter(x=>x.type==="chosen").map(x=>({...x,name:x.activity,displayDate:x.at,status:"Chosen"}))].sort((a,b)=>String(b.displayDate).localeCompare(String(a.displayDate)));
+    const history=disclosure("Activity history · "+records.length,"joy-history",records.length?records.map(x=>compact(x,dateText(x.displayDate)+" · "+categoryName(x)+" · "+x.status,menu([["View activity",()=>{const idea=m.activities.find(a=>a.id===x.activityId||a.name===x.name);if(idea){show(idea);feature.scrollIntoView({behavior:"smooth"});}}]]))):[empty("Choose an idea and it will appear here.")]);
+    p.append(feature,browse,favorites,history);show(featured);draw();root.append(p);
   }
   const renderers = {
     Overview: home,
@@ -3837,7 +3695,7 @@
       if (action) {
         const undoButton = button("Undo " + action.label, undo);
         undoButton.classList.add("mr-page-undo");
-        root.append(undoButton);
+        root.append(target === "Overview" ? disclosure("Undo Arrange Home", "home-undo", [undoButton]) : undoButton);
       }
     } else $("#content")?.classList.remove("mr-content");
     document.body.dataset.glowPage = target;

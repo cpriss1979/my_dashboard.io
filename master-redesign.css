@@ -1205,3 +1205,45 @@ html body #content :is(.refine-tabs,.feature-actions,.feature-form-actions) {dis
 html body #content :is(.refine-gifts,.dashboard-feature-grid,.dashboard-feature-grid>.card) {min-width:0;height:auto;overflow:visible;}
 html body #content .dashboard-feature-grid {grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));}
 html body #content :is(.refine-tabs,.feature-actions,.feature-form-actions) button {flex:0 1 auto;min-width:0;white-space:normal;overflow:visible;}
+
+/* November 28: compact controls, safe layouts, and theme-aware Little Joys. */
+html body #content .mr-segment {display:flex;flex-wrap:wrap;gap:8px;border:0!important;border-radius:0;padding:0 0 8px;background:transparent!important;overflow:visible;max-width:100%;}
+html body #content .mr-segment>button {border-radius:11px!important;flex:0 1 auto;padding:10px 14px!important;}
+html body #content .mr-home-controls {display:grid;gap:4px;order:2;}
+html body #content .mr-home-controls~.mr-disclosure {order:3;}
+html body #content .mr-home-controls [data-mr-fold="home-sections"] label {display:inline-flex;align-items:center;gap:8px;margin:8px;}
+html body #content .mr-home-grid>.mr-shortcut {container-type:inline-size;display:grid;grid-template-columns:auto minmax(0,1fr);align-content:center;gap:8px 12px;padding:12px;}
+html body #content .mr-shortcut .mr-icon {width:clamp(30px,13cqw,64px);height:clamp(30px,13cqw,64px);font-size:clamp(20px,7cqw,40px);padding:5px;grid-row:1/3;}
+html body #content .mr-shortcut h3 {font-size:clamp(1rem,5cqw,1.35rem);line-height:1.2;margin:0;overflow-wrap:normal;}
+html body #content .mr-shortcut p {font-size:clamp(.875rem,4cqw,1rem);line-height:1.35;margin:0;}
+html body #content .mr-shortcut .mr-open {grid-column:2;font-size:.875rem;margin:0;}
+html body #content .mr-arranging>.mr-shortcut {padding:44px 12px;}
+html body #content .mr-date {overflow:hidden!important;}
+html body #content .mr-events {display:block;overflow:hidden;}
+html body #content .mr-event-name {display:block;box-sizing:border-box;height:23px;line-height:19px;padding:2px 4px;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+html body #content .mr-events [hidden] {display:none!important;}
+html body #content .mr-event-more {display:block;font-weight:700;line-height:22px;text-align:left;}
+html body.glow-redesign:is(body,#masterTheme):is(body,#masterColors):is(body,#masterAreas) #content .refine-gifts {padding:20px!important;border:0!important;border-radius:16px!important;box-sizing:border-box;width:100%;max-width:100%;height:auto!important;overflow:visible!important;background:var(--mr-panel)!important;}
+html body #content .refine-gifts :is(input,select,textarea,.card) {min-width:0;max-width:100%;box-sizing:border-box;}
+html body #content .refine-gifts .dashboard-feature-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;}
+html body #content .mr-joy-feature {position:relative;padding:16px 52px 16px 16px;margin:16px 0;min-height:0;border:1px solid var(--mr-line);border-radius:14px;background:var(--mr-panel)!important;color:var(--mr-ink)!important;}
+html body #content .mr-joy-page .mr-heading {gap:12px;align-items:center;}
+html body #content .mr-joy-page h3 {margin:6px 0;word-break:normal;overflow-wrap:break-word;line-height:1.3;}
+html body #content .mr-joy-page p {margin:8px 0;line-height:1.45;}
+html body #content .mr-joy-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px;margin:16px 0;align-items:stretch;}
+html body #content .mr-joy-card {position:relative;display:flex;flex-direction:column;gap:8px;min-width:0;min-height:185px;padding:16px;border:1px solid var(--mr-line);border-radius:14px;background:var(--mr-panel)!important;color:var(--mr-ink)!important;}
+html body #content .mr-joy-card h3 {padding-right:38px;font-size:1.1rem;}
+html body #content .mr-joy-card>button {margin-top:auto;align-self:flex-start;}
+html body #content :is(.mr-joy-card,.mr-joy-feature)>.mr-menu {position:absolute;right:8px;top:8px;z-index:2;}
+html body #content :is(.mr-joy-card,.mr-joy-feature):has(.mr-menu[open]) {z-index:5;}
+html body #content .mr-joy-page .mr-menu-items {max-width:min(240px,75vw);background:var(--mr-panel)!important;color:var(--mr-ink)!important;}
+html body #content .mr-joy-page .mr-disclosure>.mr-line {justify-content:flex-start;gap:12px;margin-top:10px;}
+html body #content .mr-joy-page .mr-disclosure>.mr-line>label {flex:0 1 220px;}
+html body #content .mr-joy-page input[type=search] {width:100%;}
+html body #content .mr-joy-page {margin-bottom:110px;}
+@media(max-width:650px){html body #content .mr-joy-page .mr-heading {display:block;}html body #content .mr-joy-page .mr-heading>.mr-line {margin-top:10px;}html body #content .mr-joy-feature {padding:14px 48px 14px 14px;}html body #content .mr-joy-page .mr-disclosure>.mr-line>label{flex:1 1 100%;}}
+
+html body #content .mr-shortcut h3 {font-size:clamp(1rem,5cqw,1.35rem)!important;}
+html body[data-glow-page="Gift Planner"] #content {box-sizing:border-box;min-width:0;}
+html body[data-glow-page="Gift Planner"] #content>section {box-sizing:border-box;padding:20px!important;border-radius:16px!important;overflow:visible!important;width:100%;max-width:100%;height:auto!important;background:var(--mr-panel)!important;}
+html body[data-glow-page="Time for You"] :is(.nav-sparkle,.navigation-sparkle,.glitter-particle) {display:none!important;}
